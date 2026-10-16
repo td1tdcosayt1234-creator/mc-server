@@ -1,0 +1,9 @@
+node_modules/
+servers/
+backups/
+.env
+serviceAccount.json
+db.json
+*.jar
+*.zip
+*.log

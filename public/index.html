@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MC Panel - Home</title>
+<style>
+*{box-sizing:border-box}body{font-family:sans-serif;background:#0b1120;color:#e2e8f0;margin:0}
+header{background:#020617;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0}
+header b{font-size:20px}nav a{color:#e2e8f0;text-decoration:none;margin-left:12px;padding:8px 14px;border-radius:8px;background:#1e293b}
+nav a.green{background:#22c55e;color:#052e16;font-weight:bold}nav a.blue{background:#3b82f6;font-weight:bold}
+.hero{text-align:center;padding:48px 20px;background:linear-gradient(180deg,#020617,#0f172a)}
+.hero h1{font-size:36px;margin:0 0 10px}.hero p{color:#94a3b8}
+.btns{margin-top:20px}.btns a{display:inline-block;margin:6px;padding:14px 26px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:17px}
+.u{background:#22c55e;color:#052e16}.a{background:#3b82f6;color:#fff}.s{background:#1e293b;color:#fff;border:1px solid #334155}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;padding:20px;max-width:1000px;margin:auto}
+.card{background:#1e293b;padding:16px;border-radius:12px}
+.card h3{margin:0 0 8px}.card small{color:#94a3b8}
+#servers{max-width:1000px;margin:auto;padding:0 20px 40px}
+.srv{background:#1e293b;padding:12px;border-radius:10px;margin:8px 0;display:flex;justify-content:space-between;align-items:center}
+.dot{font-size:18px}footer{text-align:center;color:#64748b;padding:20px}
+code{background:#020617;padding:2px 6px;border-radius:6px}
+</style>
+</head>
+<body>
+<header><b>⛏️ MC Panel</b><nav><a href="/user">User Panel</a><a href="/admin" class="blue">Admin Panel</a></nav></header>
+<div class="hero">
+<h1>Minecraft Server Hosting</h1>
+<p>User panel + Admin panel • Firebase Database • Google Drive backup proti 50 min • Sob version select</p>
+<div class="btns">
+<a class="u" href="/user">🎮 User Panel</a>
+<a class="a" href="/admin">🛠️ Admin Panel</a>
+</div>
+<p><small>Server IP: <code id="ip">loading...</code> : <code>25565</code></small></p>
+</div>
+<div class="grid">
+<div class="card"><h3>🎮 User Panel</h3><small>Server create, version select (Paper/Purpur/Vanilla/Spigot/Fabric), start/stop, Drive backup.</small><br><br><a class="s btns" style="padding:8px 16px;text-decoration:none" href="/user">Open →</a></div>
+<div class="card"><h3>🛠️ Admin Panel</h3><small>User add (Firebase), sob server control, console command, delete.</small><br><br><a class="s btns" style="padding:8px 16px;text-decoration:none" href="/admin">Open →</a></div>
+<div class="card"><h3>💾 Auto Backup</h3><small id="bk">Proti 50 min por auto zip + Drive upload. Manual backup o ache.</small></div>
+<div class="card"><h3>🔥 Firebase + Drive</h3><small>serviceAccount.json thakle Firestore + Drive on, na thakle local db.json + ./backups.</small></div>
+</div>
+<div id="servers"><h2>🟢 Live Servers (<span id="c">0</span>)</h2><div id="list">loading...</div></div>
+<footer>MC Panel v1.0 • <code>/user</code> • <code>/admin</code></footer>
+<script>
+async function load(){
+ try{
+  const s=await (await fetch('/api/servers')).json();
+  document.getElementById('c').innerText=s.length;
+  document.getElementById('list').innerHTML=s.length?s.map(x=>`<div class="srv"><span><span class="dot">${x.running?'🟢':'🔴'}</span> <b>${x.name}</b> ${x.type} ${x.version}</span><a style="color:#22c55e" href="/user">manage →</a></div>`).join(''):'Kono server nai. <a style="color:#22c55e" href="/user">User panel theke banaw →</a>';
+ }catch(e){document.getElementById('list').innerText='load fail';}
+ try{const v=await (await fetch('/api/versions')).json();document.getElementById('bk').innerText=`Proti 50 min auto backup • Paper ${v.paper.length} + Vanilla ${v.vanilla.length} version ready`; }catch{}
+ document.getElementById('ip').innerText=location.hostname;
+}
+load();setInterval(load,10000);
+</script>
+</body>
+</html>

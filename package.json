@@ -1,0 +1,19 @@
+{
+  "name": "mc-panel",
+  "version": "1.0.0",
+  "description": "Minecraft User + Admin Panel - Firebase DB + Google Drive backup",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "archiver": "^7.0.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "firebase-admin": "^12.7.0",
+    "googleapis": "^140.0.1",
+    "node-cron": "^3.0.3"
+  }
+}

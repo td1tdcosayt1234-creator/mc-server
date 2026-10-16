@@ -1,0 +1,21 @@
+<!doctype html><html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin Panel - MC</title>
+<style>body{font-family:sans-serif;background:#111;color:#eee;margin:0;padding:20px}input,select,button{padding:8px;margin:4px;border-radius:6px;background:#020617;color:#eee;border:1px solid #374151}button{background:#3b82f6;color:#fff;border:0;cursor:pointer}.card{background:#1f2937;padding:12px;border-radius:10px;margin:10px 0}.term{background:#000;color:#4ade80;font-family:monospace;font-size:12px;height:300px;overflow-y:auto;padding:10px;border-radius:8px;white-space:pre-wrap}a{color:#60a5fa}</style></head>
+<body><a href="/">← Home</a> <a href="/user">User →</a><h2>🛠️ Admin Panel</h2>
+<div class="card"><h3>Add User (Firebase)</h3><input id="email" placeholder="user@gmail.com"><select id="role"><option>user</option><option>admin</option></select><button onclick="addUser()">Add</button><div id="users"></div></div>
+<div class="card"><h3>All Servers + Real Terminal</h3><div id="list"></div>
+<div class="term" id="log">select server ↓</div>
+<div><input id="cmd" placeholder="say hello / op name / stop" style="width:320px"><button onclick="send()">Send</button> <button onclick="tail()">Refresh log</button></div></div>
+<script>
+let sel=null,es=null;
+async function users(){const d=await (await fetch('/api/users')).json();document.getElementById('users').innerHTML=d.map(u=>`${u.email} (${u.role})`).join('<br>');}
+async function addUser(){const email=document.getElementById('email').value,role=document.getElementById('role').value;await fetch('/api/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,role})});users();}
+async function list(){const d=await (await fetch('/api/servers')).json();document.getElementById('list').innerHTML=d.map(s=>`<div><input type="radio" name="s" onclick="watch('${s.id}')"> <b>${s.name}</b> ${s.type} ${s.version} ${s.running?'🟢':'🔴'} pid:${s.pid||'-'} <button onclick="del('${s.id}')">Delete</button> <button onclick="backup('${s.id}')">Backup Now</button> <button onclick="start('${s.id}')">Start</button> <button onclick="stop('${s.id}')">Stop</button></div>`).join('');}
+async function watch(id){sel=id;const r=await (await fetch(`/api/servers/${id}/logs?tail=200`)).json();document.getElementById('log').innerText=r.logs.join('\n');if(es)es.close();es=new EventSource(`/api/servers/${id}/console`);es.onmessage=e=>{const el=document.getElementById('log');el.innerText+=(JSON.parse(e.data)+'\n');el.scrollTop=el.scrollHeight;};}
+async function tail(){if(!sel)return;const r=await (await fetch(`/api/servers/${sel}/logs?tail=200`)).json();document.getElementById('log').innerText=r.logs.join('\n');}
+async function del(id){if(!confirm('delete?'))return;await fetch('/api/servers/'+id,{method:'DELETE'});list();}
+async function backup(id){await fetch(`/api/servers/${id}/backup`,{method:'POST'});alert('backup done');}
+async function start(id){await fetch(`/api/servers/${id}/start`,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});list();}
+async function stop(id){await fetch(`/api/servers/${id}/stop`,{method:'POST'});list();}
+async function send(){if(!sel)return alert('server select koro');const cmd=document.getElementById('cmd').value;await fetch(`/api/servers/${sel}/command`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cmd})});document.getElementById('cmd').value='';}
+users();list();setInterval(list,15000);
+</script></body></html>
