@@ -1,6 +1,7 @@
 node_modules/
 servers/
 backups/
+runtime/
 .env
 serviceAccount.json
 db.json

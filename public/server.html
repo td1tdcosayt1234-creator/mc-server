@@ -406,7 +406,7 @@ async function loadStartup() {
     $('#suRam').value = String(s.ram); $('#suArgs').value = s.javaArgs || '';
     $('#suType').textContent = s.type || '—'; $('#suVer').textContent = s.version || '—';
   } catch {}
-  try { const i = await api('/api/info'); $('#suJava').textContent = i.java ? ('Java ' + (i.javaMajor || '?')) : 'not found'; $('#suJava').title = i.java || ''; } catch {}
+  try { const i = await api('/api/info'); $('#suJava').textContent = i.javaMajor ? ('sys ' + i.javaMajor + (i.jres && i.jres.length ? ' · runtime ' + i.jres.join('/') : '')) : 'auto-managed'; $('#suJava').title = i.java || ''; } catch {}
 }
 async function saveStartup() {
   try {

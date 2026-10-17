@@ -10,6 +10,7 @@ const mc = require('./lib/minecraft');
 const backup = require('./lib/backup');
 const files = require('./lib/files');
 const props = require('./lib/props');
+const java = require('./lib/java');
 
 const SERVERS_DIR = mc.SERVERS_DIR;
 
@@ -48,21 +49,11 @@ function javaCheck() {
     });
   });
 }
-// MC version string -> konesha Java major lagbe
-function neededJava(version) {
-  const v = String(version || '');
-  const m = v.match(/^(\d+)\.(\d+)(?:\.(\d+))?/);
-  if (!m) return 17;
-  if (+m[1] === 1) {
-    if (+m[2] > 20) return 21;          // 1.21+
-    if (+m[2] === 20 && m[3] != null && +m[3] >= 5) return 21; // 1.20.5/6
-    return 17;                          // 1.17 - 1.20.4 (ar purano o 17 e chole)
-  }
-  return 17;
-}
+// MC version -> Java major mapping ekhon lib/java.js e (auto runtime manager o shekha te)
+const neededJava = v => java.neededJava(v);
 app.get('/api/info', ok(async (req, res) => {
   const j = await javaCheck();
-  res.json({ java: j.line, javaMajor: j.major, ips: localIPs(), platform: process.platform });
+  res.json({ java: j.line, javaMajor: j.major, jres: java.listRuntimes(), ips: localIPs(), platform: process.platform });
 }));
 
 // ---- Servers ----
@@ -81,10 +72,6 @@ app.post('/api/servers', ok(async (req, res) => {
   const { name, type, version, ram } = req.body;
   if (!name || !version) return res.status(400).json({ error: 'name + version lagbe' });
   const id = name.toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 40) || 'srv';
-  const have = (await javaCheck()).major;
-  if (have == null) return res.status(400).json({ error: 'java PATH e nai - Java JDK install koro' });
-  const need = neededJava(version);
-  if (have < need) return res.status(400).json({ error: `MC ${version} er jonno Java ${need} lagbe, ache Java ${have}. Java ${need} (Temurin) install koro` });
   await mc.downloadServerJar(id, type || 'paper', version);
   const srv = await db.saveServer({ id, name, type: type || 'paper', version, ram: ram || 4096, javaArgs: '', createdAt: new Date().toISOString() });
   res.json({ ...srv, ...mc.serverStatus(id) });
@@ -96,11 +83,13 @@ app.post('/api/servers/:id/start', ok(async (req, res) => {
   if (!fs.existsSync(path.join(SERVERS_DIR, req.params.id, 'server.jar'))) {
     return res.status(400).json({ error: 'server.jar nai - reinstall koro' });
   }
-  // Java version real guard - crash loop prevention
-  const j = await javaCheck();
-  if (j.major == null) return res.status(400).json({ error: 'java PATH e nai - Java install koro' });
-  const need = neededJava(s ? s.version : req.body.version);
-  if (j.major < need) return res.status(400).json({ error: `MC ${s ? s.version : ''} er jonno Java ${need} lagbe - ai machine e Java ${j.major}. Java ${need} install koro` });
+  // AUTO JAVA: server version onujayi matching JRE - system e thakle seta, na thakle runtime download
+  let javaBin = null;
+  try {
+    javaBin = (await java.ensureJava(neededJava(s ? s.version : req.body.version), l => mc.pushLog(req.params.id, l))).bin;
+  } catch (e) {
+    return res.status(400).json({ error: e.message });
+  }
   // Port conflict guard - duita running server eki port e bind korte parbe na
   const myPort = props.getPort(SERVERS_DIR, req.params.id) || 25565;
   const others = (await db.getServers()).filter(x => x.id !== req.params.id && mc.isRunning(x.id));
@@ -115,19 +104,20 @@ app.post('/api/servers/:id/start', ok(async (req, res) => {
   }
   const ram = parseInt(req.body.ram || (s && s.ram) || 4096, 10) || 4096;
   const extra = String((s && s.javaArgs) || req.body.javaArgs || '').trim().split(' ').filter(Boolean);
-  res.json(mc.startServer(req.params.id, ram, extra, true));
+  res.json(mc.startServer(req.params.id, ram, extra, true, javaBin));
 }));
 app.post('/api/servers/:id/stop', (req, res) => res.json(mc.stopServer(req.params.id)));
 app.post('/api/servers/:id/restart', ok(async (req, res) => {
   const s = (await db.getServers()).find(x => x.id === req.params.id);
-  const j = await javaCheck();
-  if (j.major != null) {
-    const need = neededJava(s ? s.version : '');
-    if (j.major < need) return res.status(400).json({ error: `MC ${s ? s.version : ''} er jonno Java ${need} lagbe, ache ${j.major}` });
+  let javaBin = null;
+  try {
+    javaBin = (await java.ensureJava(neededJava(s ? s.version : ''), l => mc.pushLog(req.params.id, l))).bin;
+  } catch (e) {
+    return res.status(400).json({ error: e.message });
   }
   const ram = parseInt(req.body.ram || (s && s.ram) || 4096, 10) || 4096;
   const extra = String((s && s.javaArgs) || '').trim().split(' ').filter(Boolean);
-  res.json(mc.restartServer(req.params.id, ram, extra));
+  res.json(mc.restartServer(req.params.id, ram, extra, javaBin));
 }));
 app.post('/api/servers/:id/kill', (req, res) => res.json(mc.killServer(req.params.id)));
 
@@ -267,7 +257,8 @@ app.listen(PORT, async () => {
           console.log(`[AutoStart] skip ${s.id}: port ${bootPort} already used by PID ${owner}`);
           continue;
         }
-        mc.startServer(s.id, s.ram || 4096, String(s.javaArgs || '').trim().split(' ').filter(Boolean), true);
+        const jb = (await java.ensureJava(java.neededJava(s.version), l => console.log(`[AutoStart ${s.id}] ${l}`))).bin;
+        mc.startServer(s.id, s.ram || 4096, String(s.javaArgs || '').trim().split(' ').filter(Boolean), true, jb);
         console.log(`[AutoStart] ${s.id}`);
       } catch (e) { console.log(`[AutoStart] fail ${s.id}:`, e.message); }
     }
