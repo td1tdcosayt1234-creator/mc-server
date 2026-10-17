@@ -315,6 +315,13 @@ app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'public', 'log
 app.get('/signup', (req, res) => res.sendFile(path.join(__dirname, 'public', 'signup.html')));
 app.get('/pricing', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pricing.html')));
 app.get('/docs', (req, res) => res.sendFile(path.join(__dirname, 'public', 'docs.html')));
+app.get('/status', (req, res) => res.sendFile(path.join(__dirname, 'public', 'status.html')));
+
+// ---- 404 catch-all (page + api json) — sob route er PORE ----
+app.use((req, res) => {
+  if (req.path.startsWith('/api')) return res.status(404).json({ error: 'api route nai: ' + req.path });
+  res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, async () => {
@@ -326,6 +333,7 @@ app.listen(PORT, async () => {
   // panel reboot hoile sob server auto start
   try {
     const all = await db.getServers();
+    const claimed = new Set();   // boot e ekbar claim — same port duita server racing korle sniping hoy
     for (const s of all) {
       try {
         // port e orphan java thakle boot crash-loop hobe na - skip + clear msg
@@ -335,6 +343,11 @@ app.listen(PORT, async () => {
           console.log(`[AutoStart] skip ${s.id}: port ${bootPort} already used by PID ${owner}`);
           continue;
         }
+        if (claimed.has(bootPort)) {
+          console.log(`[AutoStart] skip ${s.id}: port ${bootPort} ekta autostart server already claim korche — Settings tab e port change korle cholbe`);
+          continue;
+        }
+        claimed.add(bootPort);
         const jb = (await java.ensureJava(java.neededJava(s.version), l => console.log(`[AutoStart ${s.id}] ${l}`))).bin;
         mc.startServer(s.id, s.ram || 4096, String(s.javaArgs || '').trim().split(' ').filter(Boolean), true, jb);
         console.log(`[AutoStart] ${s.id}`);

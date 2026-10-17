@@ -19,20 +19,22 @@
     <a class="link-pill" href="/user">Dashboard</a>
     <a class="link-pill" href="/docs">Docs</a>
     <a class="link-pill" href="/pricing">Pricing</a>
+    <a class="link-pill" href="/status">Status</a>
     <a class="link-pill" href="/admin">Admin</a>
   </nav>
   <div class="nav-actions"><a class="btn primary shine" href="/signup">Get started</a></div>
 </div></header>
 
-<div class="hero" style="padding-bottom:26px">
-  <div class="kicker fade-up"><span class="pulse-dot"></span>self-hosted pricing</div>
-  <h1 class="fade-up d2" style="max-width:660px">Nijer hosting <span class="gradtext">nijer machine e.</span></h1>
-  <p class="sub fade-up d3" style="max-width:520px;font-size:15px">Ei panel ta Open Source — tomar PC/server e fiye zabe. Cloud pricing er kono jhamela nai. Ekhon beta — <b style="color:var(--text)">sob tier free</b>.</p>
+<div class="hero" style="padding-bottom:26px;position:relative">
+  <div class="stars" aria-hidden="true"></div>
+  <div class="kicker reveal"><span class="pulse-dot"></span>self-hosted pricing</div>
+  <h1 class="reveal" style="max-width:660px;transition-delay:.08s">Nijer hosting <span class="gradtext">nijer machine e.</span></h1>
+  <p class="sub reveal" style="max-width:520px;font-size:15px;transition-delay:.16s">Ei panel ta Open Source — tomar PC/server e fiye zabe. Cloud pricing er kono jhamela nai. Ekhon beta — <b style="color:var(--text)">sob tier free</b>.</p>
 </div>
 
-<div class="container fade-up d4">
+<div class="container reveal" style="transition-delay:.12s">
   <div class="plans">
-    <div class="plan">
+    <div class="plan reveal" data-tilt style="transition-delay:.05s">
       <span class="tag">Core</span>
       <h3 style="margin:0;font-size:16.5px">Starter</h3>
       <div class="price">$0<small>/mo</small></div>
@@ -47,7 +49,7 @@
       <a class="btn" href="/docs">Docs dekho →</a>
     </div>
 
-    <div class="plan featured">
+    <div class="plan featured reveal" data-tilt style="transition-delay:.14s">
       <span class="tag">Popular</span>
       <h3 style="margin:0;font-size:16.5px">Pro</h3>
       <div class="price gradtext">$0<small>/mo · beta</small></div>
@@ -62,7 +64,7 @@
       <a class="btn primary shine" href="/signup">Signup — free beta</a>
     </div>
 
-    <div class="plan">
+    <div class="plan reveal" data-tilt style="transition-delay:.23s">
       <span class="tag">Team</span>
       <h3 style="margin:0;font-size:16.5px">Club</h3>
       <div class="price">$0<small>/mo · beta</small></div>
@@ -79,7 +81,7 @@
   </div>
 </div>
 
-<div class="container" style="max-width:880px;margin-top:46px;padding-bottom:60px">
+<div class="container reveal" style="max-width:880px;margin-top:46px;padding-bottom:60px">
   <div class="sec-index"><b style="color:var(--violet2)">FAQ</b> / common q</div>
   <h2 style="font-size:clamp(22px,3vw,30px);letter-spacing:-.04em;margin:0 0 18px">Common <span class="gradtext">questions.</span></h2>
   <details class="faq-item" open><summary>Actual hosting cost?</summary><p>Na — panel self-hosted. Tomar machine e MC server chole. Bondhu ra internet diye join korte chile → playit.gg ba Cloudflare tunnel setup lagbe (docs e ache).</p></details>
@@ -89,11 +91,8 @@
 </div>
 
 <footer style="position:relative;z-index:2;text-align:center;color:var(--muted2);padding:28px;font-size:12.5px">
-  MC Panel v2.0 — self-host · <a href="/docs">docs</a> · <a href="/pricing">pricing</a> · <a href="/user">panel</a>
+  MC Panel v2.0 — self-host · <a href="/docs">docs</a> · <a href="/pricing">pricing</a> · <a href="/status">status</a> · <a href="/user">panel</a>
 </footer>
 
-<script>
-addEventListener('scroll',()=>{const h=document.documentElement;$('#sp').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%'},{passive:true});
-addEventListener('pointermove',e=>{$('#cg').style.left=e.clientX+'px';$('#cg').style.top=e.clientY+'px'});
-</script>
+<script src="/ux.js"></script>
 </body></html>

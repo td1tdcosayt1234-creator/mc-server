@@ -12,9 +12,11 @@
   <div class="cine-grid"></div><div class="cine-vignette"></div><div class="cine-grain"></div>
 </div>
 
+<div class="scroll-progress" id="sp"></div><div class="cursor-glow" id="cg"></div>
+
 <div class="auth-wrap">
   <div class="auth-left">
-    <div class="auth-card fade-up">
+    <div class="auth-card reveal">
       <div class="brandrow">
         <span class="logo-mark">⛏️</span><b style="font-size:16px;font-weight:800">MC Panel</b>
         <span class="pill" style="margin-left:auto"><span class="dot"></span>self-hosted</span>
@@ -76,4 +78,5 @@ $('#password').addEventListener('keydown', e => { if (e.key === 'Enter') send();
 // already logged in?
 fetch('/api/auth/me').then(r => r.json()).then(j => { if (j.user) location.href = '/'; });
 </script>
+<script src="/ux.js"></script>
 </body></html>

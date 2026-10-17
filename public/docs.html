@@ -18,6 +18,7 @@
   <nav class="links">
     <a class="link-pill" href="/user">Dashboard</a>
     <a class="link-pill" href="/pricing">Pricing</a>
+    <a class="link-pill" href="/status">Status</a>
     <a class="link-pill" href="/admin">Admin</a>
   </nav>
   <div class="nav-actions"><a class="btn primary" href="/user">Open panel →</a></div>
@@ -39,7 +40,7 @@
   </aside>
 
   <main class="docs-body">
-    <section id="quickstart">
+    <section class="reveal" id="quickstart">
       <div class="sec-index"><b style="color:var(--violet2)">01</b> / Quick start</div>
       <h2>5 minute e <span class="gradtext">chalu.</span></h2>
       <p>Node.js 18+ lagbe (Node 22 recommended). Ek line ei kaj:</p>
@@ -52,7 +53,7 @@ node server.js</div>
       <div class="doc-note"><b>Tip:</b> server folder <code>servers/&lt;id&gt;</code> e thakbe — full file access panel ei. Git nijer folder ignore kore.</div>
     </section>
 
-    <section id="platforms">
+    <section class="reveal" id="platforms">
       <div class="sec-index"><b style="color:var(--violet2)">02</b> / Platforms</div>
       <h2>Ei 9 platforms <span class="gradtext">built-in.</span></h2>
       <p>Shob auto-download official API/maven theke — kono mirror jar na.</p>
@@ -69,7 +70,7 @@ node server.js</div>
       <div class="doc-note"><b>NeoForge:</b> create korle panel nijei installer chalai (~1-2 min, libraries namiye), tarpor <code>win_args.txt</code> diye bose. Java mapping auto — 1.21.x → 21.</div>
     </section>
 
-    <section id="auth">
+    <section class="reveal" id="auth">
       <div class="sec-index"><b style="color:var(--violet2)">03</b> / Login & roles</div>
       <h2>Accounts, <span class="gradtext">roles.</span></h2>
       <p>Auth ekdom local — db.json e. Password <code>scrypt</code> + random salt hash hoy. Session = 7 din, HttpOnly cookie.</p>
@@ -81,7 +82,7 @@ node server.js</div>
       </ul>
     </section>
 
-    <section id="java">
+    <section class="reveal" id="java">
       <div class="sec-index"><b style="color:var(--violet2)">04</b> / Auto Java</div>
       <h2>Java <span class="gradtext">niye tension nai.</span></h2>
       <p>Version onujayi mapping → panel nijei JRE ensure kore:</p>
@@ -92,20 +93,20 @@ MC ≤ 1.16.5        → <span class="k">Java 8</span></div>
       <p>Runtime folder: <code>runtime/java-&lt;major&gt;</code> (gitignored). System java match korle oi ta — no download. Download progress live console e dekhbo.</p>
     </section>
 
-    <section id="console">
+    <section class="reveal" id="console">
       <div class="sec-index"><b style="color:var(--violet2)">05</b> / Console & files</div>
       <h2>Real terminal, <span class="gradtext">real file manager.</span></h2>
       <p>Console page: SSE line-by-line stream, command input history (↑↓), power buttons (Start/Restart/Stop/Kill), CPU/RAM live bars. Files page: explorer + editor (Ctrl+S save), upload/download, rename/delete, khujar filter. Startup tab → RAM ti Java args; Settings tab → server.properties form + raw mode.</p>
       <div class="doc-note"><b>Auto-restart:</b> crash korle 5s por nijei bose (port-conflict thakle skip, crash-loop block).</div>
     </section>
 
-    <section id="backups">
+    <section class="reveal" id="backups">
       <div class="sec-index"><b style="color:var(--violet2)">06</b> / Backups</div>
       <h2>Auto backup + <span class="gradtext">Drive.</span></h2>
       <p>Prottek <code>BACKUP_MINUTES</code> (default 50) minute por por zip backup: <code>backups/&lt;server&gt;/</code>. Google Drive service account thakle oikhane o jai. Backup tab theke one-click <b style="color:var(--text)">Restore</b> (server stop kore full overwrite) + download.</p>
     </section>
 
-    <section id="config">
+    <section class="reveal" id="config">
       <div class="sec-index"><b style="color:var(--violet2)">07</b> / Config (.env)</div>
       <h2>Environment <span class="gradtext">vars.</span></h2>
       <div class="code"><span class="k">PORT</span>=3000
@@ -117,7 +118,7 @@ MC ≤ 1.16.5        → <span class="k">Java 8</span></div>
       <p>db.json e users + servers + settings rakha-hoi (local mode). Firebase thakle Firestore — panel apatoto auth local mode e.</p>
     </section>
 
-    <section id="api">
+    <section class="reveal" id="api">
       <div class="sec-index"><b style="color:var(--violet2)">08</b> / API</div>
       <h2>REST <span class="gradtext">endpoints.</span></h2>
       <div class="code"><span class="k">GET</span>  /api/versions          <span class="cmt"># 9 platform er version list</span>
@@ -133,7 +134,7 @@ MC ≤ 1.16.5        → <span class="k">Java 8</span></div>
 <span class="k">DELETE</span> /api/servers/:id        <span class="cmt"># admin/owner full delete</span></div>
     </section>
 
-    <section id="join">
+    <section class="reveal" id="join">
       <div class="sec-index"><b style="color:var(--violet2)">09</b> / Bondhu ra join</div>
       <h2>Connect <span class="gradtext">paths.</span></h2>
       <ul style="color:var(--muted);font-size:14px;line-height:2;padding-left:20px">
@@ -144,7 +145,7 @@ MC ≤ 1.16.5        → <span class="k">Java 8</span></div>
       </ul>
     </section>
 
-    <section id="faq">
+    <section class="reveal" id="faq">
       <div class="sec-index"><b style="color:var(--violet2)">10</b> / Troubleshoot</div>
       <h2>Common issues & <span class="gradtext">fixes.</span></h2>
       <ul style="color:var(--muted);font-size:14px;line-height:2.1;padding-left:20px">
@@ -164,8 +165,31 @@ MC ≤ 1.16.5        → <span class="k">Java 8</span></div>
 
 <script>
 const $ = s => document.querySelector(s);
-addEventListener('scroll',()=>{const h=document.documentElement;$('#sp').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%'},{passive:true});
-addEventListener('pointermove',e=>{$('#cg').style.left=e.clientX+'px';$('#cg').style.top=e.clientY+'px'});
-function cp(b){const code=b.parentElement.innerText.replace(/^copy\s*/,'');navigator.clipboard.writeText(code).then(()=>{b.textContent='copied ✅';setTimeout(()=>b.textContent='copy',1500)})}
+// chrome anims → /ux.js
+// copy: clone kore button bad diye text nei (trailing 'copy' strip bug fix)
+function cp(b){
+  const clone = b.parentElement.cloneNode(true);
+  clone.querySelectorAll('.copybtn').forEach(n => n.remove());
+  navigator.clipboard.writeText(clone.innerText.trim()).then(() => {
+    b.textContent = 'copied ✅';
+    setTimeout(() => b.textContent = 'copy', 1500);
+  });
+}
+// TOC scroll-spy — active section highlight
+(function(){
+  const links = [...document.querySelectorAll('.docs-toc a')];
+  const map = {};
+  links.forEach(a => { try { map[a.getAttribute('href').slice(1)] = a; } catch {} });
+  const spy = new IntersectionObserver(es => es.forEach(x => {
+    if (x.isIntersecting) {
+      links.forEach(a => a.style.color = '');
+      links.forEach(a => a.style.borderLeftColor = 'transparent');
+      const a = map[x.target.id];
+      if (a) { a.style.color = 'var(--text)'; a.style.borderLeftColor = 'var(--violet2)'; }
+    }
+  }), { threshold: 0.001, rootMargin: '-45% 0px -50% 0px' });
+  Object.keys(map).forEach(id => { const s = document.getElementById(id); if (s) spy.observe(s); });
+})();
 </script>
+<script src="/ux.js"></script>
 </body></html>

@@ -1,0 +1,127 @@
+<!doctype html><html lang="bn"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#04050a">
+<title>Status — MC Panel</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⛏️</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<style>
+.jrow{display:flex;gap:8px;flex-wrap:wrap}
+.stat-table{display:flex;flex-direction:column;gap:10px}
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:13px 16px;border-radius:14px;background:linear-gradient(170deg,hsla(0,0%,100%,.05),hsla(0,0%,100%,.015));border:1px solid var(--line);transition:border-color .3s,transform .3s var(--ease)}
+.stat-row:hover{border-color:var(--line2);transform:translateX(4px)}
+</style>
+</head>
+<body>
+<div class="cine" aria-hidden="true">
+  <div class="cine-aurora"><span class="aurora aurora--violet"></span><span class="aurora aurora--mint"></span><span class="aurora aurora--rose"></span></div>
+  <div class="cine-grid"></div><div class="cine-vignette"></div><div class="cine-grain"></div>
+</div>
+<div class="scroll-progress" id="sp"></div><div class="cursor-glow" id="cg"></div>
+
+<header class="nav"><div class="nav-inner">
+  <a class="logo" href="/"><span class="logo-mark">⛏️</span><span>MC Panel</span></a>
+  <nav class="links">
+    <a class="link-pill" href="/user">Dashboard</a>
+    <a class="link-pill" href="/docs">Docs</a>
+    <a class="link-pill" href="/pricing">Pricing</a>
+    <a class="link-pill" href="/admin">Admin</a>
+  </nav>
+  <div class="nav-actions">
+    <span class="chip" id="allClear"><span class="dot" style="background:var(--mint2)"></span>checking…</span>
+    <a class="btn primary" href="/user">Open panel →</a>
+  </div>
+</div></header>
+
+<div class="hero" style="padding-bottom:20px;position:relative">
+  <div class="stars" aria-hidden="true"></div>
+  <div class="kicker reveal"><span class="pulse-dot"></span>live telemetry · auto-refresh</div>
+  <h1 class="reveal" style="transition-delay:.08s">Panel <span class="gradtext">status.</span></h1>
+  <p class="sub reveal" style="max-width:560px;transition-delay:.16s">Real-time java runtime, servers, network — sob path from the running panel API. <span class="muted small" id="lastUpd"></span></p>
+</div>
+
+<div class="container" style="padding-bottom:70px;position:relative;z-index:2">
+  <div class="statband reveal">
+    <div class="big" data-tilt><b id="stOnline">—</b><span>servers online</span></div>
+    <div class="big" data-tilt><b id="stTotal">—</b><span>total servers</span></div>
+    <div class="big" data-tilt><b id="stJava">—</b><span>java runtimes</span></div>
+    <div class="big" data-tilt><b id="stNet">—</b><span>lan ips</span></div>
+  </div>
+
+  <div style="margin:40px 0 16px" class="reveal">
+    <div class="sec-index"><b style="color:var(--violet2)">01</b> / Runtime</div>
+    <h2 style="font-size:clamp(22px,3vw,30px);letter-spacing:-.04em;margin:0">Java <span class="gradtext">runtimes.</span></h2>
+  </div>
+  <div class="card reveal" data-tilt style="padding:22px">
+    <div class="jrow" id="jres"><span class="chip">loading…</span></div>
+    <div class="muted small" style="margin-top:10px" id="sysJava"></div>
+  </div>
+
+  <div style="margin:40px 0 16px" class="reveal">
+    <div class="sec-index"><b style="color:var(--violet2)">02</b> / Servers</div>
+    <h2 style="font-size:clamp(22px,3vw,30px);letter-spacing:-.04em;margin:0">Live <span class="gradtext">instances.</span></h2>
+  </div>
+  <div id="srvWrap">
+    <div class="card reveal" style="padding:22px"><div class="empty">loading servers…</div></div>
+  </div>
+</div>
+
+<footer style="position:relative;z-index:2;text-align:center;color:var(--muted2);padding:26px;font-size:12.5px">
+  MC Panel v2.0 · <a href="/docs">docs</a> · <a href="/pricing">pricing</a> · <a href="/user">panel</a>
+</footer>
+
+<script src="/ux.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const ICON={paper:'📄',purpur:'🟣',vanilla:'🌱',spigot:'⚡',fabric:'🧵',folia:'🍃',quilt:'🪡',neoforge:'🔥',craftbukkit:'🔨'};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let authed=null;
+function updTime(){$('#lastUpd').textContent='✳ last checked '+new Date().toLocaleTimeString()}
+async function info(){
+  try{
+    const j=await (await fetch('/api/info')).json();
+    const jres=j.jres||[];
+    $('#stJava').textContent=jres.length+(j.javaMajor?1:0);
+    const rows=[];
+    if(j.javaMajor)rows.push({v:'system java',m:j.javaMajor});
+    jres.forEach(m=>rows.push({v:'runtime/java-'+m,m}));
+    $('#jres').innerHTML=rows.map(r=>`<span class="chip">☕ Java ${r.m} <span class="muted">· ${esc(r.v)}</span></span>`).join('')||'<span class="chip">kono runtime nai</span>';
+    $('#sysJava').textContent='system: '+esc(j.java||'unknown')+' · platform: '+esc(j.platform||'-');
+    const ips=j.ips||[];
+    $('#stNet').textContent=ips.length;
+  }catch(e){$('#jres').innerHTML='<span class="chip">info API fail</span>'}
+}
+async function servers(){
+  try{
+    const r=await fetch('/api/servers');
+    if(r.status===401){
+      authed=false;
+      $('#srvWrap').innerHTML='<div class="card reveal rved" style="padding:26px"><div class="rowline"><span style="font-size:22px">🔒</span><div><b>Servers dekhte login lagbe</b><div class="muted small">Admin ba user account diye login korle live list + ports dekhbe</div></div><a class="btn primary" style="margin-left:auto" href="/login">Login →</a></div></div>';
+      $('#stOnline').textContent='—';$('#stTotal').textContent='—';
+      $('#allClear').innerHTML='<span class="dot"></span>login required';
+      return;
+    }
+    const s=await r.json();
+    authed=true;
+    const run=s.filter(x=>x.running).length;
+    if(window.__uxCount){window.__uxCount($('#stOnline'),run);window.__uxCount($('#stTotal'),s.length);}
+    $('#allClear').innerHTML=run?`<span class="dot" style="background:var(--green)"></span>${run} online`:`<span class="dot" style="background:#f87171"></span>sob offline`;
+    $('#srvWrap').innerHTML=s.length?`<div class="stat-table">${s.map(x=>`
+      <div class="stat-row">
+        <div style="display:flex;gap:10px;align-items:center;min-width:0">
+          <span style="font-size:18px">${ICON[x.type]||'🎮'}</span>
+          <div style="min-width:0"><b style="font-size:14.5px">${esc(x.name)}</b> <span class="ownerchip">${x.type} ${esc(x.version)}</span></div>
+        </div>
+        <div class="rowline" style="gap:8px">
+          <span class="pill ${x.running?'on':''}"><span class="dot"></span>${x.running?'Online':'Offline'}</span>
+          <span class="chip">${x.ram||4096}MB</span>
+          ${x.running?`<span class="chip">CPU <b>${x.stats&&x.stats.cpu||0}%</b></span><span class="chip">MEM <b>${x.stats&&x.stats.memMB||0}MB</b></span>`:''}
+          <a class="btn ghost sm" href="/server/${x.id}">Panel →</a>
+        </div>
+      </div>`).join('')}</div>`:'<div class="card reveal rved" style="padding:26px"><div class="empty">kono server nai — <a href="/user">create koro →</a></div></div>';
+  }catch(e){$('#srvWrap').innerHTML='<div class="card" style="padding:26px"><div class="empty">panel offline?</div></div>';$('#allClear').innerHTML='<span class="dot" style="background:#f87171"></span>panel down';}
+}
+info();servers();updTime();
+setInterval(()=>{info();servers();updTime();},6000);
+</script>
+</body></html>

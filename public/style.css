@@ -327,3 +327,39 @@ main.mn{flex:1;padding:24px 28px 70px;max-width:1080px;min-width:0}
 .statband .big b{font-size:26px;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
 .statband .big span{color:var(--muted2);font-size:11px;font-family:var(--mono);letter-spacing:.14em;text-transform:uppercase}
 .ownerchip{font-size:10px;font-family:var(--mono);padding:2px 8px;border-radius:99px;background:hsla(0,0%,100%,.05);border:1px solid var(--line);color:var(--muted2)}
+
+/* ================= motion layer 2.0 ================= */
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .8s var(--ease),transform .95s var(--ease)}
+.reveal.rved{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.reveal{transition:none;opacity:1;transform:none}.shoot{display:none}}
+.nav .nav-inner{transition:padding .35s var(--ease)}
+.nav.scrolled{background:linear-gradient(180deg,rgba(5,6,13,.94),rgba(5,6,13,.72));box-shadow:0 18px 50px -26px rgba(0,0,0,.95)}
+.nav.scrolled .nav-inner{padding-top:7px;padding-bottom:7px}
+.btn:active{transform:translateY(0) scale(.97)!important}
+[data-tilt]{transition:transform .4s var(--ease)}
+.term-bar i:first-child{animation:termPulse 2.8s ease-in-out infinite}
+@keyframes termPulse{50%{box-shadow:0 0 14px rgba(251,113,133,.9)}}
+.pill.on .dot{animation:dotPulse 2.6s ease-in-out infinite}
+@keyframes dotPulse{50%{box-shadow:0 0 16px var(--green)}}
+.link-pill{position:relative}
+.link-pill:after{content:"";position:absolute;left:12px;right:12px;bottom:3px;height:2px;border-radius:9px;background:var(--grad);transform:scaleX(0);transform-origin:left;transition:transform .32s var(--ease)}
+.link-pill:hover:after{transform:scaleX(1)}
+body.warm #slist .fade-up{animation:none!important;opacity:1!important;transform:none!important}
+
+/* stars + shooting stars */
+.stars{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:1}
+.star{position:absolute;width:2.5px;height:2.5px;border-radius:50%;background:#fff;animation:twinkle 4s ease-in-out infinite}
+@keyframes twinkle{50%{opacity:.12;transform:scale(.7)}}
+.shoot{position:absolute;width:150px;height:2px;border-radius:9px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.9),transparent);animation:shoot 8s ease-in infinite;opacity:0}
+@keyframes shoot{0%{opacity:0;transform:translate3d(0,0,0) rotate(222deg)}6%{opacity:.9}20%{opacity:0}100%{transform:translate3d(-34vw,44vh,0) rotate(222deg);opacity:0}}
+
+/* 404 glitch */
+.glitch{position:relative;display:inline-block}
+.glitch:before,.glitch:after{content:attr(data-t);position:absolute;left:0;top:0;width:100%;overflow:hidden;letter-spacing:inherit}
+.glitch:before{color:var(--sky);transform:translate(3px,0);clip-path:inset(0 0 58% 0);animation:glA 2.6s steps(2) infinite}
+.glitch:after{color:var(--rose);transform:translate(-3px,0);clip-path:inset(62% 0 0 0);animation:glB 3.1s steps(2) infinite}
+@keyframes glA{0%,88%{transform:translate(3px,0)}90%{transform:translate(-8px,-3px)}93%{transform:translate(6px,2px)}96%{transform:translate(-4px,0)}100%{transform:translate(3px,0)}}
+@keyframes glB{0%,86%{transform:translate(-3px,0)}88%{transform:translate(7px,3px)}92%{transform:translate(-6px,-2px)}95%{transform:translate(4px,0)}100%{transform:translate(-3px,0)}}
+.float-soft{animation:floatY 7s ease-in-out infinite}
+.zoom-hover{transition:transform .5s var(--ease)}
+.zoom-hover:hover{transform:scale(1.02)}

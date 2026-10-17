@@ -209,8 +209,7 @@ function toast(msg, type='ok') {
   const t = $('#tip'); t.textContent = msg; t.className = 'toast show ' + type;
   clearTimeout(t._to); t._to = setTimeout(() => t.className = 'toast', 2600);
 }
-addEventListener('scroll',()=>{const h=document.documentElement;$('#sp').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%'},{passive:true});
-addEventListener('pointermove',e=>{$('#cg').style.left=e.clientX+'px';$('#cg').style.top=e.clientY+'px'});
+// chrome anims → /ux.js
 
 async function api(url, opt = {}) {
   const r = await fetch(url, Object.assign({ headers: { 'Content-Type': 'application/json' } }, opt));
@@ -517,5 +516,6 @@ function out(){ fetch('/api/auth/logout',{method:'POST'}).then(()=>location.href
 loadSrv().then(() => { connectSSE(); setTab((location.hash || '#console').slice(1)); });
 refreshStats(); setInterval(refreshStats, 3000);
 </script>
+<script src="/ux.js"></script>
 </body>
 </html>

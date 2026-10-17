@@ -22,7 +22,7 @@
 
 <header class="nav"><div class="nav-inner">
   <a class="logo" href="/"><span class="logo-mark">⛏️</span><span>MC Panel</span></a>
-  <div class="nav-actions"><a class="link-pill" href="/">Home</a><a class="link-pill" href="/pricing">Pricing</a><a class="btn primary" href="#">Admin</a></div>
+  <div class="nav-actions"><a class="link-pill" href="/">Home</a><a class="link-pill" href="/pricing">Pricing</a><a class="link-pill" href="/status">Status</a><a class="btn primary" href="#">Admin</a></div>
 </div></header>
 
 <div class="page" style="max-width:860px;padding-top:36px">
@@ -70,8 +70,7 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const ICON={paper:'📄',purpur:'🟣',vanilla:'🌱',spigot:'⚡',fabric:'🧵',folia:'🍃',quilt:'🪡',neoforge:'🔥',craftbukkit:'🔨'};
 let ME=null;
 function toast(msg,typ='ok'){const t=$('#tip');t.textContent=msg;t.className='toast show '+typ;clearTimeout(t._to);t._to=setTimeout(()=>t.className='toast',2600)}
-addEventListener('scroll',()=>{const h=document.documentElement;$('#sp').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%'},{passive:true});
-addEventListener('pointermove',e=>{$('#cg').style.left=e.clientX+'px';$('#cg').style.top=e.clientY+'px'});
+// chrome anims → /ux.js
 // auth guard: admin na hole login e pathai
 async function me(){
   try{
@@ -144,5 +143,6 @@ async function del(id){if(!confirm('SERVER DELETE — puro folder chole jabe! Ni
 me().then(() => { if(ME) list(); });
 setInterval(list,12000);
 </script>
+<script src="/ux.js"></script>
 </body>
 </html>

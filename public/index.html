@@ -28,6 +28,7 @@
     <a class="logo" href="/"><span class="logo-mark">⛏️</span><span>MC Panel</span></a>
     <nav class="links">
       <a class="link-pill" href="/user">Dashboard</a>
+      <a class="link-pill" href="/status">Status</a>
       <a class="link-pill" href="/docs">Docs</a>
       <a class="link-pill" href="/pricing">Pricing</a>
       <a class="link-pill" href="/admin">Admin</a>
@@ -41,7 +42,8 @@
 </header>
 
 <!-- ===== HERO ===== -->
-<section class="hero" style="display:flex;max-width:1160px;gap:44px;align-items:center;text-align:left;padding-top:56px">
+<section class="hero" style="display:flex;max-width:1160px;gap:44px;align-items:center;text-align:left;padding-top:56px;position:relative">
+  <div class="stars" aria-hidden="true"></div>
   <div style="flex:1.15;min-width:0">
     <div class="kicker fade-up"><span class="pulse-dot"></span>Real Minecraft hosting · live panel</div>
     <h1 class="fade-up d2">
@@ -81,14 +83,14 @@
 </div>
 
 <div class="page" style="padding-top:34px">
-  <div class="statband fade-up" id="statband">
-    <div class="big"><b id="sbLive">—</b><span>servers online</span></div>
-    <div class="big"><b id="sbTotal">—</b><span>total servers</span></div>
-    <div class="big"><b>9</b><span>platforms</span></div>
-    <div class="big"><b>3</b><span>java majors auto</span></div>
+  <div class="statband reveal" id="statband">
+    <div class="big" data-tilt><b id="sbLive">0</b><span>servers online</span></div>
+    <div class="big" data-tilt><b id="sbTotal">0</b><span>total servers</span></div>
+    <div class="big" data-tilt><b>9</b><span>platforms</span></div>
+    <div class="big" data-tilt><b>3</b><span>java majors auto</span></div>
   </div>
 
-  <div style="margin:34px 0 18px">
+  <div style="margin:34px 0 18px" class="reveal">
     <div class="sec-index"><b style="color:var(--violet2)">01</b> / Your servers</div>
     <h2 style="font-size:clamp(24px,3vw,34px);letter-spacing:-.04em;margin:0 0 6px">Everything live. <span class="gradtext">One glance.</span></h2>
   </div>
@@ -99,23 +101,21 @@
     <h2 style="font-size:clamp(24px,3vw,34px);letter-spacing:-.04em;margin:0">Panel <span class="gradtext">features.</span></h2>
   </div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:13px">
-    <div class="card hoverable fade-up"><h3>🖥️ Real Console</h3><p class="muted" style="font-size:13.5px;margin:0">Live SSE stream, colored logs, command history, Start/Restart/Stop/Kill + CPU/RAM bars.</p></div>
-    <div class="card hoverable fade-up d2"><h3>📁 File Manager</h3><p class="muted" style="font-size:13.5px;margin:0">Explorer + editor (Ctrl+S), upload/download, rename, delete — puro server folder.</p></div>
-    <div class="card hoverable fade-up d2"><h3>⚙️ Settings</h3><p class="muted" style="font-size:13.5px;margin:0">server.properties form + raw mode, MOTD, whitelist — restart dile apply.</p></div>
-    <div class="card hoverable fade-up d3"><h3>💾 Backup + Drive</h3><p class="muted" style="font-size:13.5px;margin:0">Auto zip + Google Drive upload, manual backup, one-click restore, download.</p></div>
-    <div class="card hoverable fade-up d3"><h3>☕ Auto Java</h3><p class="muted" style="font-size:13.5px;margin:0">Version onujayi JRE (8/17/21) nijei download + verify — kichu install korar dorkar nai.</p></div>
-    <div class="card hoverable fade-up d4"><h3>🔐 Accounts</h3><p class="muted" style="font-size:13.5px;margin:0">Login/signup, admin-user roles, owner-per-server access, requireLogin toggle.</p></div>
+    <div class="card hoverable reveal" data-tilt style="transition-delay:.02s"><h3>🖥️ Real Console</h3><p class="muted" style="font-size:13.5px;margin:0">Live SSE stream, colored logs, command history, Start/Restart/Stop/Kill + CPU/RAM bars.</p></div>
+    <div class="card hoverable reveal" data-tilt style="transition-delay:.1s"><h3>📁 File Manager</h3><p class="muted" style="font-size:13.5px;margin:0">Explorer + editor (Ctrl+S), upload/download, rename, delete — puro server folder.</p></div>
+    <div class="card hoverable reveal" data-tilt style="transition-delay:.18s"><h3>⚙️ Settings</h3><p class="muted" style="font-size:13.5px;margin:0">server.properties form + raw mode, MOTD, whitelist — restart dile apply.</p></div>
+    <div class="card hoverable reveal" data-tilt style="transition-delay:.26s"><h3>💾 Backup + Drive</h3><p class="muted" style="font-size:13.5px;margin:0">Auto zip + Google Drive upload, manual backup, one-click restore, download.</p></div>
+    <div class="card hoverable reveal" data-tilt style="transition-delay:.34s"><h3>☕ Auto Java</h3><p class="muted" style="font-size:13.5px;margin:0">Version onujayi JRE (8/17/21/25) nijei download + verify — kichu install korar dorkar nai.</p></div>
+    <div class="card hoverable reveal" data-tilt style="transition-delay:.42s"><h3>🔐 Accounts</h3><p class="muted" style="font-size:13.5px;margin:0">Login/signup, admin-user roles, owner-per-server access, requireLogin toggle.</p></div>
   </div>
 </div>
-<footer style="position:relative;z-index:2;text-align:center;color:var(--muted2);padding:26px;font-size:12.5px">MC Panel v2.0 • systemctl-free self-host • <a href="/user">create →</a></footer>
+<footer style="position:relative;z-index:2;text-align:center;color:var(--muted2);padding:26px;font-size:12.5px">MC Panel v2.0 • self-host • <a href="/user">create</a> · <a href="/status">status</a> · <a href="/docs">docs</a> · <a href="/pricing">pricing</a></footer>
 
 <script>
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const ICON={paper:'📄',purpur:'🟣',vanilla:'🌱',spigot:'⚡',fabric:'🧵',folia:'🍃',quilt:'🪡',neoforge:'🔥',craftbukkit:'🔨'};
-// scroll progress + cursor glow
-addEventListener('scroll',()=>{const h=document.documentElement;$('#sp').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%'},{passive:true});
-addEventListener('pointermove',e=>{$('#cg').style.left=e.clientX+'px';$('#cg').style.top=e.clientY+'px'});
+// chrome (scroll progress, cursor glow, reveal, tilt, stars) → /ux.js dekhchu
 async function authState(){
   try{
     const me=await (await fetch('/api/auth/me')).json();
@@ -125,6 +125,7 @@ async function authState(){
 }
 
 // server list
+let lastHtml='';
 async function load(){
   try{
     const r=await fetch('/api/servers');
@@ -132,8 +133,10 @@ async function load(){
     const s=await r.json();
     const run=s.filter(x=>x.running).length;
     $('#liveCount').innerHTML=`<b>${run}</b> online · ${s.length} servers`;
-    const sbL=$('#sbLive'); if(sbL){sbL.textContent=run;$('#sbTotal').textContent=s.length;}
-    $('#slist').innerHTML=s.length?s.map(x=>`
+    const sbL=$('#sbLive');
+    if(sbL&&window.__uxCount){window.__uxCount(sbL,run);window.__uxCount($('#sbTotal'),s.length);}
+    else if(sbL){sbL.textContent=run;$('#sbTotal').textContent=s.length;}
+    const html=s.length?s.map(x=>`
       <div class="card srvrow hoverable fade-up">
         <div class="l">
           <div class="avatar">${ICON[x.type]||'🎮'}</div>
@@ -149,13 +152,21 @@ async function load(){
         <a class="btn ${x.running?'primary':''}" href="/server/${x.id}">🖥️ Panel</a>
       </div>`).join(''):
       `<div class="empty">kono server nai — <a href="/user">first server create koro →</a></div>`;
+    if(html!==lastHtml){                    // update holei DOM ghotbe — else fade-up abar replay hobe na (glitch fix)
+      document.body.classList.add('warm');  // update render e animation off
+      $('#slist').innerHTML=html;
+      lastHtml=html;
+      setTimeout(()=>document.body.classList.remove('warm'),300);
+    }
   }catch(e){$('#slist').innerHTML='<div class="empty">panel offline</div>'}
 }
 // hero terminal - REAL logs of first running/any server via SSE
 let heroEs=null;
 async function heroTerm(){
   try{
-    const s=await (await fetch('/api/servers')).json();
+    const rr=await fetch('/api/servers');
+    if(rr.status===401){$('#heroTermId').textContent='mc — locked';$('#heroTerm').innerHTML='<div class="tsys">[panel] 🔒 live console dekhte login koro — <a href="/login" style="color:var(--mint2)">/login →</a></div><span class="cursor"></span>';return}
+    const s=await rr.json();
     if(!s.length){$('#heroTermId').textContent='mc — ready'; $('#heroTerm').innerHTML='<span class="tsys">[panel] kono server nai — /user theke create koro</span><span class="cursor"></span>';return}
     const pick=s.find(x=>x.running)||s[0];
     $('#heroTermId').textContent=pick.id+' — live';
@@ -188,5 +199,6 @@ load();heroTerm();setInterval(load,8000);authState();
 // marquee seamless loop (ekbar i)
 $('#mq').innerHTML=$('#mq').innerHTML+$('#mq').innerHTML;
 </script>
+<script src="/ux.js"></script>
 </body>
 </html>
