@@ -11,6 +11,7 @@ const backup = require('./lib/backup');
 const files = require('./lib/files');
 const props = require('./lib/props');
 const java = require('./lib/java');
+const auth = require('./lib/auth');
 
 const SERVERS_DIR = mc.SERVERS_DIR;
 
@@ -22,6 +23,34 @@ app.use(express.static(path.join(__dirname, 'public')));
 if (!fs.existsSync('.env') && fs.existsSync('.env.example')) fs.copyFileSync('.env.example', '.env');
 
 const ok = fn => (req, res) => fn(req, res).catch(e => res.status(400).json({ error: e.message }));
+
+// ---- AUTH: cookie session middleware (requireLogin toggle on/off — admin page theke) ----
+const loginRequired = () => auth.settings().requireLogin !== false; // default ON (admin page theke off kora jai)
+const OPEN_API = ['/auth/signup', '/auth/login', '/auth/me', '/auth/logout', '/versions', '/info'];
+app.use('/api', async (req, res, next) => {
+  req.user = auth.userFromReq(req) || null;
+  const p = req.path;
+  if (OPEN_API.some(x => p === x || p.startsWith(x))) return next();
+  if (loginRequired() && !req.user) return res.status(401).json({ error: 'login lagbe — /login' });
+  if (p.startsWith('/users')) {
+    if (!req.user || req.user.role !== 'admin') return res.status(403).json({ error: 'admin only' });
+    return next();
+  }
+  // non-admin: owner-only server access (admin sob dekhbe)
+  if (req.user && req.user.role !== 'admin' && p.startsWith('/servers')) {
+    const sid = p.split('/')[2];
+    if (sid) {
+      try {
+        const s = (await db.getServers()).find(x => x.id === sid);
+        if (s && s.owner !== req.user.id) return res.status(403).json({ error: 'ei server tomar na (owner: ' + (s.owner || 'admin') + ')' });
+      } catch {}
+      return next();
+    }
+    req.__ownerOnly = true; // list/create emnei route-handle
+    return next();
+  }
+  return next();
+});
 
 // ---- Versions: sob select kora jabe ----
 app.get('/api/versions', ok(async (req, res) => {
@@ -58,7 +87,10 @@ app.get('/api/info', ok(async (req, res) => {
 
 // ---- Servers ----
 app.get('/api/servers', ok(async (req, res) => {
-  const list = await db.getServers();
+  let list = await db.getServers();
+  if (req.__ownerOnly && req.user && req.user.role !== 'admin') {
+    list = list.filter(s => s.owner === req.user.id);
+  }
   res.json(list.map(s => ({ ...s, ...mc.serverStatus(s.id), stats: mc.getStats(s.id) })));
 }));
 
@@ -73,7 +105,7 @@ app.post('/api/servers', ok(async (req, res) => {
   if (!name || !version) return res.status(400).json({ error: 'name + version lagbe' });
   const id = name.toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 40) || 'srv';
   await mc.downloadServerJar(id, type || 'paper', version);
-  const srv = await db.saveServer({ id, name, type: type || 'paper', version, ram: ram || 4096, javaArgs: '', createdAt: new Date().toISOString() });
+  const srv = await db.saveServer({ id, name, type: type || 'paper', version, ram: ram || 4096, javaArgs: '', owner: req.user ? req.user.id : 'legacy', createdByName: req.user ? (req.user.name || req.user.email) : 'pre-auth', createdAt: new Date().toISOString() });
   res.json({ ...srv, ...mc.serverStatus(id) });
 }));
 
@@ -226,17 +258,63 @@ app.get('/api/servers/:id/backups/:name/download', (req, res) => {
 // ---- Users (Firebase / local) ----
 app.get('/api/users', ok(async (req, res) => res.json(await db.getUsers())));
 app.post('/api/users', ok(async (req, res) => {
-  const { email, role } = req.body;
+  const { email, role, password } = req.body;
   if (!email) return res.status(400).json({ error: 'email lagbe' });
+  if (password) return res.json(await auth.adminCreate({ email, role, password }));
   res.json(await db.saveUser({ email, role: role || 'user', createdAt: new Date().toISOString() }));
 }));
 app.delete('/api/users/:id', ok(async (req, res) => res.json(await db.deleteUser(req.params.id))));
 
-// ---- Panels ----
+// ---- Auth: signup/login/logout/me + panel settings (requireLogin toggle) ----
+app.get('/api/auth/me', (req, res) => {
+  res.json({ user: req.user ? { id: req.user.id, name: req.user.name, email: req.user.email, role: req.user.role } : null, requireLogin: loginRequired() });});
+app.post('/api/auth/signup', ok(async (req, res) => {
+  const u = await auth.signup(req.body || {});
+  const { user, token } = await auth.login(u.email, (req.body || {}).password);
+  auth.setUserCookie(res, token);
+  res.json({ ok: true, user });
+}));
+app.post('/api/auth/login', ok(async (req, res) => {
+  const { user, token } = await auth.login((req.body || {}).email, (req.body || {}).password);
+  auth.setUserCookie(res, token);
+  res.json({ ok: true, user });
+}));
+app.post('/api/auth/logout', (req, res) => {
+  const m = String(req.headers.cookie || '').match(new RegExp('(?:^|;\\s*)mcpanel_session=([a-f0-9]{64})'));
+  if (m) auth.revoke(m[1]);
+  auth.clearUserCookie(res);
+  res.json({ ok: true });
+});
+app.post('/api/auth/settings', ok(async (req, res) => {
+  if (!req.user || req.user.role !== 'admin') return res.status(403).json({ error: 'admin only' });
+  res.json({ settings: auth.saveSettings({ requireLogin: !!req.body.requireLogin }) });
+}));
+app.get('/api/auth/settings', ok(async (req, res) => {
+  if (!req.user || req.user.role !== 'admin') return res.status(403).json({ error: 'admin only' });
+  res.json({ requireLogin: !!auth.settings().requireLogin });
+}));
+
+// ---- Full server delete (stop + folder + db) — admin/owner only ----
+app.delete('/api/servers/:id', ok(async (req, res) => {
+  const id = req.params.id;
+  const s = (await db.getServers()).find(x => x.id === id);
+  if (!s) return res.status(404).json({ error: 'server nai' });
+  mc.killServer(id);
+  await new Promise(r => setTimeout(r, 2500)); // taskkill settle
+  try { fs.rmSync(path.join(SERVERS_DIR, id), { recursive: true, force: true }); } catch {}
+  await db.deleteServer(id);
+  res.json({ ok: true, deleted: true });
+}));
+
+// ---- Pages ----
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 app.get('/user', (req, res) => res.sendFile(path.join(__dirname, 'public', 'user.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 app.get('/server/:id', (req, res) => res.sendFile(path.join(__dirname, 'public', 'server.html')));
+app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
+app.get('/signup', (req, res) => res.sendFile(path.join(__dirname, 'public', 'signup.html')));
+app.get('/pricing', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pricing.html')));
+app.get('/docs', (req, res) => res.sendFile(path.join(__dirname, 'public', 'docs.html')));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, async () => {

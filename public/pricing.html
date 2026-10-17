@@ -1,0 +1,99 @@
+<!doctype html><html lang="bn"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#04050a">
+<title>Pricing — MC Panel</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⛏️</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="cine" aria-hidden="true">
+  <div class="cine-aurora"><span class="aurora aurora--violet"></span><span class="aurora aurora--mint"></span><span class="aurora aurora--rose"></span><span class="aurora aurora--deep"></span></div>
+  <div class="cine-grid"></div><div class="cine-vignette"></div><div class="cine-scan"></div><div class="cine-grain"></div>
+</div>
+<div class="scroll-progress" id="sp"></div><div class="cursor-glow" id="cg"></div>
+
+<header class="nav"><div class="nav-inner">
+  <a class="logo" href="/"><span class="logo-mark">⛏️</span><span>MC Panel</span></a>
+  <nav class="links">
+    <a class="link-pill" href="/user">Dashboard</a>
+    <a class="link-pill" href="/docs">Docs</a>
+    <a class="link-pill" href="/pricing">Pricing</a>
+    <a class="link-pill" href="/admin">Admin</a>
+  </nav>
+  <div class="nav-actions"><a class="btn primary shine" href="/signup">Get started</a></div>
+</div></header>
+
+<div class="hero" style="padding-bottom:26px">
+  <div class="kicker fade-up"><span class="pulse-dot"></span>self-hosted pricing</div>
+  <h1 class="fade-up d2" style="max-width:660px">Nijer hosting <span class="gradtext">nijer machine e.</span></h1>
+  <p class="sub fade-up d3" style="max-width:520px;font-size:15px">Ei panel ta Open Source — tomar PC/server e fiye zabe. Cloud pricing er kono jhamela nai. Ekhon beta — <b style="color:var(--text)">sob tier free</b>.</p>
+</div>
+
+<div class="container fade-up d4">
+  <div class="plans">
+    <div class="plan">
+      <span class="tag">Core</span>
+      <h3 style="margin:0;font-size:16.5px">Starter</h3>
+      <div class="price">$0<small>/mo</small></div>
+      <p class="muted" style="font-size:13px;margin:0">Nijer PC e 1-2 server. Shobu full free.</p>
+      <ul>
+        <li><i class="check">✓</i><span><b>2 servers</b> · 9 platforms (Paper, Folia, NeoForge…)</span></li>
+        <li><i class="check">✓</i><span>Real console + file manager + server.properties</span></li>
+        <li><i class="check">✓</i><span><b>Auto Java 21/17/8</b> — nijer download manage</span></li>
+        <li><i class="check">✓</i><span>LAN + Tailscale join</span></li>
+        <li><i class="check">✓</i><span>Community support (GitHub issues)</span></li>
+      </ul>
+      <a class="btn" href="/docs">Docs dekho →</a>
+    </div>
+
+    <div class="plan featured">
+      <span class="tag">Popular</span>
+      <h3 style="margin:0;font-size:16.5px">Pro</h3>
+      <div class="price gradtext">$0<small>/mo · beta</small></div>
+      <p class="muted" style="font-size:13px;margin:0">Beta e shob unlock. Release er por suggested $5/mo hobe.</p>
+      <ul>
+        <li><i class="check">✓</i><span><b>Unlimited servers</b> — RAM er limit jayga moto</span></li>
+        <li><i class="check">✓</i><span><b>Cloud backup</b> (Google Drive) + auto scheduler</span></li>
+        <li><i class="check">✓</i><span>Crash auto-restart + port-conflict guard</span></li>
+        <li><i class="check">✓</i><span>Multi-user accounts + roles (admin/user)</span></li>
+        <li><i class="check">✓</i><span>Priority feature requests</span></li>
+      </ul>
+      <a class="btn primary shine" href="/signup">Signup — free beta</a>
+    </div>
+
+    <div class="plan">
+      <span class="tag">Team</span>
+      <h3 style="margin:0;font-size:16.5px">Club</h3>
+      <div class="price">$0<small>/mo · beta</small></div>
+      <p class="muted" style="font-size:13px;margin:0">Bondhu ra sob ek shathe — roles diye divide.</p>
+      <ul>
+        <li><i class="check">✓</i><span><b>Shared panel</b> — bondhu ra nijer server manage korte pare</span></li>
+        <li><i class="check">✓</i><span>Owner-based server access (403 guard built-in)</span></li>
+        <li><i class="check">✓</i><span>Port check + conflict-safe multiboot</span></li>
+        <li><i class="check">✓</i><span>Public overwrite prevention (login on)</span></li>
+        <li><i class="check">✓</i><span>Same free beta price — <b>pay what you want</b></span></li>
+      </ul>
+      <a class="btn" href="/user">Panel open →</a>
+    </div>
+  </div>
+</div>
+
+<div class="container" style="max-width:880px;margin-top:46px;padding-bottom:60px">
+  <div class="sec-index"><b style="color:var(--violet2)">FAQ</b> / common q</div>
+  <h2 style="font-size:clamp(22px,3vw,30px);letter-spacing:-.04em;margin:0 0 18px">Common <span class="gradtext">questions.</span></h2>
+  <details class="faq-item" open><summary>Actual hosting cost?</summary><p>Na — panel self-hosted. Tomar machine e MC server chole. Bondhu ra internet diye join korte chile → playit.gg ba Cloudflare tunnel setup lagbe (docs e ache).</p></details>
+  <details class="faq-item"><summary>Java install korte hobe?</summary><p>Na — version onujayi JRE (17/21/8) auto-download hoy runtime folder e. Create page e version select korle panel nijei thik kore.</p></details>
+  <details class="faq-item"><summary>Koto gulo server chalano jabe?</summary><p>RAM joto ache toto server. 16GB machine e 4-5 ta server comfortably chole.</p></details>
+  <details class="faq-item"><summary>Beta sesh hole?</summary><p>Beta end er por Starter free thakbe; Pro suggested $5/mo, Team $12/mo. Self-host manei sob — cloud bill nai.</p></details>
+</div>
+
+<footer style="position:relative;z-index:2;text-align:center;color:var(--muted2);padding:28px;font-size:12.5px">
+  MC Panel v2.0 — self-host · <a href="/docs">docs</a> · <a href="/pricing">pricing</a> · <a href="/user">panel</a>
+</footer>
+
+<script>
+addEventListener('scroll',()=>{const h=document.documentElement;$('#sp').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%'},{passive:true});
+addEventListener('pointermove',e=>{$('#cg').style.left=e.clientX+'px';$('#cg').style.top=e.clientY+'px'});
+</script>
+</body></html>

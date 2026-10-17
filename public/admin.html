@@ -22,7 +22,7 @@
 
 <header class="nav"><div class="nav-inner">
   <a class="logo" href="/"><span class="logo-mark">⛏️</span><span>MC Panel</span></a>
-  <div class="nav-actions"><a class="link-pill" href="/">Home</a><a class="link-pill" href="/user">Create</a><a class="btn primary" href="#">Admin</a></div>
+  <div class="nav-actions"><a class="link-pill" href="/">Home</a><a class="link-pill" href="/pricing">Pricing</a><a class="btn primary" href="#">Admin</a></div>
 </div></header>
 
 <div class="page" style="max-width:860px;padding-top:36px">
@@ -30,14 +30,31 @@
   <h1 class="fade-up d2" style="font-size:clamp(26px,4vw,40px);letter-spacing:-.04em;margin:14px 0 26px">Users &amp; <span class="gradtext">servers.</span></h1>
 
   <div class="card fade-up d3" style="padding:22px;margin-bottom:18px">
-    <h3 style="margin:0 0 14px">👥 Users <span class="muted small">(firebase / local db)</span></h3>
-    <div class="rowline" style="margin-bottom:12px">
-      <input class="input flex1" id="email" placeholder="player@gmail.com" style="max-width:320px">
-      <select class="input" id="role" style="width:120px"><option>user</option><option>admin</option></select>
-      <button class="btn primary" onclick="addUser()">+ Add</button>
+    <div class="rowline" style="margin-bottom:12px;justify-content:space-between">
+      <h3 style="margin:0">👥 Users</h3>
+      <span class="muted small" id="whoami"></span>
+    </div>
+    <div class="rowline" style="margin-bottom:14px">
+      <input class="input" id="uname" placeholder="Name" style="max-width:150px">
+      <input class="input flex1" id="email" placeholder="email@gmail.com" style="max-width:280px">
+      <input class="input" id="upw" type="password" placeholder="password (min 6)" style="max-width:180px">
+      <select class="input" id="role" style="width:100px"><option>user</option><option>admin</option></select>
+      <button class="btn primary sm" onclick="addUser()">+ Add</button>
       <span class="muted small" id="ustat"></span>
     </div>
     <div id="users"><div class="empty">loading…</div></div>
+  </div>
+
+  <div class="card fade-up d3" style="padding:22px;margin-bottom:18px">
+    <h3 style="margin:0 0 12px">⚙️ Panel Security</h3>
+    <div class="rowline">
+      <label class="toggle"><input type="checkbox" id="reqLogin" onchange="saveSettings()"><i></i></label>
+      <div>
+        <b style="font-size:14px">Login required</b>
+        <div class="muted small">on = panel access e account lagbe · owner-only server access · off = khola mode (jemon age chilo)</div>
+      </div>
+      <span class="muted small" id="setStat" style="margin-left:auto"></span>
+    </div>
   </div>
 
   <div class="card fade-up d4" style="padding:22px">
@@ -50,34 +67,70 @@
 <script>
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ICON={paper:'📄',purpur:'🟣',vanilla:'🌱',spigot:'⚡',fabric:'🧵',folia:'🍃',quilt:'🪡',neoforge:'🔥',craftbukkit:'🔨'};
+let ME=null;
 function toast(msg,typ='ok'){const t=$('#tip');t.textContent=msg;t.className='toast show '+typ;clearTimeout(t._to);t._to=setTimeout(()=>t.className='toast',2600)}
 addEventListener('scroll',()=>{const h=document.documentElement;$('#sp').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%'},{passive:true});
 addEventListener('pointermove',e=>{$('#cg').style.left=e.clientX+'px';$('#cg').style.top=e.clientY+'px'});
-async function users(){
+// auth guard: admin na hole login e pathai
+async function me(){
   try{
-    const d=await (await fetch('/api/users')).json();
+    const j=await (await fetch('/api/auth/me')).json();
+    ME=j.user;
+    if(!ME){location.href='/login';return null}
+    $('#whoami').textContent=(ME.role==='admin'?'👑 ':'👤 ')+ME.name+' ('+ME.role+')';
+    if(ME.role!=='admin'){$('#list').innerHTML='<div class="empty">🔒 admin only page — tomar dashboard: <a href="/user">/user</a></div>';users();$('#users').innerHTML='<div class="empty">🔒 admin only</div>';$('#reqLogin').disabled=true;return ME}
+    try{
+      const s=await (await fetch('/api/auth/settings')).json();
+      $('#reqLogin').checked=!!s.requireLogin;
+      $('#reqLogin').disabled=false;
+      $('#setStat').textContent=s.requireLogin?'active':'khola (off)';
+    }catch{}
+  }catch(e){}
+  return ME;
+}
+async function saveSettings(){
+  const on=$('#reqLogin').checked;
+  try{
+    const r=await (await fetch('/api/auth/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({requireLogin:on})})).json();
+    if(r.error){toast('❌ '+r.error,'bad');return}
+    $('#setStat').textContent='✅ saved'+(on?' — khola mode off':'');
+    toast('Panel security save ✅');
+  }catch(e){toast('❌ '+e.message,'bad')}
+}
+async function users(errOnly){
+  try{
+    const r=await fetch('/api/users');
+    if(r.status===403){$('#users').innerHTML='<div class="empty">🔒 admin only</div>';return}
+    const d=await r.json();
     $('#users').innerHTML=d.length?d.map(u=>`
       <div class="userrow">
-        <div style="display:flex;gap:10px;align-items:center"><b style="font-size:14px">${esc(u.email||u.id)}</b><span class="rolechip ${u.role==='admin'?'admin':''}">${esc(u.role||'user')}</span></div>
+        <div style="display:flex;gap:10px;align-items:center"><b style="font-size:14px">${esc(u.name||u.email||u.id)}</b><span class="rolechip ${u.role==='admin'?'admin':''}">${esc(u.role||'user')}</span><span class="muted small">${esc(u.email||'')}</span>${u.hash?'':'<span class="ownerchip">password nai</span>'}</div>
         <button class="btn stop sm" onclick="delUser('${esc(u.id)}')">Delete</button>
       </div>`).join(''):'<div class="empty">kono user nai</div>';
   }catch(e){$('#users').innerHTML='<div class="empty">load fail</div>'}
 }
 async function addUser(){
-  const email=$('#email').value.trim(),role=$('#role').value;
+  const email=$('#email').value.trim(),role=$('#role').value,name=$('#uname').value.trim(),password=$('#upw').value;
   if(!email)return alert('email daw');
-  const r=await (await fetch('/api/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,role})})).json();
-  $('#email').value='';$('#ustat').textContent=r.error?'❌ '+r.error:'✅ added';
+  if(password&&password.length<6)return alert('password min 6');
+  const body={email,role}; if(name)body.name=name; if(password)body.password=password;
+  const r=await (await fetch('/api/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
+  $('#email').value='';$('#upw').value='';$('#uname').value='';
+  $('#ustat').textContent=r.error?'❌ '+r.error:'✅ added';
   users();
 }
 async function delUser(id){if(!confirm('delete user?'))return;await fetch('/api/users/'+id,{method:'DELETE'});users();}
 async function list(){
   try{
-    const d=await (await fetch('/api/servers')).json();
+    const r=await fetch('/api/servers');
+    if(!r.ok){$('#list').innerHTML='<div class="empty">🔒 admin login lagbe — <a href="/login">/login</a></div>';return}
+    const d=await r.json();
     $('#list').innerHTML=d.map(s=>`
       <div class="card srvrow hoverable">
-        <div><b style="font-size:14.5px">${esc(s.name)}</b> <span class="muted small">${s.type} ${s.version} • ${s.ram||4096}MB</span>
-          <br><span class="pill ${s.running?'on':''}" style="margin-top:5px"><span class="dot"></span>${s.running?'Online':'Offline'}</span></div>
+        <div><b style="font-size:14.5px">${ICON[s.type]||'🎮'} ${esc(s.name)}</b> <span class="muted small">${s.type} ${s.version} • ${s.ram||4096}MB</span>
+          <br><span class="pill ${s.running?'on':''}" style="margin-top:5px"><span class="dot"></span>${s.running?'Online':'Offline'}</span>
+          ${s.owner?`<span class="ownerchip" style="margin-left:8px">owner: ${esc(s.createdByName||s.owner.slice(0,8))}</span>`:'<span class="ownerchip" style="margin-left:8px">legacy</span>'}</div>
         <div class="rowbtn">
           <button class="btn primary sm" onclick="location.href='/server/${s.id}'">🖥️ Panel</button>
           <button class="btn ghost sm" onclick="restart('${s.id}')">🔄 Restart</button>
@@ -87,8 +140,9 @@ async function list(){
   }catch(e){$('#list').innerHTML='<div class="empty">load fail</div>'}
 }
 async function restart(id){toast('Restarting…');await fetch(`/api/servers/${id}/restart`,{method:'POST'});setTimeout(list,2500);}
-async function del(id){if(!confirm('SERVER DELETE — puro folder chole jabe! Nishchit?'))return;await fetch('/api/servers/'+id,{method:'DELETE'});toast('Deleted','bad');list();}
-users();list();setInterval(list,12000);
+async function del(id){if(!confirm('SERVER DELETE — puro folder chole jabe! Nishchit?'))return;const r=await (await fetch('/api/servers/'+id,{method:'DELETE'})).json();toast(r.error?('❌ '+r.error):'Deleted ✅',r.error?'bad':'ok');setTimeout(list,800);}
+me().then(() => { if(ME) list(); });
+setInterval(list,12000);
 </script>
 </body>
 </html>

@@ -1,0 +1,79 @@
+<!doctype html><html lang="bn"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#04050a">
+<title>Login — MC Panel</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⛏️</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="cine" aria-hidden="true">
+  <div class="cine-aurora"><span class="aurora aurora--violet"></span><span class="aurora aurora--mint"></span><span class="aurora aurora--rose"></span></div>
+  <div class="cine-grid"></div><div class="cine-vignette"></div><div class="cine-grain"></div>
+</div>
+
+<div class="auth-wrap">
+  <div class="auth-left">
+    <div class="auth-card fade-up">
+      <div class="brandrow">
+        <span class="logo-mark">⛏️</span><b style="font-size:16px;font-weight:800">MC Panel</b>
+        <span class="pill" style="margin-left:auto"><span class="dot"></span>self-hosted</span>
+      </div>
+      <h1 style="font-size:28px;letter-spacing:-.04em;margin:0 0 6px">Firer ashun <span class="gradtext">login.</span></h1>
+      <p class="muted" style="margin:0 0 22px;font-size:14px">Panel er sob kaj — server create, console, file — login er por.</p>
+
+      <div class="field">
+        <label class="label">Email</label>
+        <input class="input" id="email" type="email" placeholder="player@gmail.com" spellcheck="false" autocomplete="email">
+      </div>
+      <div class="field">
+        <label class="label">Password</label>
+        <input class="input" id="password" type="password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="btn primary btn-lg shine" id="go" style="width:100%">→ Login</button>
+      <div class="rowline" style="margin-top:16px;justify-content:space-between">
+        <span class="hint" id="msg"></span>
+        <span class="muted small">Account nai? <a href="/signup" style="color:var(--mint2)">Signup →</a></span>
+      </div>
+    </div>
+  </div>
+  <div class="auth-right">
+    <div class="auth-visual float-slow">
+      <div class="term">
+        <div class="term-bar"><i></i><i></i><i></i><span class="term-title">mc-live — console</span><span class="term-live"><span class="pulse-dot"></span>live</span></div>
+        <div class="term-body" style="min-height:250px;height:auto">
+          <div class="l-cmd">$ panel login</div>
+          <div class="tsys">[panel] session cookie set ✅ HttpOnly</div>
+          <div class="tdefault">[07:32:01 INFO]: Joined the lobby</div>
+          <div class="tchat">PlayerOne joined the game</div>
+          <div class="l-ok">▶ console, files, backups unlocked</div>
+          <div class="cursor"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const send = async () => {
+  const b = $('#go'); b.disabled = true; b.textContent = 'checking…';
+  try {
+    const r = await fetch('/api/auth/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: $('#email').value, password: $('#password').value })
+    });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || 'login fail');
+    location.href = j.user.role === 'admin' ? '/admin' : '/user';
+  } catch (e) {
+    $('#msg').textContent = '❌ ' + e.message;
+    b.disabled = false; b.textContent = '→ Login';
+  }
+};
+$('#go').onclick = send;
+$('#password').addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
+// already logged in?
+fetch('/api/auth/me').then(r => r.json()).then(j => { if (j.user) location.href = '/'; });
+</script>
+</body></html>

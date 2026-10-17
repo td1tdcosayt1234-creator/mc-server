@@ -36,6 +36,7 @@
     <span class="chip" id="mVer">version —</span>
     <span class="chip" id="mRam">RAM —</span>
     <a href="/" style="color:var(--muted);margin-top:8px">← Dashboard</a>
+    <a href="#" onclick="out()" style="color:var(--muted)">↩ Exit</a>
   </div>
 </aside>
 <main class="mn">
@@ -201,7 +202,7 @@ const SID = location.pathname.split('/').pop();
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 let SRV = null, es = null;
-const TYPE_ICON = {paper:'📄',purpur:'🟣',vanilla:'🌱',spigot:'⚡',fabric:'🧵'};
+const TYPE_ICON = {paper:'📄',purpur:'🟣',vanilla:'🌱',spigot:'⚡',fabric:'🧵',folia:'🍃',quilt:'🪡',neoforge:'🔥',craftbukkit:'🔨'};
 let hist = []; let hIdx = 0;
 
 function toast(msg, type='ok') {
@@ -213,6 +214,7 @@ addEventListener('pointermove',e=>{$('#cg').style.left=e.clientX+'px';$('#cg').s
 
 async function api(url, opt = {}) {
   const r = await fetch(url, Object.assign({ headers: { 'Content-Type': 'application/json' } }, opt));
+  if (r.status === 401) { location.href = '/login'; throw new Error('login lagbe'); }
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
   return j;
@@ -252,7 +254,7 @@ async function loadSrv() {
     $('#footSrv').textContent = SRV.id;
     $('#netChip').innerHTML = '<span class="pulse-dot"></span>' + ((SRV.stats && SRV.stats.uptime) ? 'port 25565' : 'port 25565');
     updStats({ ...(SRV.stats || {}), running: SRV.running });
-  } catch (e) { $('#svName').textContent = 'server nai'; }
+  } catch (e) { if (String(e.message).includes('HTTP')) location.href = '/login'; else $('#svName').textContent = 'server nai'; }
 }
 function updStats(s) {
   const on = !!s.running;
@@ -511,6 +513,7 @@ async function restoreBackup(n) {
 }
 
 /* ================= INIT ================= */
+function out(){ fetch('/api/auth/logout',{method:'POST'}).then(()=>location.href='/login'); }
 loadSrv().then(() => { connectSSE(); setTab((location.hash || '#console').slice(1)); });
 refreshStats(); setInterval(refreshStats, 3000);
 </script>

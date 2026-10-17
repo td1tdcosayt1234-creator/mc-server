@@ -20,7 +20,7 @@
 
 <header class="nav"><div class="nav-inner">
   <a class="logo" href="/"><span class="logo-mark">⛏️</span><span>MC Panel</span></a>
-  <div class="nav-actions"><a class="link-pill" href="/">Home</a><a class="link-pill" href="/admin">Admin</a><a class="btn primary" href="#">Create</a></div>
+  <div class="nav-actions"><a class="link-pill" href="/">Home</a><a class="link-pill" href="/pricing">Pricing</a><a class="btn primary" href="#">Create</a></div>
 </div></header>
 
 <div class="page" style="max-width:760px;padding-top:36px">
@@ -35,8 +35,19 @@
     <div class="field" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
       <div><label class="label">② Platform</label>
         <select class="input" id="type" onchange="fillVer()">
-          <option value="paper">📄 Paper — best performance</option><option value="purpur">🟣 Purpur</option>
-          <option value="vanilla">🌱 Vanilla</option><option value="spigot">⚡ Spigot</option><option value="fabric">🧵 Fabric</option>
+          <optgroup label="Bukkit family">
+            <option value="paper">📄 Paper — best performance</option>
+            <option value="folia">🍃 Folia — multithreaded regions</option>
+            <option value="purpur">🟣 Purpur — paper + extras</option>
+            <option value="spigot">⚡ Spigot — classic</option>
+            <option value="craftbukkit">🔨 CraftBukkit — vanilla+bukkit</option>
+          </optgroup>
+          <optgroup label="Modded / vanilla">
+            <option value="vanilla">🌱 Vanilla — official</option>
+            <option value="fabric">🧵 Fabric — mods</option>
+            <option value="quilt">🪡 Quilt — mods</option>
+            <option value="neoforge">🔥 NeoForge — big mods</option>
+          </optgroup>
         </select></div>
       <div><label class="label">Version</label><select class="input" id="version"></select></div>
     </div>
@@ -59,7 +70,7 @@
 let V={};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const ICON={paper:'📄',purpur:'🟣',vanilla:'🌱',spigot:'⚡',fabric:'🧵'};
+const ICON={paper:'📄',purpur:'🟣',vanilla:'🌱',spigot:'⚡',fabric:'🧵',folia:'🍃',quilt:'🪡',neoforge:'🔥',craftbukkit:'🔨'};
 addEventListener('scroll',()=>{const h=document.documentElement;$('#sp').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%'},{passive:true});
 addEventListener('pointermove',e=>{$('#cg').style.left=e.clientX+'px';$('#cg').style.top=e.clientY+'px'});
 async function versions(){try{V=await (await fetch('/api/versions')).json();fillVer();}catch{}}
@@ -76,7 +87,9 @@ async function create(){
 }
 async function list(){
   try{
-    const d=await (await fetch('/api/servers')).json();
+    const r=await fetch('/api/servers');
+    if(r.status===401){$('#list').innerHTML='<div class="empty">🔒 login kage na kore access nai — <a href="/login">login →</a></div>';return}
+    const d=await r.json();
     $('#list').innerHTML=d.length?d.map(x=>`
       <div class="card srvrow hoverable">
         <div style="display:flex;gap:12px;align-items:center;min-width:0">

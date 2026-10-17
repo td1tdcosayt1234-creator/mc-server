@@ -1,0 +1,171 @@
+<!doctype html><html lang="bn"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#04050a">
+<title>Docs — MC Panel</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⛏️</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="cine" aria-hidden="true">
+  <div class="cine-aurora"><span class="aurora aurora--violet"></span><span class="aurora aurora--mint"></span><span class="aurora aurora--rose"></span></div>
+  <div class="cine-grid"></div><div class="cine-vignette"></div><div class="cine-grain"></div>
+</div>
+<div class="scroll-progress" id="sp"></div><div class="cursor-glow" id="cg"></div>
+
+<header class="nav"><div class="nav-inner">
+  <a class="logo" href="/"><span class="logo-mark">⛏️</span><span>MC Panel</span></a>
+  <nav class="links">
+    <a class="link-pill" href="/user">Dashboard</a>
+    <a class="link-pill" href="/pricing">Pricing</a>
+    <a class="link-pill" href="/admin">Admin</a>
+  </nav>
+  <div class="nav-actions"><a class="btn primary" href="/user">Open panel →</a></div>
+</div></header>
+
+<div class="container docs-layout">
+  <aside class="docs-toc doc-toc" id="toc">
+    <div class="label" style="margin:4px 0 6px 12px">On this page</div>
+    <a href="#quickstart">01 / Quick start</a>
+    <a href="#platforms">02 / Platforms</a>
+    <a href="#auth">03 / Login & roles</a>
+    <a href="#java">04 / Auto Java</a>
+    <a href="#console">05 / Console & files</a>
+    <a href="#backups">06 / Backups</a>
+    <a href="#config">07 / Config (.env)</a>
+    <a href="#api">08 / API</a>
+    <a href="#join">09 / Bondhu ra join</a>
+    <a href="#faq">10 / Troubleshoot</a>
+  </aside>
+
+  <main class="docs-body">
+    <section id="quickstart">
+      <div class="sec-index"><b style="color:var(--violet2)">01</b> / Quick start</div>
+      <h2>5 minute e <span class="gradtext">chalu.</span></h2>
+      <p>Node.js 18+ lagbe (Node 22 recommended). Ek line ei kaj:</p>
+      <div class="code"><button class="copybtn" onclick="cp(this)">copy</button><span class="cmt"># clone + install + chalau</span>
+git clone https://github.com/td1tdcosayt1234-creator/mc-server.git
+cd mc-server
+npm install
+node server.js</div>
+      <p>Ekhon <code>http://localhost:3000</code> — first signup korle oi account <b style="color:var(--violet2)">admin</b>. Create page theke server create koro: name + platform + version + RAM → Create + Download (auto jar)</p>
+      <div class="doc-note"><b>Tip:</b> server folder <code>servers/&lt;id&gt;</code> e thakbe — full file access panel ei. Git nijer folder ignore kore.</div>
+    </section>
+
+    <section id="platforms">
+      <div class="sec-index"><b style="color:var(--violet2)">02</b> / Platforms</div>
+      <h2>Ei 9 platforms <span class="gradtext">built-in.</span></h2>
+      <p>Shob auto-download official API/maven theke — kono mirror jar na.</p>
+      <div class="code" style="line-height:2.1">
+<b class="k">paper</b> <span class="s">📄</span>  fill.papermc.io v3 · fresh builds <span class="cmt">· perf + plugins</span><br>
+<b class="k">folia</b> <span class="s">🍃</span>  fill.papermc.io v3 <span class="cmt">· region multithreaded (1.20+)</span><br>
+<b class="k">purpur</b> <span class="s">🟣</span>  api.purpurmc.org <span class="cmt">· paper + extra features</span><br>
+<b class="k">spigot</b> <span class="s">⚡</span>  download.getbukkit.org <span class="cmt">· old-school bukkit</span><br>
+<b class="k">craftbukkit</b> <span class="s">🔨</span>  download.getbukkit.org <span class="cmt">· vanilla + bukkit api</span><br>
+<b class="k">vanilla</b> <span class="s">🌱</span>  piston-meta.mojang.com <span class="cmt">· official jar</span><br>
+<b class="k">fabric</b> <span class="s">🧵</span>  meta.fabricmc.net loader+installer jar<br>
+<b class="k">quilt</b> <span class="s">🪡</span>  meta.quiltmc.org loader+installer jar<br>
+<b class="k">neoforge</b> <span class="s">🔥</span>  maven.neoforged.net installer → <span class="s">--installServer</span> → win_args run</div>
+      <div class="doc-note"><b>NeoForge:</b> create korle panel nijei installer chalai (~1-2 min, libraries namiye), tarpor <code>win_args.txt</code> diye bose. Java mapping auto — 1.21.x → 21.</div>
+    </section>
+
+    <section id="auth">
+      <div class="sec-index"><b style="color:var(--violet2)">03</b> / Login & roles</div>
+      <h2>Accounts, <span class="gradtext">roles.</span></h2>
+      <p>Auth ekdom local — db.json e. Password <code>scrypt</code> + random salt hash hoy. Session = 7 din, HttpOnly cookie.</p>
+      <ul style="color:var(--muted);font-size:14px;line-height:2;padding-left:20px">
+        <li><b style="color:var(--text)">First signup = admin</b> (self-host panel er sensible default)</li>
+        <li><b style="color:var(--text)">admin</b> — sob server, user manage, requireLogin toggle</li>
+        <li><b style="color:var(--text)">user</b> — nijer create kora server only (owner: 403 guard)</li>
+        <li>Admin page theke <b style="color:var(--text)">"Login required" toggle</b> — off korle khola access (giya style)</li>
+      </ul>
+    </section>
+
+    <section id="java">
+      <div class="sec-index"><b style="color:var(--violet2)">04</b> / Auto Java</div>
+      <h2>Java <span class="gradtext">niye tension nai.</span></h2>
+      <p>Version onujayi mapping → panel nijei JRE ensure kore:</p>
+      <div class="code"><span class="cmt">// net Java mapping (lib/java.js)</span>
+MC 1.20.5 – 1.21.x → <span class="k">Java 21</span>  <span class="cmt">(Temurin JRE auto-download)</span>
+MC 1.17.0 – 1.20.4 → <span class="k">Java 17</span>
+MC ≤ 1.16.5        → <span class="k">Java 8</span></div>
+      <p>Runtime folder: <code>runtime/java-&lt;major&gt;</code> (gitignored). System java match korle oi ta — no download. Download progress live console e dekhbo.</p>
+    </section>
+
+    <section id="console">
+      <div class="sec-index"><b style="color:var(--violet2)">05</b> / Console & files</div>
+      <h2>Real terminal, <span class="gradtext">real file manager.</span></h2>
+      <p>Console page: SSE line-by-line stream, command input history (↑↓), power buttons (Start/Restart/Stop/Kill), CPU/RAM live bars. Files page: explorer + editor (Ctrl+S save), upload/download, rename/delete, khujar filter. Startup tab → RAM ti Java args; Settings tab → server.properties form + raw mode.</p>
+      <div class="doc-note"><b>Auto-restart:</b> crash korle 5s por nijei bose (port-conflict thakle skip, crash-loop block).</div>
+    </section>
+
+    <section id="backups">
+      <div class="sec-index"><b style="color:var(--violet2)">06</b> / Backups</div>
+      <h2>Auto backup + <span class="gradtext">Drive.</span></h2>
+      <p>Prottek <code>BACKUP_MINUTES</code> (default 50) minute por por zip backup: <code>backups/&lt;server&gt;/</code>. Google Drive service account thakle oikhane o jai. Backup tab theke one-click <b style="color:var(--text)">Restore</b> (server stop kore full overwrite) + download.</p>
+    </section>
+
+    <section id="config">
+      <div class="sec-index"><b style="color:var(--violet2)">07</b> / Config (.env)</div>
+      <h2>Environment <span class="gradtext">vars.</span></h2>
+      <div class="code"><span class="k">PORT</span>=3000
+<span class="k">SERVERS_DIR</span>=./servers
+<span class="k">BACKUPS_DIR</span>=./backups
+<span class="k">BACKUP_MINUTES</span>=50
+<span class="k">FIREBASE_SERVICE_ACCOUNT</span>=./serviceAccount.json <span class="cmt"># khali = local db.json</span>
+<span class="k">DRIVE_FOLDER_ID</span>= <span class="cmt"># khali = local backups</span></div>
+      <p>db.json e users + servers + settings rakha-hoi (local mode). Firebase thakle Firestore — panel apatoto auth local mode e.</p>
+    </section>
+
+    <section id="api">
+      <div class="sec-index"><b style="color:var(--violet2)">08</b> / API</div>
+      <h2>REST <span class="gradtext">endpoints.</span></h2>
+      <div class="code"><span class="k">GET</span>  /api/versions          <span class="cmt"># 9 platform er version list</span>
+<span class="k">GET</span>  /api/info               <span class="cmt"># java + runtime + ips</span>
+<span class="k">GET</span>  /api/servers            <span class="cmt"># list (+stats)</span>
+<span class="k">POST</span> /api/servers            <span class="cmt"># create {name,type,version,ram}</span>
+<span class="k">POST</span> /api/servers/:id/start|stop|restart|kill
+<span class="k">GET</span>  /api/servers/:id/logs?tail= | /console (SSE) | /files?dir=
+<span class="k">POST</span> /api/servers/:id/command  <span class="cmt">#{cmd:'say hi'}</span>
+<span class="k">GET/POST</span> /api/servers/:id/properties
+<span class="k">POST</span> /api/servers/:id/backup   <span class="cmt">#+ /backups, /backups/:n/restore|download</span>
+<span class="k">POST</span> /api/auth/signup|login|logout, GET /api/auth/me
+<span class="k">DELETE</span> /api/servers/:id        <span class="cmt"># admin/owner full delete</span></div>
+    </section>
+
+    <section id="join">
+      <div class="sec-index"><b style="color:var(--violet2)">09</b> / Bondhu ra join</div>
+      <h2>Connect <span class="gradtext">paths.</span></h2>
+      <ul style="color:var(--muted);font-size:14px;line-height:2;padding-left:20px">
+        <li><b style="color:var(--text)">Same PC:</b> <code>localhost:25565</code></li>
+        <li><b style="color:var(--text)">LAN/Tailscale:</b> panel er Network tab e LAN IP + port dekhabe (Tailscale install = CGNAT e o kaj kore)</li>
+        <li><b style="color:var(--text)">Internet:</b> router port-forward (TCP+UDP) ba <b style="color:var(--mint2)">playit.gg tunnel</b> (free, MC friendly) — bandho kore bondhu ke tunnel address dao</li>
+        <li>Multi-port: duita server duita port (Settings tab e server-port change)</li>
+      </ul>
+    </section>
+
+    <section id="faq">
+      <div class="sec-index"><b style="color:var(--violet2)">10</b> / Troubleshoot</div>
+      <h2>Common issues & <span class="gradtext">fixes.</span></h2>
+      <ul style="color:var(--muted);font-size:14px;line-height:2.1;padding-left:20px">
+        <li><b style="color:var(--text)">"port already used"</b> → onno server ba orphan java oi port e; oi server stop koro ba Settings e port change</li>
+        <li><b style="color:var(--text)">Crash-loop guard</b> → auto-restart thamiye dekhabe — console log poro</li>
+        <li><b style="color:var(--text)">EULA</b> → Startup tab e "eula.txt accept" button</li>
+        <li><b style="color:var(--text)">NeoForge installer fail?</b> → network check; abar create korle fresh install</li>
+        <li><b style="color:var(--text)">Restart panel</b> → node mesh niye: Ctrl+C → node server.js (backups + servers folder thik thakbe)</li>
+      </ul>
+    </section>
+  </main>
+</div>
+
+<footer style="position:relative;z-index:2;text-align:center;color:var(--muted2);padding:26px;font-size:12.5px">
+  MC Panel v2.0 · <a href="/pricing">pricing</a> · <a href="/user">panel</a> · GitHub: td1tdcosayt1234-creator/mc-server
+</footer>
+
+<script>
+const $ = s => document.querySelector(s);
+addEventListener('scroll',()=>{const h=document.documentElement;$('#sp').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%'},{passive:true});
+addEventListener('pointermove',e=>{$('#cg').style.left=e.clientX+'px';$('#cg').style.top=e.clientY+'px'});
+function cp(b){const code=b.parentElement.innerText.replace(/^copy\s*/,'');navigator.clipboard.writeText(code).then(()=>{b.textContent='copied ✅';setTimeout(()=>b.textContent='copy',1500)})}
+</script>
+</body></html>

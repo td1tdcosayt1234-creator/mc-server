@@ -26,13 +26,15 @@
 <header class="nav">
   <div class="nav-inner">
     <a class="logo" href="/"><span class="logo-mark">⛏️</span><span>MC Panel</span></a>
-    <nav class="links desktop">
-      <a class="link-pill" href="/server">Servers</a>
-      <a class="link-pill" href="/user">Create</a>
+    <nav class="links">
+      <a class="link-pill" href="/user">Dashboard</a>
+      <a class="link-pill" href="/docs">Docs</a>
+      <a class="link-pill" href="/pricing">Pricing</a>
       <a class="link-pill" href="/admin">Admin</a>
     </nav>
     <div class="nav-actions">
       <span class="chip" id="liveChip"><span class="pulse-dot"></span><span id="liveCount">checking…</span></span>
+      <a class="btn ghost sm" href="/login" id="navAuth" style="display:none">Login</a>
       <a class="btn primary shine" href="/user">Create Server</a>
     </div>
   </div>
@@ -74,12 +76,19 @@
 <div class="stack-band fade-up d6">
   <span class="stack-band-label"><i></i>Runs on</span>
   <div class="marquee"><div class="marquee-track" id="mq">
-    <span><b>◆</b>Paper</span><span><b>◆</b>Purpur</span><span><b>◆</b>Spigot</span><span><b>◆</b>Fabric</span><span><b>◆</b>Vanilla</span><span><b>◆</b>Plugins</span><span><b>◆</b>Java 17/21</span>
+    <span><b>◆</b>Paper</span><span><b>◆</b>Folia</span><span><b>◆</b>Purpur</span><span><b>◆</b>Spigot</span><span><b>◆</b>CraftBukkit</span><span><b>◆</b>Vanilla</span><span><b>◆</b>Fabric</span><span><b>◆</b>Quilt</span><span><b>◆</b>NeoForge</span><span><b>◆</b>Java 8/17/21 auto</span>
   </div></div>
 </div>
 
-<div class="page" style="padding-top:14px">
-  <div style="margin:10px 0 18px">
+<div class="page" style="padding-top:34px">
+  <div class="statband fade-up" id="statband">
+    <div class="big"><b id="sbLive">—</b><span>servers online</span></div>
+    <div class="big"><b id="sbTotal">—</b><span>total servers</span></div>
+    <div class="big"><b>9</b><span>platforms</span></div>
+    <div class="big"><b>3</b><span>java majors auto</span></div>
+  </div>
+
+  <div style="margin:34px 0 18px">
     <div class="sec-index"><b style="color:var(--violet2)">01</b> / Your servers</div>
     <h2 style="font-size:clamp(24px,3vw,34px);letter-spacing:-.04em;margin:0 0 6px">Everything live. <span class="gradtext">One glance.</span></h2>
   </div>
@@ -92,8 +101,10 @@
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:13px">
     <div class="card hoverable fade-up"><h3>🖥️ Real Console</h3><p class="muted" style="font-size:13.5px;margin:0">Live SSE stream, colored logs, command history, Start/Restart/Stop/Kill + CPU/RAM bars.</p></div>
     <div class="card hoverable fade-up d2"><h3>📁 File Manager</h3><p class="muted" style="font-size:13.5px;margin:0">Explorer + editor (Ctrl+S), upload/download, rename, delete — puro server folder.</p></div>
-    <div class="card hoverable fade-up d3"><h3>⚙️ Settings</h3><p class="muted" style="font-size:13.5px;margin:0">server.properties form + raw mode, MOTD, gamemode, EE-relevant whitelist — restart dile apply.</p></div>
-    <div class="card hoverable fade-up d4"><h3>💾 Backup</h3><p class="muted" style="font-size:13.5px;margin:0">Auto zip + Drive upload, manual backup, one-click restore, download.</p></div>
+    <div class="card hoverable fade-up d2"><h3>⚙️ Settings</h3><p class="muted" style="font-size:13.5px;margin:0">server.properties form + raw mode, MOTD, whitelist — restart dile apply.</p></div>
+    <div class="card hoverable fade-up d3"><h3>💾 Backup + Drive</h3><p class="muted" style="font-size:13.5px;margin:0">Auto zip + Google Drive upload, manual backup, one-click restore, download.</p></div>
+    <div class="card hoverable fade-up d3"><h3>☕ Auto Java</h3><p class="muted" style="font-size:13.5px;margin:0">Version onujayi JRE (8/17/21) nijei download + verify — kichu install korar dorkar nai.</p></div>
+    <div class="card hoverable fade-up d4"><h3>🔐 Accounts</h3><p class="muted" style="font-size:13.5px;margin:0">Login/signup, admin-user roles, owner-per-server access, requireLogin toggle.</p></div>
   </div>
 </div>
 <footer style="position:relative;z-index:2;text-align:center;color:var(--muted2);padding:26px;font-size:12.5px">MC Panel v2.0 • systemctl-free self-host • <a href="/user">create →</a></footer>
@@ -101,17 +112,27 @@
 <script>
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const ICON={paper:'📄',purpur:'🟣',vanilla:'🌱',spigot:'⚡',fabric:'🧵'};
+const ICON={paper:'📄',purpur:'🟣',vanilla:'🌱',spigot:'⚡',fabric:'🧵',folia:'🍃',quilt:'🪡',neoforge:'🔥',craftbukkit:'🔨'};
 // scroll progress + cursor glow
 addEventListener('scroll',()=>{const h=document.documentElement;$('#sp').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%'},{passive:true});
 addEventListener('pointermove',e=>{$('#cg').style.left=e.clientX+'px';$('#cg').style.top=e.clientY+'px'});
+async function authState(){
+  try{
+    const me=await (await fetch('/api/auth/me')).json();
+    if(me.user){ $('#navAuth').style.display='inline-flex'; $('#navAuth').textContent=me.user.role==='admin'?'👑 '+me.user.name:'👤 '+me.user.name; $('#navAuth').href=me.user.role==='admin'?'/admin':'/user'; }
+    else $('#navAuth').style.display='inline-flex';
+  }catch{}
+}
 
 // server list
 async function load(){
   try{
-    const s=await (await fetch('/api/servers')).json();
+    const r=await fetch('/api/servers');
+    if(r.status===401){$('#slist').innerHTML='<div class="empty">🔒 access korte login koro — <a href="/login">login →</a></div>';$('#liveCount').textContent='login koro';return}
+    const s=await r.json();
     const run=s.filter(x=>x.running).length;
     $('#liveCount').innerHTML=`<b>${run}</b> online · ${s.length} servers`;
+    const sbL=$('#sbLive'); if(sbL){sbL.textContent=run;$('#sbTotal').textContent=s.length;}
     $('#slist').innerHTML=s.length?s.map(x=>`
       <div class="card srvrow hoverable fade-up">
         <div class="l">
@@ -139,7 +160,9 @@ async function heroTerm(){
     const pick=s.find(x=>x.running)||s[0];
     $('#heroTermId').textContent=pick.id+' — live';
     $('#heroFoot').textContent=pick.id+(pick.running?'':' · offline');
-    const l=await (await fetch(`/api/servers/${pick.id}/logs?tail=8`)).json();
+    const lr=await fetch(`/api/servers/${pick.id}/logs?tail=8`);
+    if(lr.status===401){$('#heroTerm').innerHTML='<span class="tsys">[panel] 🔒 login koro console dekhte</span><span class="cursor"></span>';return}
+    const l=await lr.json();
     const el=$('#heroTerm');
     el.innerHTML='';
     for(const t of l.logs){const d=document.createElement('div');d.innerHTML=colorLine(t);el.appendChild(d)}
@@ -161,7 +184,7 @@ function colorLine(t){
   if(/joined the game|left the game/i.test(t))return `<span class="tchat">${esc(t)}</span>`;
   return `<span class="tdefault">${esc(t)}</span>`;
 }
-load();heroTerm();setInterval(load,8000);
+load();heroTerm();setInterval(load,8000);authState();
 // marquee seamless loop (ekbar i)
 $('#mq').innerHTML=$('#mq').innerHTML+$('#mq').innerHTML;
 </script>

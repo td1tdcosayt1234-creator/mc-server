@@ -1,0 +1,81 @@
+<!doctype html><html lang="bn"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#04050a">
+<title>Signup — MC Panel</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⛏️</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="cine" aria-hidden="true">
+  <div class="cine-aurora"><span class="aurora aurora--violet"></span><span class="aurora aurora--mint"></span><span class="aurora aurora--rose"></span></div>
+  <div class="cine-grid"></div><div class="cine-vignette"></div><div class="cine-grain"></div>
+</div>
+
+<div class="auth-wrap">
+  <div class="auth-left">
+    <div class="auth-card fade-up">
+      <div class="brandrow">
+        <span class="logo-mark">⛏️</span><b style="font-size:16px;font-weight:800">MC Panel</b>
+      </div>
+      <h1 style="font-size:28px;letter-spacing:-.04em;margin:0 0 6px">Free account <span class="gradtext">kholo.</span></h1>
+      <p class="muted" style="margin:0 0 22px;font-size:14px">1st je account korbey tar role <b style="color:var(--violet2)">admin</b> — sob power. Baki ra <span class="pill" style="display:inline;padding:2px 8px">user</span>.</p>
+
+      <div class="field">
+        <label class="label">Name</label>
+        <input class="input" id="name" placeholder="Roun" spellcheck="false" autocomplete="name">
+      </div>
+      <div class="field">
+        <label class="label">Email</label>
+        <input class="input" id="email" type="email" placeholder="player@gmail.com" spellcheck="false" autocomplete="email">
+      </div>
+      <div class="field">
+        <label class="label">Password (min 6)</label>
+        <input class="input" id="password" type="password" placeholder="••••••••" autocomplete="new-password">
+      </div>
+      <button class="btn primary btn-lg shine" id="go" style="width:100%">◆ Create account</button>
+      <div class="rowline" style="margin-top:16px;justify-content:space-between">
+        <span class="hint" id="msg"></span>
+        <span class="muted small">Already? <a href="/login" style="color:var(--mint2)">Login →</a></span>
+      </div>
+    </div>
+  </div>
+  <div class="auth-right">
+    <div class="auth-visual float-slow">
+      <div class="term">
+        <div class="term-bar"><i></i><i></i><i></i><span class="term-title">signup — form</span><span class="term-live"><span class="pulse-dot"></span>live</span></div>
+        <div class="term-body" style="min-height:250px;height:auto">
+          <div class="l-cmd">$ POST /api/auth/signup</div>
+          <div class="tsys">[auth] scrypt hash + random salt 🔐</div>
+          <div class="tsys">[auth] session token → HttpOnly cookie</div>
+          <div class="l-ok">✓ account created</div>
+          <div class="tchat">{"ok":true,"user":{"role":"admin"}}</div>
+          <div class="cursor"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const send = async () => {
+  const b = $('#go'); b.disabled = true; b.textContent = 'creating…';
+  try {
+    const r = await fetch('/api/auth/signup', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: $('#name').value, email: $('#email').value, password: $('#password').value })
+    });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || 'signup fail');
+    location.href = '/';
+  } catch (e) {
+    $('#msg').textContent = '❌ ' + e.message;
+    b.disabled = false; b.textContent = '◆ Create account';
+  }
+};
+$('#go').onclick = send;
+$('#password').addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
+fetch('/api/auth/me').then(r => r.json()).then(j => { if (j.user) location.href = '/'; });
+</script>
+</body></html>

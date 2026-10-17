@@ -263,3 +263,67 @@ main.mn{flex:1;padding:24px 28px 70px;max-width:1080px;min-width:0}
   .grid2,.grid3{grid-template-columns:1fr}
   .hero h1{font-size:clamp(30px,8vw,44px)}
 }
+
+/* ================= AUTH ================= */
+.auth-wrap{min-height:100vh;display:grid;grid-template-columns:1.05fr 1fr;position:relative;z-index:2}
+.auth-left{display:flex;align-items:center;justify-content:center;padding:40px 32px}
+.auth-card{width:100%;max-width:400px}
+.auth-right{position:relative;display:flex;align-items:center;justify-content:center;border-left:1px solid var(--line);background:linear-gradient(160deg,rgba(139,92,246,.09),rgba(45,212,191,.05) 60%,transparent);overflow:hidden}
+.auth-visual{max-width:420px;width:100%;padding:34px}
+.field label.label{display:block}
+.hint{color:var(--muted2);font-size:12px}
+.auth-card .brandrow{display:flex;align-items:center;gap:10px;margin-bottom:26px}
+.toggle{position:relative;display:inline-flex;width:40px;height:22px;cursor:pointer;flex:none}
+.toggle input{display:none}
+.toggle i{position:absolute;inset:0;border-radius:99px;background:hsla(0,0%,100%,.1);border:1px solid var(--line2);transition:background .25s}
+.toggle i:before{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#aab;transition:transform .25s var(--spring),background .25s}
+.toggle input:checked+i{background:rgba(139,92,246,.5)}
+.toggle input:checked+i:before{transform:translateX(18px);background:#fff}
+@media (max-width:920px){.auth-wrap{grid-template-columns:1fr}.auth-right{display:none}}
+
+/* ================= PRICING ================= */
+.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;align-items:stretch}
+.plan{position:relative;display:flex;flex-direction:column;padding:24px;border-radius:var(--radius);background:linear-gradient(170deg,hsla(0,0%,100%,.055),hsla(0,0%,100%,.014) 55%,hsla(0,0%,100%,.028));border:1px solid var(--line);transition:transform .4s var(--ease),border-color .4s}
+.plan:hover{transform:translateY(-4px);border-color:var(--line2)}
+.plan.featured{border-color:rgba(139,92,246,.5);background:linear-gradient(170deg,rgba(139,92,246,.13),hsla(0,0%,100%,.02) 55%,rgba(45,212,191,.06));box-shadow:0 0 60px -20px rgba(139,92,246,.6)}
+.plan .tag{position:absolute;top:-11px;left:50%;transform:translateX(-50%);font-size:9.5px;font-family:var(--mono);letter-spacing:.18em;text-transform:uppercase;background:var(--panel-solid);border:1px solid rgba(139,92,246,.5);color:var(--violet2);padding:3px 12px;border-radius:99px}
+.plan .price{font-size:42px;font-weight:800;letter-spacing:-.05em;margin:14px 0 2px}
+.plan .price small{font-size:14px;color:var(--muted2);font-weight:500;letter-spacing:0}
+.plan ul{list-style:none;margin:18px 0 20px;padding:0;display:flex;flex-direction:column;gap:9px}
+.plan ul li{display:flex;gap:9px;align-items:flex-start;font-size:13.5px;color:var(--muted)}
+.plan ul li b{color:var(--text);font-weight:600}
+.plan ul li i.check{color:var(--mint2);font-style:normal;flex:none}
+.plan .btn{width:100%;margin-top:auto}
+.faq-item{border:1px solid var(--line);border-radius:14px;background:hsla(0,0%,100%,.025);margin-bottom:10px;overflow:hidden}
+.faq-item summary{cursor:pointer;padding:15px 18px;font-weight:600;font-size:14px;letter-spacing:-.01em;list-style:none;display:flex;align-items:center;gap:10px}
+.faq-item summary::-webkit-details-marker{display:none}
+.faq-item summary:before{content:"›";color:var(--violet2);font-weight:700;transition:transform .25s var(--ease);display:inline-block}
+.faq-item[open] summary:before{transform:rotate(90deg)}
+.faq-item p{padding:0 18px 15px 34px;color:var(--muted);font-size:13.5px;margin:0}
+
+/* ================= DOCS ================= */
+.docs-layout{display:grid;grid-template-columns:220px 1fr;gap:34px;position:relative;z-index:2;padding-top:34px}
+.docs-toc{position:sticky;top:76px;align-self:start;display:flex;flex-direction:column;gap:3px}
+.docs-toc a{padding:7px 12px;border-radius:9px;color:var(--muted);font-size:13px;border-left:2px solid transparent;transition:all .2s}
+.docs-toc a:hover{color:var(--text);background:hsla(0,0%,100%,.04)}
+.docs-body{min-width:0;display:flex;flex-direction:column;gap:44px;padding-bottom:90px}
+.docs-body section{scroll-margin-top:80px}
+.docs-body h2{font-size:24px;letter-spacing:-.03em;margin:0 0 8px}
+.docs-body h3{font-size:16px;margin:0 0 8px}
+.docs-body p{color:var(--muted);margin:8px 0;line-height:1.75;font-size:14px}
+.code{position:relative;background:rgba(2,3,8,.65);border:1px solid var(--line2);border-radius:12px;padding:14px 16px;font-family:var(--mono);font-size:12.5px;line-height:1.7;color:#c8d3e8;overflow-x:auto;margin:10px 0}
+.code .cmt{color:#5d6478}
+.code .k{color:var(--violet2)}
+.code .s{color:var(--mint2)}
+.copybtn{position:absolute;top:8px;right:8px;font-size:10.5px;padding:4px 10px;border-radius:8px;border:1px solid var(--line2);background:hsla(0,0%,100%,.05);color:var(--muted);cursor:pointer;font-family:var(--mono)}
+.copybtn:hover{color:var(--text);border-color:hsla(0,0%,100%,.25)}
+.doc-note{border-left:3px solid var(--violet);background:rgba(139,92,246,.07);padding:12px 16px;border-radius:0 12px 12px 0;font-size:13.5px;color:var(--muted);margin:10px 0}
+.doc-note b{color:var(--violet2)}
+@media (max-width:920px){.docs-layout{grid-template-columns:1fr}.docs-toc{position:static;flex-direction:row;flex-wrap:wrap}}
+
+/* ================= misc upgrades ================= */
+.statband{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.statband .big{display:flex;flex-direction:column;gap:4px;padding:18px;border-radius:var(--radius);background:linear-gradient(170deg,hsla(0,0%,100%,.05),hsla(0,0%,100%,.015));border:1px solid var(--line)}
+.statband .big b{font-size:26px;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.statband .big span{color:var(--muted2);font-size:11px;font-family:var(--mono);letter-spacing:.14em;text-transform:uppercase}
+.ownerchip{font-size:10px;font-family:var(--mono);padding:2px 8px;border-radius:99px;background:hsla(0,0%,100%,.05);border:1px solid var(--line);color:var(--muted2)}
