@@ -2,65 +2,168 @@
 <html lang="bn">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>MC Panel - Home</title>
-<style>
-:root{--bg:#0e141d;--card:#151f2b;--line:#24313f;--txt:#d8e1ec;--dim:#8798aa;--green:#43b56d;--accent:#4a9fd8}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif}
-header{background:#0b1119;border-bottom:1px solid var(--line);padding:14px 26px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0}
-header b{font-size:18px}
-nav a{color:var(--txt);margin-left:10px;padding:8px 14px;border-radius:8px;background:var(--card);border:1px solid var(--line);text-decoration:none;font-size:13px}
-nav a.main{background:var(--accent);border-color:var(--accent);color:#04202f;font-weight:700}
-.hero{text-align:center;padding:42px 20px 30px}
-.hero h1{font-size:34px;margin:0 0 8px}
-.hero p{color:var(--dim)}
-.wrap{max-width:1000px;margin:auto;padding:0 20px 50px}
-.srv{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px}
-.srv .l{display:flex;gap:12px;align-items:center;min-width:0}
-.dot{width:10px;height:10px;border-radius:50%;background:#5a6672;flex:none}
-.dot.on{background:var(--green);box-shadow:0 0 8px var(--green)}
-.srv small{color:var(--dim)}
-.srv a.open{padding:8px 14px;border-radius:8px;background:#1d5c37;color:#fff;font-weight:600;text-decoration:none;font-size:13px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:12px;margin-top:26px}
-.grid .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
-.grid h3{margin:0 0 8px;font-size:15px}
-.grid small{color:var(--dim);line-height:1.5;display:block}
-.grid a{display:inline-block;margin-top:10px;padding:7px 14px;border-radius:8px;background:#19242f;border:1px solid var(--line);text-decoration:none;font-size:13px;color:var(--txt)}
-footer{text-align:center;color:#55657a;padding:18px;font-size:12px}
-</style>
+<meta name="theme-color" content="#04050a">
+<title>MC Panel — Real Minecraft Hosting</title>
+<meta name="description" content="Pterodactyl-style panel — real console, file manager, server.properties, backups · nijer machine e real MC hosting">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⛏️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
 </head>
 <body>
-<header><b>⛏️ MC Panel</b><nav><a class="main" href="/user">+ New Server</a><a href="/admin">Admin</a></nav></header>
-<div class="hero">
-  <h1>Your Minecraft Servers</h1>
-  <p>Pterodactyl-style panel • real console • file manager • server.properties editor • auto backup</p>
+<!-- cinematic background -->
+<div class="cine" aria-hidden="true">
+  <div class="cine-aurora"><span class="aurora aurora--violet"></span><span class="aurora aurora--mint"></span><span class="aurora aurora--rose"></span><span class="aurora aurora--deep"></span></div>
+  <div class="cine-grid"></div>
+  <div class="cine-vignette"></div>
+  <div class="cine-scan"></div>
+  <div class="cine-grain"></div>
 </div>
-<div class="wrap">
-  <div id="list">loading...</div>
-  <div class="grid">
-    <div class="card"><h3>🖥️ Real Console</h3><small>Live SSE stream + command input + history (ArrowUp). Start/Restart/Stop/Kill button.</small><a href="/user">Create server →</a></div>
-    <div class="card"><h3>📁 File Manager</h3><small>plugin/config edit, upload/download, new file/folder, rename, delete - sob server folder e.</small><a href="/user">Let's go →</a></div>
-    <div class="card"><h3>⚙️ Settings</h3><small>server.properties editor (motd, port, difficulty, max-players...) + startup RAM/java flags.</small><a href="/user">Open →</a></div>
-    <div class="card"><h3>💾 Backup</h3><small>Auto zip + Drive upload, manual backup, restore, download - per 50 min.</small><a href="/user">Open →</a></div>
+<div class="scroll-progress" id="sp" aria-hidden="true"></div>
+<div class="cursor-glow" id="cg" aria-hidden="true"></div>
+
+<header class="nav">
+  <div class="nav-inner">
+    <a class="logo" href="/"><span class="logo-mark">⛏️</span><span>MC Panel</span></a>
+    <nav class="links desktop">
+      <a class="link-pill" href="/server">Servers</a>
+      <a class="link-pill" href="/user">Create</a>
+      <a class="link-pill" href="/admin">Admin</a>
+    </nav>
+    <div class="nav-actions">
+      <span class="chip" id="liveChip"><span class="pulse-dot"></span><span id="liveCount">checking…</span></span>
+      <a class="btn primary shine" href="/user">Create Server</a>
+    </div>
+  </div>
+</header>
+
+<!-- ===== HERO ===== -->
+<section class="hero" style="display:flex;max-width:1160px;gap:44px;align-items:center;text-align:left;padding-top:56px">
+  <div style="flex:1.15;min-width:0">
+    <div class="kicker fade-up"><span class="pulse-dot"></span>Real Minecraft hosting · live panel</div>
+    <h1 class="fade-up d2">
+      <span class="word-mask"><span style="animation-delay:.08s">Real</span></span>
+      <span class="word-mask"><span style="animation-delay:.15s">server.</span></span>
+      <span class="word-mask"><span style="animation-delay:.22s">Real</span></span>
+      <span class="word-mask"><span style="animation-delay:.29s">console.</span></span><br>
+      <span class="gradtext"><span class="word-mask"><span style="animation-delay:.38s">Zero</span></span>
+      <span class="word-mask"><span style="animation-delay:.45s">babysitting.</span></span></span>
+    </h1>
+    <p class="sub fade-up d4">Paper/Purpur/Spigot/Vanilla/Fabric auto-download, ek real JVM panel e chole ase — live logs, command, file manager, server.properties, backup-restore. Sob ekhane.</p>
+    <div class="fade-up d5" style="display:flex;gap:11px;flex-wrap:wrap">
+      <a class="btn primary btn-lg shine" href="/user">Create your server</a>
+      <a class="btn ghost btn-lg" href="/server">Open panel</a>
+    </div>
+    <div class="fade-up d6" style="margin-top:18px;display:flex;gap:9px;flex-wrap:wrap">
+      <span class="chip">⚡ auto jar download</span>
+      <span class="chip">🔥 firebase + drive backup</span>
+      <span class="chip">no cost</span>
+    </div>
+  </div>
+  <!-- LIVE REAL terminal -->
+  <div class="fade-up d5" style="flex:1;min-width:280px">
+    <div class="term float-slow" style="height:auto">
+      <div class="term-bar"><i></i><i></i><i></i><span class="term-title" id="heroTermId">mc — live</span><span class="term-live"><span class="pulse-dot"></span>live</span></div>
+      <div class="term-body" id="heroTerm" style="height:300px;min-height:300px"><span class="l-cmd">$ panel watch …</span><span class="cursor"></span></div>
+      <div class="term-foot"><span id="heroFoot">—</span><span class="progress"><i></i></span><span>25565</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="stack-band fade-up d6">
+  <span class="stack-band-label"><i></i>Runs on</span>
+  <div class="marquee"><div class="marquee-track" id="mq">
+    <span><b>◆</b>Paper</span><span><b>◆</b>Purpur</span><span><b>◆</b>Spigot</span><span><b>◆</b>Fabric</span><span><b>◆</b>Vanilla</span><span><b>◆</b>Plugins</span><span><b>◆</b>Java 17/21</span>
+  </div></div>
+</div>
+
+<div class="page" style="padding-top:14px">
+  <div style="margin:10px 0 18px">
+    <div class="sec-index"><b style="color:var(--violet2)">01</b> / Your servers</div>
+    <h2 style="font-size:clamp(24px,3vw,34px);letter-spacing:-.04em;margin:0 0 6px">Everything live. <span class="gradtext">One glance.</span></h2>
+  </div>
+  <div id="slist">loading…</div>
+
+  <div style="margin:44px 0 22px">
+    <div class="sec-index"><b style="color:var(--violet2)">02</b> / What's inside</div>
+    <h2 style="font-size:clamp(24px,3vw,34px);letter-spacing:-.04em;margin:0">Panel <span class="gradtext">features.</span></h2>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:13px">
+    <div class="card hoverable fade-up"><h3>🖥️ Real Console</h3><p class="muted" style="font-size:13.5px;margin:0">Live SSE stream, colored logs, command history, Start/Restart/Stop/Kill + CPU/RAM bars.</p></div>
+    <div class="card hoverable fade-up d2"><h3>📁 File Manager</h3><p class="muted" style="font-size:13.5px;margin:0">Explorer + editor (Ctrl+S), upload/download, rename, delete — puro server folder.</p></div>
+    <div class="card hoverable fade-up d3"><h3>⚙️ Settings</h3><p class="muted" style="font-size:13.5px;margin:0">server.properties form + raw mode, MOTD, gamemode, EE-relevant whitelist — restart dile apply.</p></div>
+    <div class="card hoverable fade-up d4"><h3>💾 Backup</h3><p class="muted" style="font-size:13.5px;margin:0">Auto zip + Drive upload, manual backup, one-click restore, download.</p></div>
   </div>
 </div>
-<footer>MC Panel v2.0 • Firebase + Google Drive ready</footer>
+<footer style="position:relative;z-index:2;text-align:center;color:var(--muted2);padding:26px;font-size:12.5px">MC Panel v2.0 • systemctl-free self-host • <a href="/user">create →</a></footer>
+
 <script>
-function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ICON={paper:'📄',purpur:'🟣',vanilla:'🌱',spigot:'⚡',fabric:'🧵'};
+// scroll progress + cursor glow
+addEventListener('scroll',()=>{const h=document.documentElement;$('#sp').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%'},{passive:true});
+addEventListener('pointermove',e=>{$('#cg').style.left=e.clientX+'px';$('#cg').style.top=e.clientY+'px'});
+
+// server list
 async function load(){
   try{
     const s=await (await fetch('/api/servers')).json();
-    document.getElementById('list').innerHTML=s.length?s.map(x=>`
-      <div class="srv">
+    const run=s.filter(x=>x.running).length;
+    $('#liveCount').innerHTML=`<b>${run}</b> online · ${s.length} servers`;
+    $('#slist').innerHTML=s.length?s.map(x=>`
+      <div class="card srvrow hoverable fade-up">
         <div class="l">
-          <span class="dot ${x.running?'on':''}"></span>
-          <div><b>${esc(x.name)}</b><br><small>${x.type} ${x.version} • ${x.ram||4096}MB${x.running?` • CPU ${x.stats&&x.stats.cpu||0}% • ${x.stats&&x.stats.memMB||0}MB`:' • Offline'}</small></div>
+          <div class="avatar">${ICON[x.type]||'🎮'}</div>
+          <div style="min-width:0">
+            <span class="pill ${x.running?'on':''}"><span class="dot"></span>${x.running?'Online':'Offline'}</span>
+            <b style="margin-left:9px;font-size:15px">${esc(x.name)}</b>
+            <div class="mini">
+              <span class="chip">${x.type} ${x.version}</span><span class="chip">${x.ram||4096}MB RAM</span>
+              ${x.running?`<span class="chip">CPU <b>${x.stats&&x.stats.cpu||0}%</b></span><span class="chip">MEM <b>${x.stats&&x.stats.memMB||0}MB</b></span>`:''}
+            </div>
+          </div>
         </div>
-        <a class="open" href="/server/${x.id}">🖥️ Open Panel</a>
-      </div>`).join(''):`<div class="srv"><span>Kono server nai -</span><a class="open" href="/user" style="background:#1a3f61">+ Create Server</a></div>`;
-  }catch(e){document.getElementById('list').innerText='load fail';}
+        <a class="btn ${x.running?'primary':''}" href="/server/${x.id}">🖥️ Panel</a>
+      </div>`).join(''):
+      `<div class="empty">kono server nai — <a href="/user">first server create koro →</a></div>`;
+  }catch(e){$('#slist').innerHTML='<div class="empty">panel offline</div>'}
 }
-load();setInterval(load,8000);
+// hero terminal - REAL logs of first running/any server via SSE
+let heroEs=null;
+async function heroTerm(){
+  try{
+    const s=await (await fetch('/api/servers')).json();
+    if(!s.length){$('#heroTermId').textContent='mc — ready'; $('#heroTerm').innerHTML='<span class="tsys">[panel] kono server nai — /user theke create koro</span><span class="cursor"></span>';return}
+    const pick=s.find(x=>x.running)||s[0];
+    $('#heroTermId').textContent=pick.id+' — live';
+    $('#heroFoot').textContent=pick.id+(pick.running?'':' · offline');
+    const l=await (await fetch(`/api/servers/${pick.id}/logs?tail=8`)).json();
+    const el=$('#heroTerm');
+    el.innerHTML='';
+    for(const t of l.logs){const d=document.createElement('div');d.innerHTML=colorLine(t);el.appendChild(d)}
+    const cur=document.createElement('div');cur.innerHTML='<span class="cursor"></span>';el.appendChild(cur);
+    heroEs=new EventSource(`/api/servers/${pick.id}/console`);
+    heroEs.onmessage=e=>{try{
+      const t=JSON.parse(e.data);
+      if(t.startsWith('[Panel] console connected'))return;
+      const d=document.createElement('div');d.innerHTML=colorLine(t);el.insertBefore(d,el.lastElementChild);
+      while(el.childElementCount>60)el.removeChild(el.firstChild);
+    }catch{}};
+  }catch{}
+}
+function colorLine(t){
+  if(t.startsWith('>'))return `<span class="tcmd">${esc(t)}</span>`;
+  if(t.startsWith('[Panel]'))return `<span class="tsys">${esc(t)}</span>`;
+  if(/\[[\w/ -]*(WARN|WARNING)\]|\bWARN\b/i.test(t))return `<span class="twarn">${esc(t)}</span>`;
+  if(/\b(ERROR|SEVERE|FATAL)\b|Exception|Caused by/i.test(t))return `<span class="terr">${esc(t)}</span>`;
+  if(/joined the game|left the game/i.test(t))return `<span class="tchat">${esc(t)}</span>`;
+  return `<span class="tdefault">${esc(t)}</span>`;
+}
+load();heroTerm();setInterval(load,8000);
+// marquee seamless loop (ekbar i)
+$('#mq').innerHTML=$('#mq').innerHTML+$('#mq').innerHTML;
 </script>
 </body>
 </html>

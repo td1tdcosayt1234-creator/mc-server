@@ -1,74 +1,93 @@
 <!doctype html><html lang="bn"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>MC Panel - Admin</title>
+<meta name="theme-color" content="#04050a">
+<title>Admin — MC Panel</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⛏️</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
 <style>
-:root{--bg:#0e141d;--card:#151f2b;--line:#24313f;--txt:#d8e1ec;--dim:#8798aa;--accent:#4a9fd8}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px}
-header{background:#0b1119;border-bottom:1px solid var(--line);padding:14px 26px;display:flex;justify-content:space-between;align-items:center}
-header a{color:var(--dim);text-decoration:none}
-main{max-width:860px;margin:auto;padding:26px 20px 60px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
-.card h3{margin:0 0 12px}
-label{display:block;font-size:12px;color:var(--dim);margin:8px 0 3px}
-input,select{background:#0b1014;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:9px}
-.row{display:grid;grid-template-columns:2fr 1fr auto auto;gap:8px;align-items:end}
-button{padding:9px 14px;border-radius:8px;border:1px solid var(--line);background:#1a3f61;color:#fff;cursor:pointer;font-weight:600}
-button.den{background:#5c2620;border-color:#7c352d}
-table{width:100%;border-collapse:collapse}
-th{text-align:left;color:var(--dim);font-size:11px;text-transform:uppercase;padding:8px 8px;border-bottom:1px solid var(--line)}
-td{padding:8px;border-bottom:1px solid #1b2530}
-.srv{display:flex;justify-content:space-between;align-items:center;background:#121b26;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px}
-a.plink{color:#fff;background:#1d5c37;text-decoration:none;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600}
-small{color:var(--dim)}
+.userrow{display:flex;justify-content:space-between;align-items:center;padding:10px 4px;border-bottom:1px solid hsla(0,0%,100%,.05)}
+.userrow:last-child{border-bottom:0}
+.rolechip{font-size:10px;font-family:var(--mono);letter-spacing:.14em;text-transform:uppercase;padding:3px 10px;border-radius:99px;background:hsla(0,0%,100%,.04);border:1px solid var(--line);color:var(--muted)}
+.rolechip.admin{border-color:rgba(139,92,246,.35);color:var(--violet2)}
+.srvrow{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;margin-bottom:10px}
 </style>
 </head>
 <body>
-<header><div><a href="/">← Home</a><b style="margin-left:12px">🛠️ Admin</b></div><div><a href="/user">User panel →</a></div></header>
-<main>
-<div class="card">
-  <h3>👥 Users (Firebase / local)</h3>
-  <div class="row">
-    <div><label>Email</label><input id="email" placeholder="player@gmail.com"></div>
-    <div><label>Role</label><select id="role"><option>user</option><option>admin</option></select></div>
-    <div><button onclick="addUser()">Add</button></div>
-    <div><span style="font-size:12px;color:var(--dim)" id="ustat"></span></div>
+<div class="cine" aria-hidden="true">
+  <div class="cine-aurora"><span class="aurora aurora--violet"></span><span class="aurora aurora--mint"></span><span class="aurora aurora--rose"></span><span class="aurora aurora--deep"></span></div>
+  <div class="cine-grid"></div><div class="cine-vignette"></div><div class="cine-scan"></div><div class="cine-grain"></div>
+</div>
+<div class="scroll-progress" id="sp"></div><div class="cursor-glow" id="cg"></div>
+
+<header class="nav"><div class="nav-inner">
+  <a class="logo" href="/"><span class="logo-mark">⛏️</span><span>MC Panel</span></a>
+  <div class="nav-actions"><a class="link-pill" href="/">Home</a><a class="link-pill" href="/user">Create</a><a class="btn primary" href="#">Admin</a></div>
+</div></header>
+
+<div class="page" style="max-width:860px;padding-top:36px">
+  <div class="kicker fade-up"><span class="pulse-dot"></span>admin zone</div>
+  <h1 class="fade-up d2" style="font-size:clamp(26px,4vw,40px);letter-spacing:-.04em;margin:14px 0 26px">Users &amp; <span class="gradtext">servers.</span></h1>
+
+  <div class="card fade-up d3" style="padding:22px;margin-bottom:18px">
+    <h3 style="margin:0 0 14px">👥 Users <span class="muted small">(firebase / local db)</span></h3>
+    <div class="rowline" style="margin-bottom:12px">
+      <input class="input flex1" id="email" placeholder="player@gmail.com" style="max-width:320px">
+      <select class="input" id="role" style="width:120px"><option>user</option><option>admin</option></select>
+      <button class="btn primary" onclick="addUser()">+ Add</button>
+      <span class="muted small" id="ustat"></span>
+    </div>
+    <div id="users"><div class="empty">loading…</div></div>
   </div>
-  <div id="users"></div>
+
+  <div class="card fade-up d4" style="padding:22px">
+    <h3 style="margin:0 0 14px">🖥️ All Servers</h3>
+    <div id="list"><div class="empty">loading…</div></div>
+  </div>
 </div>
-<div class="card">
-  <h3>🖥️ All Servers</h3>
-  <div id="list">loading...</div>
-</div>
-</main>
+<div class="toast" id="tip"></div>
+
 <script>
-function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(msg,typ='ok'){const t=$('#tip');t.textContent=msg;t.className='toast show '+typ;clearTimeout(t._to);t._to=setTimeout(()=>t.className='toast',2600)}
+addEventListener('scroll',()=>{const h=document.documentElement;$('#sp').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%'},{passive:true});
+addEventListener('pointermove',e=>{$('#cg').style.left=e.clientX+'px';$('#cg').style.top=e.clientY+'px'});
 async function users(){
-  const d=await (await fetch('/api/users')).json();
-  document.getElementById('users').innerHTML=d.length?
-    '<table><thead><tr><th>Email</th><th>Role</th><th style="width:90px"></th></tr></thead><tbody>'+d.map(u=>`
-      <tr><td>${esc(u.email||u.id)}</td><td>${esc(u.role||'user')}</td>
-      <td><button class="den" onclick="delUser('${esc(u.id)}')">Delete</button></td></tr>`).join('')+'</tbody></table>'
-    :'<div style="color:var(--dim);padding:8px">kono user nai</div>';
+  try{
+    const d=await (await fetch('/api/users')).json();
+    $('#users').innerHTML=d.length?d.map(u=>`
+      <div class="userrow">
+        <div style="display:flex;gap:10px;align-items:center"><b style="font-size:14px">${esc(u.email||u.id)}</b><span class="rolechip ${u.role==='admin'?'admin':''}">${esc(u.role||'user')}</span></div>
+        <button class="btn stop sm" onclick="delUser('${esc(u.id)}')">Delete</button>
+      </div>`).join(''):'<div class="empty">kono user nai</div>';
+  }catch(e){$('#users').innerHTML='<div class="empty">load fail</div>'}
 }
 async function addUser(){
-  const email=document.getElementById('email').value.trim(),role=document.getElementById('role').value;
+  const email=$('#email').value.trim(),role=$('#role').value;
   if(!email)return alert('email daw');
   const r=await (await fetch('/api/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,role})})).json();
-  document.getElementById('email').value='';document.getElementById('ustat').innerText=r.error?('❌ '+r.error):'✅ added';
+  $('#email').value='';$('#ustat').textContent=r.error?'❌ '+r.error:'✅ added';
   users();
 }
 async function delUser(id){if(!confirm('delete user?'))return;await fetch('/api/users/'+id,{method:'DELETE'});users();}
 async function list(){
-  const d=await (await fetch('/api/servers')).json();
-  document.getElementById('list').innerHTML=d.map(s=>`
-    <div class="srv">
-      <div><b>${esc(s.name)}</b> <small>${s.type} ${s.version} • ${s.ram||4096}MB ${s.running?'🟢':'🔴'}</small></div>
-      <div><a class="plink" href="/server/${s.id}">🖥️ Panel</a> <button onclick="restart('${s.id}')">Restart</button> <button class="den" onclick="del('${s.id}')">Delete Server</button></div>
-    </div>`).join('');
+  try{
+    const d=await (await fetch('/api/servers')).json();
+    $('#list').innerHTML=d.map(s=>`
+      <div class="card srvrow hoverable">
+        <div><b style="font-size:14.5px">${esc(s.name)}</b> <span class="muted small">${s.type} ${s.version} • ${s.ram||4096}MB</span>
+          <br><span class="pill ${s.running?'on':''}" style="margin-top:5px"><span class="dot"></span>${s.running?'Online':'Offline'}</span></div>
+        <div class="rowbtn">
+          <button class="btn primary sm" onclick="location.href='/server/${s.id}'">🖥️ Panel</button>
+          <button class="btn ghost sm" onclick="restart('${s.id}')">🔄 Restart</button>
+          <button class="btn stop sm" onclick="del('${s.id}')">Delete</button>
+        </div>
+      </div>`).join('');
+  }catch(e){$('#list').innerHTML='<div class="empty">load fail</div>'}
 }
-async function restart(id){await fetch(`/api/servers/${id}/restart`,{method:'POST'});list();}
-async function del(id){if(!confirm('SERVER DELETE (folder) — puro loop delete hobe. Nishchit na?'))return;await fetch('/api/servers/'+id,{method:'DELETE'});list();}
+async function restart(id){toast('Restarting…');await fetch(`/api/servers/${id}/restart`,{method:'POST'});setTimeout(list,2500);}
+async function del(id){if(!confirm('SERVER DELETE — puro folder chole jabe! Nishchit?'))return;await fetch('/api/servers/'+id,{method:'DELETE'});toast('Deleted','bad');list();}
 users();list();setInterval(list,12000);
 </script>
 </body>
