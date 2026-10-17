@@ -1,21 +1,75 @@
-<!doctype html><html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin Panel - MC</title>
-<style>body{font-family:sans-serif;background:#111;color:#eee;margin:0;padding:20px}input,select,button{padding:8px;margin:4px;border-radius:6px;background:#020617;color:#eee;border:1px solid #374151}button{background:#3b82f6;color:#fff;border:0;cursor:pointer}.card{background:#1f2937;padding:12px;border-radius:10px;margin:10px 0}.term{background:#000;color:#4ade80;font-family:monospace;font-size:12px;height:300px;overflow-y:auto;padding:10px;border-radius:8px;white-space:pre-wrap}a{color:#60a5fa}</style></head>
-<body><a href="/">← Home</a> <a href="/user">User →</a><h2>🛠️ Admin Panel</h2>
-<div class="card"><h3>Add User (Firebase)</h3><input id="email" placeholder="user@gmail.com"><select id="role"><option>user</option><option>admin</option></select><button onclick="addUser()">Add</button><div id="users"></div></div>
-<div class="card"><h3>All Servers + Real Terminal</h3><div id="list"></div>
-<div class="term" id="log">select server ↓</div>
-<div><input id="cmd" placeholder="say hello / op name / stop" style="width:320px"><button onclick="send()">Send</button> <button onclick="tail()">Refresh log</button></div></div>
+<!doctype html><html lang="bn"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MC Panel - Admin</title>
+<style>
+:root{--bg:#0e141d;--card:#151f2b;--line:#24313f;--txt:#d8e1ec;--dim:#8798aa;--accent:#4a9fd8}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px}
+header{background:#0b1119;border-bottom:1px solid var(--line);padding:14px 26px;display:flex;justify-content:space-between;align-items:center}
+header a{color:var(--dim);text-decoration:none}
+main{max-width:860px;margin:auto;padding:26px 20px 60px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+.card h3{margin:0 0 12px}
+label{display:block;font-size:12px;color:var(--dim);margin:8px 0 3px}
+input,select{background:#0b1014;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:9px}
+.row{display:grid;grid-template-columns:2fr 1fr auto auto;gap:8px;align-items:end}
+button{padding:9px 14px;border-radius:8px;border:1px solid var(--line);background:#1a3f61;color:#fff;cursor:pointer;font-weight:600}
+button.den{background:#5c2620;border-color:#7c352d}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;color:var(--dim);font-size:11px;text-transform:uppercase;padding:8px 8px;border-bottom:1px solid var(--line)}
+td{padding:8px;border-bottom:1px solid #1b2530}
+.srv{display:flex;justify-content:space-between;align-items:center;background:#121b26;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px}
+a.plink{color:#fff;background:#1d5c37;text-decoration:none;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600}
+small{color:var(--dim)}
+</style>
+</head>
+<body>
+<header><div><a href="/">← Home</a><b style="margin-left:12px">🛠️ Admin</b></div><div><a href="/user">User panel →</a></div></header>
+<main>
+<div class="card">
+  <h3>👥 Users (Firebase / local)</h3>
+  <div class="row">
+    <div><label>Email</label><input id="email" placeholder="player@gmail.com"></div>
+    <div><label>Role</label><select id="role"><option>user</option><option>admin</option></select></div>
+    <div><button onclick="addUser()">Add</button></div>
+    <div><span style="font-size:12px;color:var(--dim)" id="ustat"></span></div>
+  </div>
+  <div id="users"></div>
+</div>
+<div class="card">
+  <h3>🖥️ All Servers</h3>
+  <div id="list">loading...</div>
+</div>
+</main>
 <script>
-let sel=null,es=null;
-async function users(){const d=await (await fetch('/api/users')).json();document.getElementById('users').innerHTML=d.map(u=>`${u.email} (${u.role})`).join('<br>');}
-async function addUser(){const email=document.getElementById('email').value,role=document.getElementById('role').value;await fetch('/api/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,role})});users();}
-async function list(){const d=await (await fetch('/api/servers')).json();document.getElementById('list').innerHTML=d.map(s=>`<div><input type="radio" name="s" onclick="watch('${s.id}')"> <b>${s.name}</b> ${s.type} ${s.version} ${s.running?'🟢':'🔴'} pid:${s.pid||'-'} <button onclick="del('${s.id}')">Delete</button> <button onclick="backup('${s.id}')">Backup Now</button> <button onclick="start('${s.id}')">Start</button> <button onclick="stop('${s.id}')">Stop</button></div>`).join('');}
-async function watch(id){sel=id;const r=await (await fetch(`/api/servers/${id}/logs?tail=200`)).json();document.getElementById('log').innerText=r.logs.join('\n');if(es)es.close();es=new EventSource(`/api/servers/${id}/console`);es.onmessage=e=>{const el=document.getElementById('log');el.innerText+=(JSON.parse(e.data)+'\n');el.scrollTop=el.scrollHeight;};}
-async function tail(){if(!sel)return;const r=await (await fetch(`/api/servers/${sel}/logs?tail=200`)).json();document.getElementById('log').innerText=r.logs.join('\n');}
-async function del(id){if(!confirm('delete?'))return;await fetch('/api/servers/'+id,{method:'DELETE'});list();}
-async function backup(id){await fetch(`/api/servers/${id}/backup`,{method:'POST'});alert('backup done');}
-async function start(id){await fetch(`/api/servers/${id}/start`,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});list();}
-async function stop(id){await fetch(`/api/servers/${id}/stop`,{method:'POST'});list();}
-async function send(){if(!sel)return alert('server select koro');const cmd=document.getElementById('cmd').value;await fetch(`/api/servers/${sel}/command`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cmd})});document.getElementById('cmd').value='';}
-users();list();setInterval(list,15000);
-</script></body></html>
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+async function users(){
+  const d=await (await fetch('/api/users')).json();
+  document.getElementById('users').innerHTML=d.length?
+    '<table><thead><tr><th>Email</th><th>Role</th><th style="width:90px"></th></tr></thead><tbody>'+d.map(u=>`
+      <tr><td>${esc(u.email||u.id)}</td><td>${esc(u.role||'user')}</td>
+      <td><button class="den" onclick="delUser('${esc(u.id)}')">Delete</button></td></tr>`).join('')+'</tbody></table>'
+    :'<div style="color:var(--dim);padding:8px">kono user nai</div>';
+}
+async function addUser(){
+  const email=document.getElementById('email').value.trim(),role=document.getElementById('role').value;
+  if(!email)return alert('email daw');
+  const r=await (await fetch('/api/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,role})})).json();
+  document.getElementById('email').value='';document.getElementById('ustat').innerText=r.error?('❌ '+r.error):'✅ added';
+  users();
+}
+async function delUser(id){if(!confirm('delete user?'))return;await fetch('/api/users/'+id,{method:'DELETE'});users();}
+async function list(){
+  const d=await (await fetch('/api/servers')).json();
+  document.getElementById('list').innerHTML=d.map(s=>`
+    <div class="srv">
+      <div><b>${esc(s.name)}</b> <small>${s.type} ${s.version} • ${s.ram||4096}MB ${s.running?'🟢':'🔴'}</small></div>
+      <div><a class="plink" href="/server/${s.id}">🖥️ Panel</a> <button onclick="restart('${s.id}')">Restart</button> <button class="den" onclick="del('${s.id}')">Delete Server</button></div>
+    </div>`).join('');
+}
+async function restart(id){await fetch(`/api/servers/${id}/restart`,{method:'POST'});list();}
+async function del(id){if(!confirm('SERVER DELETE (folder) — puro loop delete hobe. Nishchit na?'))return;await fetch('/api/servers/'+id,{method:'DELETE'});list();}
+users();list();setInterval(list,12000);
+</script>
+</body>
+</html>

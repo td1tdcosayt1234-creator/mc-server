@@ -1,0 +1,551 @@
+<!doctype html><html lang="bn"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Server Panel - MC</title>
+<style>
+:root{
+  --bg:#0e141d;--side:#111a24;--card:#151f2b;--card2:#19242f;--line:#24313f;
+  --txt:#d8e1ec;--dim:#8798aa;--accent:#4a9fd8;--green:#43b56d;--yellow:#dfb45a;--red:#e05a4e;--purple:#b29dd6;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px}
+a{color:var(--accent);text-decoration:none}
+.layout{display:flex;min-height:100vh}
+/* ---- sidebar ---- */
+aside{width:250px;background:var(--side);border-right:1px solid var(--line);padding:18px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100vh}
+aside h2{margin:4px 0 2px;font-size:17px}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:3px 10px;border-radius:99px;background:var(--card);border:1px solid var(--line)}
+.pill .dot{width:8px;height:8px;border-radius:50%}
+.pill.on .dot{background:var(--green);box-shadow:0 0 6px var(--green)}
+.pill.off .dot{background:#5a6672}
+nav{margin-top:14px;display:flex;flex-direction:column;gap:4px}
+nav a{display:flex;gap:10px;align-items:center;padding:9px 12px;border-radius:8px;color:var(--dim);font-weight:600}
+nav a:hover{background:var(--card);color:var(--txt)}
+nav a.active{background:var(--card);color:var(--accent);border:1px solid var(--line)}
+.meta{margin-top:auto;font-size:12px;color:var(--dim);display:flex;flex-direction:column;gap:4px}
+.chip{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:4px 8px;color:var(--txt)}
+/* ---- main ---- */
+main{flex:1;padding:22px 26px;max-width:1100px;min-width:0}
+.topbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:16px}
+.topbar h1{font-size:20px;margin:0 10px 0 0}
+button{padding:7px 14px;border-radius:7px;border:1px solid var(--line);background:var(--card2);color:var(--txt);cursor:pointer;font-weight:600}
+button:hover{filter:brightness(1.15)}
+button:disabled{opacity:.4;cursor:not-allowed}
+.btn-start{background:#1d5c37;border-color:#2b7c4c}
+.btn-restart{background:#6b5a1e;border-color:#8a742c}
+.btn-stop{background:#4a231f;border-color:#6b322c}
+.btn-kill{background:#7c2c24;border-color:#a53c31}
+.pwr{display:flex;gap:8px;flex-wrap:wrap;flex:1}
+.res{display:flex;gap:10px;align-items:center;font-size:12px;color:var(--dim)}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 10px;min-width:86px}
+.stat b{color:var(--txt);font-size:13px;display:block}
+.bar{height:4px;background:#0b1014;border-radius:4px;margin-top:4px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--green);border-radius:4px}
+.view{display:none}
+.view.show{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
+.card h3{margin:0 0 10px;font-size:15px}
+label{display:block;font-size:12px;color:var(--dim);margin:8px 0 3px}
+input,select,textarea{background:#0b1014;color:var(--txt);border:1px solid var(--line);border-radius:7px;padding:8px;font-family:inherit}
+input,select{width:100%}
+textarea{width:100%;font-family:Consolas,monospace;background:#0b1014}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.note{font-size:12px;color:var(--dim)}
+/* ---- terminal ---- */
+.term-wrap{display:flex;flex-direction:column;background:#05070a;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.term{font-family:Consolas,'Courier New',monospace;font-size:12.5px;height:calc(100vh - 235px);min-height:300px;overflow-y:auto;padding:10px 12px;white-space:pre-wrap;word-break:break-word;line-height:1.45}
+.term div{margin:0}
+.default{color:#c3cfdc}
+.sys{color:#7fa3c4}
+.warn{color:#e5b567}
+.err{color:#ff6b5b}
+.cmd{color:var(--purple)}
+.chat{color:#7ecf9e}
+.term-input{display:flex;border-top:1px solid var(--line);background:#0a0e13;padding:8px;gap:8px}
+.term-input span{color:var(--green);font-family:Consolas,monospace;padding-left:4px;font-weight:bold}
+.term-input input{flex:1;background:transparent;border:0;outline:0;font-family:Consolas,monospace;color:var(--txt);font-size:13px;caret-color:var(--green)}
+/* ---- files table ---- */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{color:var(--dim);text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;padding:8px 10px;border-bottom:1px solid var(--line)}
+td{padding:7px 10px;border-bottom:1px solid #1b2530}
+tr:hover td{background:#141d26}
+.fname{display:flex;gap:8px;align-items:center;cursor:pointer;color:var(--txt)}
+.crumb{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px;font-size:13px}
+.crumb a{cursor:pointer}
+.crumb span{color:var(--dim)}
+.rowbtn{display:flex;gap:6px;justify-content:flex-end}
+.rowbtn button{padding:3px 8px;font-size:11px}
+.iconf{font-style:normal}
+.tip{position:fixed;bottom:18px;right:18px;background:var(--card);border:1px solid var(--line);padding:10px 14px;border-radius:8px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:99;max-width:340px}
+.tip.show{opacity:1}
+.tip.ok{border-color:var(--green)}.tip.bad{border-color:var(--red)}
+.empty{color:var(--dim);padding:14px;text-align:center}
+h1.letterhead{display:flex;align-items:center;gap:10px}
+kbd{background:#0b1014;border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:11px}
+@media (max-width:860px){aside{display:none}}
+</style></head>
+<body>
+<div class="layout">
+<aside>
+  <div style="font-size:22px">⛏️</div>
+  <h2 id="svName">...</h2>
+  <div><span class="pill off" id="svPill"><span class="dot"></span><span id="svStatus">Offline</span></span></div>
+  <nav id="nav">
+    <a href="#console" data-tab="console" class="active">🖥️ Console</a>
+    <a href="#files" data-tab="files">📁 Files</a>
+    <a href="#startup" data-tab="startup">🚀 Startup</a>
+    <a href="#settings" data-tab="settings">⚙️ Settings</a>
+    <a href="#network" data-tab="network">🌐 Network</a>
+    <a href="#backups" data-tab="backups">💾 Backups</a>
+  </nav>
+  <div class="meta">
+    <span class="chip" id="mType">type -</span>
+    <span class="chip" id="mVer">version -</span>
+    <span class="chip" id="mRam">RAM -</span>
+    <a href="/" style="margin-top:8px">← Dashboard</a>
+  </div>
+</aside>
+<main>
+  <div class="topbar">
+    <div class="pwr">
+      <button class="btn-start" id="bStart" onclick="power('start')">▶ Start</button>
+      <button class="btn-restart" id="bRestart" onclick="power('restart')">🔄 Restart</button>
+      <button class="btn-stop" id="bStop" onclick="power('stop')">■ Stop</button>
+      <button class="btn-kill" id="bKill" onclick="power('kill')" title="porlole disappear na korle force kill, pourbe crash na">✖ Kill</button>
+    </div>
+    <div class="res">
+      <div class="stat">CPU <b id="rCpu">0%</b><div class="bar"><i id="bCpu" style="width:0%"></i></div></div>
+      <div class="stat">RAM <b id="rMem">0 MB</b><div class="bar"><i id="bMem" style="width:0%"></i></div></div>
+      <div class="stat">Uptime <b id="rUp">-</b></div>
+    </div>
+  </div>
+
+  <!-- ===== CONSOLE ===== -->
+  <div class="view show" id="v-console">
+    <div class="term-wrap">
+      <div class="term" id="term"></div>
+      <div class="term-input"><span>&gt;</span>
+        <input id="cmdInput" placeholder="cmd lekho (say hello / op admin / stop) - purano command: ArrowUp" autofocus>
+        <button onclick="sendCmd()">Send</button>
+        <button onclick="clearTerm()" title="shudhu display clear">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== FILES ===== -->
+  <div class="view" id="v-files">
+    <div id="fileEditor" style="display:none">
+      <div class="card">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <b id="edPath" style="flex:1">path</b>
+          <button onclick="saveFile()">💾 Save</button>
+          <button onclick="closeEditor()">✕ Close</button>
+          <a href="#" id="edDownload"><button style="pointer-events:none">⬇ Download</button></a>
+        </div>
+        <textarea id="edText" style="height:55vh;margin-top:8px" spellcheck="false"></textarea>
+      </div>
+    </div>
+    <div id="fileBrowser">
+      <div class="crumb" id="crumbs"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+        <button onclick="newFile()">+ File</button>
+        <button onclick="newFolder()">+ Folder</button>
+        <button onclick="document.getElementById('upInput').click()">⬆ Upload</button>
+        <button onclick="loadFiles()">↻ Refresh</button>
+        <input type="file" id="upInput" multiple style="display:none">
+      </div>
+      <div class="card" style="padding:4px">
+        <table>
+          <thead><tr><th>Name</th><th style="width:90px">Size</th><th style="width:150px">Modified</th><th style="width:170px;text-align:right">Actions</th></tr></thead>
+          <tbody id="fileRows"></tbody>
+        </table>
+        <div class="empty" id="fileEmpty" style="display:none">khali folder</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== STARTUP ===== -->
+  <div class="view" id="v-startup">
+    <div class="card">
+      <h3>🚀 Startup Settings</h3>
+      <div class="grid2">
+        <div><label>RAM (MB, Xmx)</label><select id="suRam">
+          <option>1024</option><option>2048</option><option>3072</option><option>4096</option>
+          <option>6144</option><option>8192</option><option>12288</option><option>16384</option>
+        </select></div>
+        <div><label>Extra Java Args</label><input id="suArgs" placeholder="-XX:+UseG1GC -XX:+UseStringDeduplication">
+        </div>
+      </div>
+      <div class="grid3" style="margin-top:12px">
+        <div class="stat">Platform <b id="suType">-</b></div>
+        <div class="stat">Version <b id="suVer">-</b></div>
+        <div class="stat">Java <b id="suJava">checking...</b></div>
+      </div>
+      <div style="margin-top:12px"><button onclick="saveStartup()">💾 Save Startup</button> <span class="note">change korle next Start/Restart e apply hobe</span></div>
+    </div>
+    <div class="card">
+      <h3>⚠️ EULA</h3>
+      <button onclick="acceptEula()">eula.txt accept koro</button> <span class="note">(server boro scale na hobe aro eula=false thakle)</span>
+    </div>
+  </div>
+
+  <!-- ===== SETTINGS ===== -->
+  <div class="view" id="v-settings">
+    <div class="card">
+      <h3>⚙️ server.properties</h3>
+      <span class="note">save korle file likhe hobe, apply korte <b>Restart</b> lagbe</span>
+      <div class="grid3" id="propForm" style="margin-top:8px"></div>
+      <div style="margin-top:10px"><button onclick="saveProps()">💾 Save Properties</button>
+      <label style="display:inline-flex;align-items:center;gap:6px;margin-left:12px"><input type="checkbox" id="rawToggle" onchange="rawMode()" style="width:auto"> Raw edit</label></div>
+      <div id="rawWrap" style="display:none;margin-top:10px">
+        <textarea id="rawText" style="height:40vh" spellcheck="false"></textarea>
+        <div style="margin-top:8px"><button onclick="saveRaw()">💾 Save Raw</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== NETWORK ===== -->
+  <div class="view" id="v-network">
+    <div class="card">
+      <h3>🌐 Network / Connect</h3>
+      <div class="grid3">
+        <div class="stat">Game Port <b id="nPort">-</b></div>
+        <div class="stat">Panel URL <b id="nPanel" style="font-size:12px">-</b></div>
+        <div class="stat">LAN IP <b id="nLan" style="font-size:12px">-</b></div>
+      </div>
+      <p class="note" style="margin-top:12px">
+        ⚡ Friend ra join korte: <code id="nAddr" style="color:#fff">-</code> use o bootarion
+        router e <b>port forward</b> (TCP 25565 + panel port) korlagbe,
+        na hole <b>Cloudflare Tunnel / ngrok / Tailscale</b> use koro.<br>
+        Firewall: Windows Firewall e <b>panel port + 25565 TCP</b> allow koro.
+      </p>
+    </div>
+  </div>
+
+  <!-- ===== BACKUPS ===== -->
+  <div class="view" id="v-backups">
+    <div class="card">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <h3 style="flex:1;margin:0">💾 Backups <span class="note" id="bkWhere"></span></h3>
+        <button onclick="createBackup()">+ Take Backup</button>
+        <button onclick="loadBackups()">↻</button>
+      </div>
+      <span class="note">proteshi X min por auto backup hoy (.env BACKUP_MINUTES)</span>
+      <table style="margin-top:8px">
+        <thead><tr><th>Name</th><th style="width:90px">Size</th><th style="width:160px">Created</th><th style="width:230px;text-align:right">Actions</th></tr></thead>
+        <tbody id="bkRows"></tbody>
+      </table>
+      <div class="empty" id="bkEmpty" style="display:none">kono backup nai</div>
+    </div>
+  </div>
+</main>
+</div>
+<div class="tip" id="tip"></div>
+
+<script>
+const SID = location.pathname.split('/').pop();
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let SRV = null, es = null, statTimer = null;
+const hist = []; let hIdx = -1;
+
+function toast(msg, type='ok') {
+  const t = $('#tip'); t.innerText = msg; t.className = 'tip show ' + type;
+  clearTimeout(t._to); t._to = setTimeout(() => t.className = 'tip', 2600);
+}
+async function api(url, opt = {}) {
+  const r = await fetch(url, Object.assign({ headers: { 'Content-Type': 'application/json' } }, opt));
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
+  return j;
+}
+const fmtSize = b => b < 1024 ? b + ' B' : b < 1048576 ? (b / 1024).toFixed(1) + ' KB' : (b / 1048576).toFixed(1) + ' MB';
+function fmtUp(ms) {
+  const s = Math.floor(ms / 1000); if (s < 60) return s + 's';
+  const m = Math.floor(s / 60); if (m < 60) return m + 'm ' + (s % 60) + 's';
+  return Math.floor(m / 60) + 'h ' + (m % 60) + 'm';
+}
+
+/* ================= TABS ================= */
+function setTab(tab) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('show'));
+  const v = $('#v-' + tab); if (v) v.classList.add('show');
+  document.querySelectorAll('#nav a').forEach(a => a.classList.toggle('active', a.dataset.tab === tab));
+  if (tab === 'files' && fileLoaded === false) loadFiles();
+  if (tab === 'settings' && propsLoaded === false) loadProps();
+  if (tab === 'startup') loadStartup();
+  if (tab === 'network') loadNetwork();
+  if (tab === 'backups') loadBackups();
+}
+window.addEventListener('hashchange', () => setTab((location.hash || '#console').slice(1)));
+
+/* ================= SERVER INFO + STATS ================= */
+async function loadSrv() {
+  try {
+    SRV = await api(`/api/servers/${SID}`);
+    $('#svName').innerText = SRV.name || SRV.id;
+    $('#mType').innerText = (SRV.type || '').toUpperCase();
+    $('#mVer').innerText = SRV.version || '';
+    $('#mRam').innerText = 'RAM ' + (SRV.ram || 4096) + 'MB';
+    updStats({ ...(SRV.stats || {}), running: SRV.running });
+  } catch (e) { $('#svName').innerText = 'server nai'; }
+}
+function updStats(s) {
+  const on = !!s.running;
+  $('#svPill').className = 'pill ' + (on ? 'on' : 'off');
+  $('#svStatus').innerText = on ? 'Online' : 'Offline';
+  $('#bStart').disabled = on;
+  $('#bRestart').disabled = !on;
+  $('#bStop').disabled = !on;
+  $('#bKill').disabled = !on;
+  $('#rCpu').innerText = (s.cpu || 0) + '%';
+  const cpuPct = Math.min(100, s.cpu || 0);
+  $('#bCpu').style.width = cpuPct + '%';
+  $('#bCpu').style.background = cpuPct > 85 ? 'var(--red)' : cpuPct > 55 ? 'var(--yellow)' : 'var(--green)';
+  const mem = s.memMB || 0, cap = (SRV && SRV.ram) || 4096;
+  $('#rMem').innerText = mem + ' MB';
+  const memPct = Math.min(100, mem / cap * 100);
+  $('#bMem').style.width = memPct + '%';
+  $('#bMem').style.background = memPct > 90 ? 'var(--red)' : memPct > 70 ? 'var(--yellow)' : 'var(--green)';
+  $('#rUp').innerText = on && s.uptime ? fmtUp(s.uptime) : '-';
+}
+async function refreshStats() {
+  try {
+    const s = await api(`/api/servers/${SID}/stats`);
+    updStats(s);
+  } catch {}
+}
+
+/* ================= POWER ================= */
+async function power(a) {
+  if (a === 'kill' && !confirm('Force kill korle data save hoyna. Kill?')) return;
+  try {
+    await api(`/api/servers/${SID}/${a}`, { method: 'POST' });
+    toast(a + ' command pathano holo (' + a + ')');
+    if (a !== 'start') $('#svStatus').innerText = a === 'restart' ? 'Restarting...' : 'Stopping...';
+    setTimeout(refreshStats, 700); setTimeout(refreshStats, 2500);
+  } catch (e) { toast(e.message, 'bad'); }
+}
+
+/* ================= TERMINAL ================= */
+function colorLine(t) {
+  if (t.startsWith('>')) return `<span class="cmd">${esc(t)}</span>`;
+  if (t.startsWith('[Panel]')) return `<span class="sys">${esc(t)}</span>`;
+  if (/\[[\w/ -]*(WARN|WARNING)\]|\bWARN\b/i.test(t)) return `<span class="warn">${esc(t)}</span>`;
+  if (/\b(ERROR|SEVERE|FATAL)\b|Exception|Caused by/i.test(t)) return `<span class="err">${esc(t)}</span>`;
+  if (/joined the game|left the game|Achievement|Advancement|logged in with entity/i.test(t)) return `<span class="chat">${esc(t)}</span>`;
+  return `<span class="default">${esc(t)}</span>`;
+}
+let lines = [];
+function appendTerm(t) {
+  lines.push(t); if (lines.length > 900) lines = lines.slice(-900);
+  const el = $('#term');
+  const stick = el.scrollHeight - el.scrollTop - el.clientHeight < 60;
+  const d = document.createElement('div'); d.innerHTML = colorLine(t);
+  el.appendChild(d);
+  while (el.childElementCount > 900) el.removeChild(el.firstChild);
+  if (stick) el.scrollTop = el.scrollHeight;
+}
+function clearTerm() { $('#term').innerHTML = ''; lines = []; }
+function connectSSE() {
+  if (es) es.close();
+  es = new EventSource(`/api/servers/${SID}/console`);
+  es.onmessage = e => { try { appendTerm(JSON.parse(e.data)); } catch {} };
+}
+async function pushCmd(c) {
+  try { await api(`/api/servers/${SID}/command`, { method: 'POST', body: JSON.stringify({ cmd: c }) }); }
+  catch (e) { appendTerm(`[Panel] send fail: ${e.message}`); }
+}
+function sendCmd() {
+  const i = $('#cmdInput'); const c = i.value.trim(); if (!c) return;
+  hist.push(c); if (hist.length > 50) hist.shift(); hIdx = hist.length;
+  i.value = ''; pushCmd(c);
+}
+$('#cmdInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { sendCmd(); }
+  else if (e.key === 'ArrowUp' && hIdx > 0) { hIdx--; $('#cmdInput').value = hist[hIdx]; e.preventDefault(); }
+  else if (e.key === 'ArrowDown') { if (hIdx < hist.length - 1) { hIdx++; $('#cmdInput').value = hist[hIdx]; } else { hIdx = hist.length; $('#cmdInput').value = ''; } }
+});
+
+/* ================= FILES ================= */
+let cwd = '', fileLoaded = false, editing = null;
+async function loadFiles(dir) {
+  if (dir === undefined) dir = cwd;
+  fileLoaded = true;
+  try {
+    const d = await api(`/api/servers/${SID}/files?dir=${encodeURIComponent(dir)}`);
+    cwd = d.cwd;
+    renderCrumbs();
+    $('#fileRows').innerHTML = d.entries.map(e => renderFileRow(e)).join('');
+    $('#fileEmpty').style.display = d.entries.length ? 'none' : 'block';
+  } catch (e) { toast(e.message, 'bad'); }
+}
+function renderCrumbs() {
+  const html = [`<a onclick="loadFiles('')">📁 ${esc(SRV ? (SRV.name || SID) : SID)} (root)</a>`];
+  if (cwd) {
+    const parts = cwd.split('/'); let acc = '';
+    parts.forEach((p, i) => { acc = acc ? acc + '/' + p : p; html.push(`<span>/</span><a onclick="loadFiles('${esc(acc)}')">${esc(p)}</a>`); });
+  }
+  $('#crumbs').innerHTML = html.join('');
+}
+function renderFileRow(e) {
+  const rel = cwd ? cwd + '/' + e.name : e.name;
+  const icon = e.dir ? '📁' : '📄';
+  const name = `<span class="fname" onclick="${e.dir ? `loadFiles('${esc(rel)}')` : `openFile('${esc(rel)}')`}"><i class="iconf">${icon}</i>${esc(e.name)}</span>`;
+  const acts = `<div class="rowbtn"><button onclick="event.stopPropagation();renameItem('${esc(rel)}')">✏️</button><button onclick="event.stopPropagation();delItem('${esc(rel)}')">🗑</button>${e.dir ? '' : `<a href="/api/servers/${SID}/download?path=${encodeURIComponent(rel)}"><button style="pointer-events:none">⬇</button></a>`}</div>`;
+  return `<tr><td>${name}</td><td>${e.dir ? '-' : fmtSize(e.size)}</td><td>${new Date(e.mtime).toLocaleString()}</td><td>${acts}</td></tr>`;
+}
+async function openFile(rel) {
+  try {
+    const d = await api(`/api/servers/${SID}/file?path=${encodeURIComponent(rel)}`);
+    editing = rel;
+    $('#edPath').innerText = rel;
+    $('#edText').value = d.content == null ? (d.text ? '' : '// binary file - edit kora jai na') : d.content;
+    $('#edDownload').href = `/api/servers/${SID}/download?path=${encodeURIComponent(rel)}`;
+    $('#fileEditor').style.display = 'block'; $('#fileBrowser').style.display = 'none';
+  } catch (e) { toast(e.message, 'bad'); }
+}
+function closeEditor() { $('#fileEditor').style.display = 'none'; $('#fileBrowser').style.display = 'block'; editing = null; loadFiles(); }
+async function saveFile() {
+  try { await api(`/api/servers/${SID}/file`, { method: 'POST', body: JSON.stringify({ path: editing, content: $('#edText').value }) }); toast('File save holo'); }
+  catch (e) { toast(e.message, 'bad'); }
+}
+$('#edText').addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveFile(); }
+  if (e.key === 'Tab') { e.preventDefault(); const t = e.target, p = t.selectionStart; t.value = t.value.slice(0, p) + '  ' + t.value.slice(t.selectionEnd); t.selectionStart = t.selectionEnd = p + 2; }
+});
+async function newFile() { const n = prompt('New file naam:'); if (!n) return; try { await api(`/api/servers/${SID}/file`, { method: 'POST', body: JSON.stringify({ path: (cwd ? cwd + '/' : '') + n, content: '' }) }); loadFiles(); } catch (e) { toast(e.message, 'bad'); } }
+async function newFolder() { const n = prompt('New folder naam:'); if (!n) return; try { await api(`/api/servers/${SID}/mkdir`, { method: 'POST', body: JSON.stringify({ path: (cwd ? cwd + '/' : '') + n }) }); loadFiles(); } catch (e) { toast(e.message, 'bad'); } }
+async function renameItem(rel) { const to = prompt('Notun naam/path:', rel.split('/').pop()); if (!to) return; try { await api(`/api/servers/${SID}/rename`, { method: 'POST', body: JSON.stringify({ path: rel, to: (cwd ? cwd + '/' : '') + to }) }); loadFiles(); } catch (e) { toast(e.message, 'bad'); } }
+async function delItem(rel) { if (!confirm('Delete: ' + rel + ' ?')) return; try { await api(`/api/servers/${SID}/delete`, { method: 'POST', body: JSON.stringify({ path: rel }) }); if (editing === rel) closeEditor(); else loadFiles(); toast('Delete holo'); } catch (e) { toast(e.message, 'bad'); } }
+$('#upInput').addEventListener('change', async ev => {
+  for (const f of ev.target.files) {
+    const rel = (cwd ? cwd + '/' : '') + f.name;
+    try {
+      const r = await fetch(`/api/servers/${SID}/upload?path=${encodeURIComponent(rel)}`, { method: 'POST', body: f });
+      if (!r.ok) throw new Error('upload fail ' + f.name);
+      toast(f.name + ' upload OK');
+    } catch (e) { toast(e.message, 'bad'); }
+  }
+  ev.target.value = ''; loadFiles();
+});
+
+/* ================= STARTUP ================= */
+let suLoaded = false;
+async function loadStartup() {
+  if (suLoaded) return; suLoaded = true;
+  try {
+    const s = await api(`/api/servers/${SID}/startup`);
+    $('#suRam').value = String(s.ram); $('#suArgs').value = s.javaArgs || '';
+    $('#suType').innerText = s.type || '-'; $('#suVer').innerText = s.version || '-';
+  } catch {}
+  try { const i = await api('/api/info'); $('#suJava').innerText = i.java || 'not found'; } catch {}
+}
+async function saveStartup() {
+  try {
+    await api(`/api/servers/${SID}/startup`, { method: 'POST', body: JSON.stringify({ ram: +$('#suRam').value, javaArgs: $('#suArgs').value }) });
+    toast('Startup save holo - Restart dile apply hobe');
+  } catch (e) { toast(e.message, 'bad'); }
+}
+async function acceptEula() {
+  try { await api(`/api/servers/${SID}/file`, { method: 'POST', body: JSON.stringify({ path: 'eula.txt', content: 'eula=true\n' }) }); toast('EULA accepted'); }
+  catch (e) { toast(e.message, 'bad'); }
+}
+
+/* ================= SETTINGS (server.properties) ================= */
+let propsLoaded = false, propMap = {};
+const PROP_FIELDS = [
+  ['motd', 'MOTD (server naame khelo)', 'text'],
+  ['server-port', 'Game Port', 'number'],
+  ['query.port', 'Query Port', 'number'],
+  ['max-players', 'Max Players', 'number'],
+  ['online-mode', 'Online Mode (cameo) / cracked room', 'bool'],
+  ['white-list', 'White-list (phele phele khele)', 'bool'],
+  ['difficulty', 'Difficulty', ['peaceful', 'easy', 'normal', 'hard']],
+  ['gamemode', 'Default Gamemode', ['survival', 'creative', 'adventure', 'spectator']],
+  ['pvp', 'PvP', 'bool'],
+  ['view-distance', 'View Distance', 'number'],
+  ['simulation-distance', 'Simulation Distance', 'number'],
+  ['level-seed', 'World Seed', 'text'],
+  ['allow-flight', 'Allow Fly (Creative pakhi)', 'bool'],
+  ['spawn-npcs', 'Spawn NPCs', 'bool'],
+];
+async function loadProps() {
+  if (propsLoaded) return; propsLoaded = true;
+  try {
+    const d = await api(`/api/servers/${SID}/properties`);
+    propMap = d.map || {};
+    renderPropForm();
+    $('#rawText').value = d.raw || '';
+    if (!d.exists) toast('server.properties nai - first start howar por pai', 'bad');
+  } catch (e) { toast(e.message, 'bad'); }
+}
+function renderPropForm() {
+  $('#propForm').innerHTML = PROP_FIELDS.map(([k, label, type]) => {
+    const v = propMap[k] != null ? propMap[k] : '';
+    if (Array.isArray(type)) {
+      return `<div><label>${esc(label)} <code style="font-size:10px">${k}</code></label><select data-key="${k}" data-type="str">${type.map(o => `<option value="${o}"${o === v ? ' selected' : ''}>${o}</option>`).join('')}</select></div>`;
+    }
+    if (type === 'bool') {
+      return `<div><label>${esc(label)} <code style="font-size:10px">${k}</code></label><select data-key="${k}" data-type="bool"><option value="true"${v == 'true' ? ' selected' : ''}>true</option><option value="false"${v != 'true' ? ' selected' : ''}>false</option></select></div>`;
+    }
+    const num = type === 'number' ? `type="number"` : '';
+    return `<div><label>${esc(label)} <code style="font-size:10px">${k}</code></label><input ${num} data-key="${k}" data-type="${type}" value="${esc(v)}"></div>`;
+  }).join('');
+}
+async function saveProps() {
+  const values = {};
+  document.querySelectorAll('#propForm [data-key]').forEach(el => { values[el.dataset.key] = el.value; });
+  try {
+    await api(`/api/servers/${SID}/properties`, { method: 'POST', body: JSON.stringify({ values }) });
+    toast('Properties save holo - Restart koro');
+    await loadPropsRaw();
+  } catch (e) { toast(e.message, 'bad'); }
+}
+rawMode = () => { $('#rawWrap').style.display = $('#rawToggle').checked ? 'block' : 'none'; };
+async function saveRaw() {
+  try {
+    await api(`/api/servers/${SID}/properties`, { method: 'POST', body: JSON.stringify({ raw: $('#rawText').value }) });
+    toast('Raw properties save holo - Restart koro');
+    const d = await api(`/api/servers/${SID}/properties`); propMap = d.map || {}; $('#rawText').value = d.raw || ''; renderPropForm();
+  } catch (e) { toast(e.message, 'bad'); }
+}
+async function loadPropsRaw() { const d = await api(`/api/servers/${SID}/properties`); propMap = d.map || {}; $('#rawText').value = d.raw || ''; renderPropForm(); }
+
+/* ================= NETWORK ================= */
+async function loadNetwork() {
+  try {
+    const props = await api(`/api/servers/${SID}/properties`);
+    const port = (props.map || {})['server-port'] || '25565';
+    $('#nPort').innerText = port;
+    const i = await api('/api/info');
+    $('#nPanel').innerText = location.host;
+    $('#nLan').innerText = (i.ips && i.ips[0]) || location.hostname;
+    $('#nAddr').innerText = `${(i.ips && i.ips[0]) || location.hostname}:${port}`;
+  } catch {}
+}
+
+/* ================= BACKUPS ================= */
+async function loadBackups() {
+  try {
+    const d = await api(`/api/servers/${SID}/backups`);
+    $('#bkRows').innerHTML = d.map(b => `<tr><td>${esc(b.name)}</td><td>${fmtSize(b.size)}</td><td>${new Date(b.mtime).toLocaleString()}</td>
+      <td><div class="rowbtn"><button onclick="restoreBackup('${esc(b.name)}')">♻ Restore</button><a href="/api/servers/${SID}/backups/${encodeURIComponent(b.name)}/download"><button style="pointer-events:none">⬇</button></a><button onclick="delBackup('${esc(b.name)}')">🗑</button></div></td></tr>`).join('');
+    $('#bkEmpty').style.display = d.length ? 'none' : 'block';
+  } catch (e) { toast(e.message, 'bad'); }
+}
+async function createBackup() {
+  try { toast('Backup nite hobe...'); const d = await api(`/api/servers/${SID}/backup`, { method: 'POST' }); toast('Backup done: ' + d.file, 'ok'); loadBackups(); }
+  catch (e) { toast(e.message, 'bad'); }
+}
+async function delBackup(n) { if (!confirm('Delete backup: ' + n)) return; try { await api(`/api/servers/${SID}/backups/${encodeURIComponent(n)}`, { method: 'DELETE' }); toast('Delete holo'); loadBackups(); } catch (e) { toast(e.message, 'bad'); } }
+async function restoreBackup(n) {
+  if (!confirm('Restore korle server STOP hobe ar porlole backup content e replace hobe. OK?')) return;
+  try { await api(`/api/servers/${SID}/backups/${encodeURIComponent(n)}/restore`, { method: 'POST' }); toast('Restore kora holo'); }
+  catch (e) { toast(e.message, 'bad'); }
+}
+
+/* ================= INIT ================= */
+loadSrv().then(() => { connectSSE(); setTab((location.hash || '#console').slice(1)); });
+refreshStats(); statTimer = setInterval(refreshStats, 3000);
+</script></body></html>
