@@ -127,6 +127,13 @@ kbd{font-size:10.5px}
 textarea.input{font-family:var(--mono);font-size:12.5px;line-height:1.7;background:rgba(2,3,8,.6)}
 .field{margin-bottom:12px}
 
+/* responsive form grids (inline style er bodole class) */
+.grid2c{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.suGrid{display:grid;grid-template-columns:1fr 1.4fr;gap:12px}
+.propGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media (max-width:920px){.propGrid{grid-template-columns:1fr 1fr}}
+@media (max-width:640px){.grid2c,.suGrid,.propGrid{grid-template-columns:1fr}}
+
 /* ---------- tables ---------- */
 table.t{width:100%;border-collapse:collapse;font-size:13.5px}
 table.t th{color:var(--muted2);text-align:left;font-size:10.5px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.14em;padding:10px 11px;border-bottom:1px solid var(--line)}
@@ -254,14 +261,27 @@ main.mn{flex:1;padding:24px 28px 70px;max-width:1080px;min-width:0}
 
 /* ---------- responsive ---------- */
 @media (max-width:920px){
-  aside.sb{width:auto;height:auto;position:static;flex-direction:row;align-items:center;flex-wrap:wrap;gap:10px}
-  nav.sn{flex-direction:row;overflow-x:auto;width:100%}
+  .layout{flex-direction:column}          /* phone/tablet: sidebar upore — main full width */
+  aside.sb{width:auto;height:auto;position:sticky;top:0;z-index:45;flex-direction:row;align-items:center;flex-wrap:wrap;gap:8px;
+    border-right:0;border-bottom:1px solid var(--line)}
+  nav.sn{flex-direction:row;overflow-x:auto;width:100%;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  nav.sn::-webkit-scrollbar{display:none}
   nav.sn a{white-space:nowrap}
+  .sb .srvhead{margin-bottom:0;flex:1;min-width:0}
+  .sb .brand{padding:6px 4px 6px}
   .sb .meta{display:none}
   main.mn{padding:16px 16px 70px}
   .links{display:none}
   .grid2,.grid3{grid-template-columns:1fr}
   .hero h1{font-size:clamp(30px,8vw,44px)}
+}
+
+/* home hero (index) */
+.hero2{display:flex;max-width:1160px;gap:44px;align-items:center;text-align:left;padding-top:56px;position:relative}
+@media (max-width:920px){
+  .hero2{flex-direction:column;gap:26px;text-align:center;padding-top:34px}
+  .hero2 .kicker{margin:0 auto}
+  .hero2 .btn-wrap{justify-content:center}
 }
 
 /* ================= AUTH ================= */
@@ -483,56 +503,87 @@ body.srv-on #bStart{box-shadow:0 0 0 3px rgba(45,212,191,.1),0 10px 30px -12px r
 .pkrow{transition:border-color .18s,box-shadow .18s,transform .18s}
 .pkrow:hover{border-color:hsla(160,90%,55%,.45);box-shadow:0 6px 22px -10px hsla(160,90%,55%,.35);transform:translateY(-1px)}
 @media(prefers-reduced-motion:reduce){.pkrow,.pkrow:hover{transition:none;transform:none}}
-/* ================= 📱 MOBILE COMFORT LAYER (≤640px phone polish) ================= */
+/* ================= 📱 MOBILE COMFORT LAYER 2.0 (≤640px phone polish) ================= */
 @media (max-width:640px){
   /* ar kom padding — khali phone e content boro boro */
-  main.mn{padding:12px 12px 84px}
-  aside.sb{padding:10px 10px 12px}
+  main.mn{padding:12px 12px 90px}
+  aside.sb{padding:8px 10px 10px;gap:6px;backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);background:rgba(5,6,13,.9)}
+  aside.sb .brand span:last-child{display:none}       /* logo mark only — jagay bachao */
+  aside.sb .srvhead{padding:8px 10px;margin-bottom:0}
+  aside.sb .srvhead h2{max-width:none;font-size:13.5px}
   h2{font-size:18px}
   .srv-topline h1{font-size:19px}
+
+  /* stats — 3 ta compact row e na bhenge, equal share */
+  .res{gap:7px;display:grid;grid-template-columns:1fr 1fr 1fr}
+  .stat{min-width:0;padding:8px 10px}
+  .stat .v{font-size:13px}
+  .stat .k{font-size:8.5px;letter-spacing:.1em}
 
   /* table gulo horizontal scroll — phone e bhenge bdhake na */
   .t{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch;border-radius:12px}
   .t td,.t th{font-size:11.5px;padding:8px 10px}
+  /* Action column phone e sticky right — scroll korleo rename/delete all-time haat er nage */
+  .t th:last-child,.t td:last-child{position:sticky;right:0;background:linear-gradient(90deg,hsla(210,40%,8%,.65),#0b0e19 30%)}
+  .t td:last-child .rowbtn{justify-content:flex-end}
 
-  /* power button 2x2 grid — tap comfortable */
+  /* power buttons 2x2 — typer tap comfortable */
   .pwr{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .pwr .btn{width:100%;min-height:42px}
-  .powerbar{gap:10px}
-
-  /* CPU/RAM/uptime compact */
-  .res{gap:7px}
-  .stat{min-width:0;padding:8px 10px}
-  .stat .v{font-size:13px}
+  .pwr .btn{width:100%;min-height:44px;font-size:13.5px}
+  .powerbar{gap:10px;margin-bottom:14px}
+  #netChip{margin-left:auto}
 
   /* market rows — install button full-width tap target */
   .pkrow{padding:12px}
   .pkrow>div:last-child{display:flex}
-  .pkrow .btn{flex:1;min-height:42px;font-size:13.5px}
+  .pkrow .btn{flex:1;min-height:44px;font-size:13.5px}
 
-  /* boro touch target sob input/button e */
-  .input{padding:11px 12px;font-size:14px;min-height:42px}
-  .btn{min-height:40px}
+  /* boro touch target sob input/button e + iOS auto-zoom bondho (16px) */
+  .input,select.input{padding:11px 12px;font-size:16px;min-height:44px}
+  .btn{min-height:42px}
   .rowline{gap:8px}
-  .rowbtn .btn{min-height:36px;padding:7px 14px}
+  .rowbtn{width:100%;justify-content:stretch}
+  .rowbtn .btn{min-height:38px;padding:7px 12px;flex:1}
+  .toast{left:12px;right:12px;bottom:12px;max-width:none;text-align:center}
 
-  /* sidebar nav chips comfortably scrollable */
-  nav.sn{gap:5px}
-  nav.sn a{padding:8px 13px;font-size:12.5px;font-weight:600}
+  /* sidebar nav chips comfortably scrollable + edge fade */
+  nav.sn{gap:5px;scroll-snap-type:x proximity;
+    -webkit-mask-image:linear-gradient(90deg,#000 92%,transparent);mask-image:linear-gradient(90deg,#000 92%,transparent)}
+  nav.sn a{padding:9px 13px;font-size:12.5px;font-weight:600;scroll-snap-align:start}
 
   /* console phone e thikmoto height + boro font tap-friendly */
   .term-body{height:max(46vh,320px);font-size:11.5px;padding:12px 14px}
-  .terminput{padding:10px 12px}
-  .terminput input{font-size:13px;min-height:36px}
+  .terminput{padding:8px 10px;gap:8px}
+  .terminput input{font-size:16px;min-height:38px}
+  .term-foot .hint{display:none}                      /* Enter/↑↓ hint — phone e meaningless */
+  .terminput .btn{padding:8px 12px;min-height:38px}
 
   /* pricing/homepage/plans single col */
   .plans{grid-template-columns:1fr}
   .statband{grid-template-columns:1fr 1fr}
-  .hero{padding-top:30px}
+  .hero{padding:34px 16px 20px}
+  .container,.page{padding-left:14px;padding-right:14px}
+
+  /* nav: phone e overflow hoto — logo mark + main action ekhon */
+  .nav-inner{padding:9px 12px;gap:6px}
+  .nav .logo span:last-child{display:none}
+  .nav .link-pill{display:none}
+  .nav-actions{gap:6px}
+  .nav-actions .chip{display:none}
+  .nav-actions .btn{padding:8px 13px;font-size:12.5px;border-radius:10px}
+  .nav-actions .btn.sm{padding:7px 11px}
 
   /* auth (login/signup) phone prime */
   .auth-wrap{padding:0}
   .auth-card{padding:22px 18px;width:auto;max-width:100%}
+
+  /* file editor: phone e Save row sticky thakuk */
+  .vedit .rowline{flex-wrap:nowrap;overflow-x:auto}
+  #edText{height:46vh!important;font-size:13px}
+
+  /* docs toc chips scroll */
+  .docs-toc{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}
+  .docs-toc::-webkit-scrollbar{display:none}
 
   /* scroll horizontal bar kom dekhay */
   ::-webkit-scrollbar{height:6px}
@@ -541,6 +592,21 @@ body.srv-on #bStart{box-shadow:0 0 0 3px rgba(45,212,191,.1),0 10px 30px -12px r
 @media (max-width:380px){
   .pwr{grid-template-columns:1fr}
   .statband{grid-template-columns:1fr}
+  .res{grid-template-columns:1fr 1fr}
+  .pwr .btn{min-height:46px}
+}
+/* touch devices: sticky hover lift/grow bondho (tap er por button uthe thake na) */
+@media (hover:none){
+  .btn:hover{transform:none}
+  .hoverable:hover{box-shadow:none}
+  .plan:hover{transform:none}
+  .srvrow.live:hover::after{animation:liveBar 2.4s ease-in-out infinite}
+  .pkrow:hover{transform:none}
+  .stat-row:hover{transform:none}
+}
+/* coarse pointer (phone/tablet): cursor glow + star cursor effects off */
+@media (pointer:coarse){
+  .cursor-glow{display:none}
 }
 @media (prefers-reduced-motion:reduce){
   .pkrow,.pkrow:hover{transition:none;transform:none}

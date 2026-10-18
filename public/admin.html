@@ -93,7 +93,7 @@ async function saveSettings(){
   try{
     const r=await (await fetch('/api/auth/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({requireLogin:on})})).json();
     if(r.error){toast('❌ '+r.error,'bad');return}
-    $('#setStat').textContent='✅ saved'+(on?' — khola mode off':'');
+    $('#setStat').textContent=on?'✅ login required ON':'✅ khola mode (login off)';
     toast('Panel security save ✅');
   }catch(e){toast('❌ '+e.message,'bad')}
 }
@@ -104,7 +104,7 @@ async function users(errOnly){
     const d=await r.json();
     $('#users').innerHTML=d.length?d.map(u=>`
       <div class="userrow">
-        <div style="display:flex;gap:10px;align-items:center"><b style="font-size:14px">${esc(u.name||u.email||u.id)}</b><span class="rolechip ${u.role==='admin'?'admin':''}">${esc(u.role||'user')}</span><span class="muted small">${esc(u.email||'')}</span>${u.hash?'':'<span class="ownerchip">password nai</span>'}</div>
+        <div style="display:flex;gap:10px;align-items:center"><b style="font-size:14px">${esc(u.name||u.email||u.id)}</b><span class="rolechip ${u.role==='admin'?'admin':''}">${esc(u.role||'user')}</span><span class="muted small">${esc(u.email||'')}</span>${u.hasPassword?'':'<span class="ownerchip">password nai</span>'}</div>
         <button class="btn stop sm" onclick="delUser('${esc(u.id)}')">Delete</button>
       </div>`).join(''):'<div class="empty">kono user nai</div>';
   }catch(e){$('#users').innerHTML='<div class="empty">load fail</div>'}
@@ -139,7 +139,7 @@ async function list(){
   }catch(e){$('#list').innerHTML='<div class="empty">load fail</div>'}
 }
 async function restart(id){toast('Restarting…');await fetch(`/api/servers/${id}/restart`,{method:'POST'});setTimeout(list,2500);}
-async function del(id){if(!confirm('SERVER DELETE — puro folder chole jabe! Nishchit?'))return;const r=await (await fetch('/api/servers/'+id,{method:'DELETE'})).json();toast(r.error?('❌ '+r.error):'Deleted ✅',r.error?'bad':'ok');setTimeout(list,800);}
+async function del(id){if(!confirm('SERVER DELETE — puro folder chole jabe! Nishchit?'))return;const r=await (await fetch('/api/servers/'+id,{method:'DELETE'})).json();toast(r.error?('❌ '+r.error):(r.warning?('⚠ '+r.warning):'Deleted ✅'),r.error?'bad':(r.warning?'bad':'ok'));setTimeout(list,800);}
 me().then(() => { if(ME) list(); });
 setInterval(list,12000);
 </script>

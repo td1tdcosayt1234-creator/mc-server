@@ -24,9 +24,19 @@ const plugins = require('./lib/plugins');
 const SERVERS_DIR = mc.SERVERS_DIR;
 
 const app = express();
+app.disable('x-powered-by');
 app.use(cors());
-app.use(express.json());
+// 10mb: file editor er save (5MB limit) + raw properties JSON e jate dhore (default 100kb chilo — boro file save fail hoto)
+app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+
+// body-parser error (payload too large / malformed json) — HTML na, clean JSON pathai
+app.use('/api', (err, req, res, next) => {
+  if (!err) return next();
+  const code = err.status || err.statusCode || 400;
+  const msg = err.type === 'entity.too.large' ? `body onek boro (${Math.round((err.limit || 0) / 1048576)}MB limit)` : err.message;
+  if (!res.headersSent) res.status(code).json({ error: msg });
+});
 
 // ok(): sync + async + res.json() dujoner handler-i handle kore (res.json 'this' return kore — promise na!)
 // middleware mounted holeo next thake — er jonno (req,res,next) signature
@@ -39,10 +49,32 @@ const OPEN_API = ['/auth/signup', '/auth/login', '/auth/me', '/auth/logout', '/v
 // kintu start/stop/command/file/upload/backup/user — sob login er PORE (write action)
 const PUBLIC_READ = p =>
   p === '/servers' || /^\/servers\/[^/]+\/(logs|stats|console)$/.test(p);
+const SID_OK = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/; // server id — path traversal (%2e%2e etc) block
+
+// brute-force guard: login/signup IP-wise (1 min window)
+const authHits = new Map();
+function authLimited(ip) {
+  const now = Date.now();
+  const rec = authHits.get(ip) || { at: now, n: 0 };
+  if (now - rec.at > 60 * 1000) { rec.at = now; rec.n = 0; }
+  rec.n++;
+  authHits.set(ip, rec);
+  if (authHits.size > 5000) authHits.clear(); // memory guard
+  return rec.n > 15;
+}
 app.use('/api', async (req, res, next) => {
   req.user = auth.userFromReq(req) || null;
   const p = req.path;
-  if (OPEN_API.some(x => p === x || p.startsWith(x))) return next();
+  // /servers/:id er id validation sob route er age (guest logs/console o ekhane dhore)
+  if (p.startsWith('/servers/')) {
+    const sid = p.split('/')[2];
+    if (sid && !SID_OK.test(sid)) return res.status(400).json({ error: 'server id vul' });
+  }
+  if (p.startsWith('/auth/login') || p.startsWith('/auth/signup')) {
+    const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket.remoteAddress || 'x';
+    if (authLimited(ip)) return res.status(429).json({ error: 'onek bar try holo — 1 min por abar' });
+  }
+  if (OPEN_API.some(x => p === x || p.startsWith(x + '/'))) return next();
   if (req.method === 'GET' && PUBLIC_READ(p)) return next();
   if (loginRequired() && !req.user) return res.status(401).json({ error: 'login lagbe — /login' });
   if (p.startsWith('/users')) {
@@ -104,7 +136,7 @@ app.get('/api/servers', ok(async (req, res) => {
   if (req.__ownerOnly && req.user && req.user.role !== 'admin') {
     list = list.filter(s => s.owner === req.user.id);
   }
-  if (!req.user) list = list.map(s => { const o = s.owner, pub = { ...s }; delete pub.owner; return pub; }); // guest: uid lukano
+  if (!req.user) list = list.map(s => { const pub = { ...s }; delete pub.owner; delete pub.createdByName; return pub; }); // guest: uid/naam lukano
   res.json(list.map(s => ({ ...s, ...mc.serverStatus(s.id), stats: mc.getStats(s.id) })));
 }));
 
@@ -173,7 +205,7 @@ app.post('/api/servers/:id/kill', (req, res) => res.json(mc.killServer(req.param
 
 // ---- Real terminal: logs + live SSE + command ----
 app.get('/api/servers/:id/logs', ok(async (req, res) => {
-  const tail = parseInt(req.query.tail || '150', 10);
+  const tail = Math.min(1000, Math.max(1, parseInt(req.query.tail || '150', 10) || 150));
   const mem = mc.getLogs(req.params.id, tail);
   const logs = mem.length ? mem : mc.loadDiskLog(req.params.id, tail);
   res.json({ logs, running: mc.isRunning(req.params.id) });
@@ -206,8 +238,11 @@ app.post('/api/servers/:id/file', (req, res) => {
 app.post('/api/servers/:id/mkdir', ok((req, res) => { res.json(files.mkdir(SERVERS_DIR, req.params.id, req.body.path)); }));
 app.post('/api/servers/:id/delete', ok((req, res) => { res.json(files.remove(SERVERS_DIR, req.params.id, req.body.path)); }));
 app.post('/api/servers/:id/rename', ok((req, res) => { res.json(files.rename(SERVERS_DIR, req.params.id, req.body.path, req.body.to)); }));
-app.post('/api/servers/:id/upload', express.raw({ type: '*/*', limit: '500mb' }), (req, res) => {
-  try { res.json(files.upload(SERVERS_DIR, req.params.id, req.query.path, req.body)); }
+app.post('/api/servers/:id/upload', express.raw({ type: () => true, limit: '500mb' }), (req, res) => {
+  try {
+    if (!Buffer.isBuffer(req.body) || !req.body.length) throw new Error('upload body khali — file select koro');
+    res.json(files.upload(SERVERS_DIR, req.params.id, req.query.path, req.body));
+  }
   catch (e) { res.status(400).json({ error: e.message }); }
 });
 app.get('/api/servers/:id/download', (req, res) => {
@@ -261,7 +296,10 @@ app.post('/api/servers/:id/backup', ok(async (req, res) => {
   res.json({ ok: true, file: z });
 }));
 app.post('/api/servers/:id/backups/:name/restore', ok(async (req, res) => {
+  // stop → process exit + port release porjonto wait (Windows e file-lock thakle restore adha-adhura hoto)
   try { mc.stopServer(req.params.id); } catch {}
+  const stopped = await mc.waitStopped(req.params.id, 20000);
+  if (!stopped) return res.status(400).json({ error: 'server stop hoy nai — age Stop/Kill kore abar try koro' });
   await backup.restoreBackup(req.params.id, req.params.name, SERVERS_DIR);
   res.json({ ok: true });
 }));
@@ -286,8 +324,11 @@ app.get('/api/servers/:id/plugins', plugins.listInstalled);
 app.post('/api/servers/:id/plugins/install', ok(plugins.install));
 app.post('/api/servers/:id/plugins/delete', ok(plugins.remove));
 
-// ---- Users (Firebase / local) ----
-app.get('/api/users', ok(async (req, res) => res.json(await db.getUsers())));
+// ---- Users (Firebase / local) — hash/salt kabhi client e jai na ----
+app.get('/api/users', ok(async (req, res) => {
+  const list = await db.getUsers();
+  res.json(list.map(u => ({ id: u.id, email: u.email, name: u.name, role: u.role, createdAt: u.createdAt, hasPassword: !!(u.hash && u.salt) })));
+}));
 app.post('/api/users', ok(async (req, res) => {
   const { email, role, password } = req.body;
   if (!email) return res.status(400).json({ error: 'email lagbe' });
@@ -331,10 +372,21 @@ app.delete('/api/servers/:id', ok(async (req, res) => {
   const s = (await db.getServers()).find(x => x.id === id);
   if (!s) return res.status(404).json({ error: 'server nai' });
   mc.killServer(id);
-  await new Promise(r => setTimeout(r, 2500)); // taskkill settle
-  try { fs.rmSync(path.join(SERVERS_DIR, id), { recursive: true, force: true }); } catch {}
+  await mc.waitStopped(id, 15000); // pid liveness check — Windows file lock fix (agei map delete hoa wait bypass hoto)
   await db.deleteServer(id);
-  res.json({ ok: true, deleted: true });
+  // folder purge — Windows e handle release e delay thake, tai retry/backoff (age silent catch e folder pore thakto)
+  const dir = path.join(SERVERS_DIR, id);
+  let purged = false;
+  for (let i = 0; i < 10 && !purged; i++) {
+    try { fs.rmSync(dir, { recursive: true, force: true, maxRetries: 2, retryDelay: 250 }); } catch {}
+    purged = !fs.existsSync(dir);
+    if (!purged) await new Promise(r => setTimeout(r, 400));
+  }
+  if (!purged) {
+    // last resort: background e ar ekbar try (kono antivirus/handle late release holeo clean hobe)
+    setTimeout(() => { try { fs.rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 500 }); } catch {} }, 5000);
+  }
+  res.json({ ok: true, deleted: true, filesRemoved: purged, warning: purged ? undefined : 'folder lock — background cleanup try hocche' });
 }));
 
 // ---- Pages ----

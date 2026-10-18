@@ -69,7 +69,7 @@
         <button class="btn sm start" onclick="sendCmd()">Send</button>
         <button class="btn ghost sm" onclick="clearTerm()">Clear</button>
       </div>
-      <div class="term-foot"><span><kbd>Enter</kbd> send</span><span><kbd>↑↓</kbd> history</span><span class="progress"><i></i></span><span id="footSrv">—</span></div>
+      <div class="term-foot"><span class="hint"><kbd>Enter</kbd> send</span><span class="hint"><kbd>↑↓</kbd> history</span><span class="progress"><i></i></span><span id="footSrv">—</span></div>
     </div>
   </div>
 
@@ -111,7 +111,7 @@
   <div class="view" id="v-startup">
     <div class="card" style="padding:22px;margin-bottom:16px">
       <h3>🚀 Startup Settings</h3>
-      <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:12px">
+      <div class="suGrid">
         <div class="field"><label class="label">RAM (MB, -Xmx)</label>
           <select class="input" id="suRam"><option>1024</option><option>2048</option><option>3072</option><option>4096</option><option>6144</option><option>8192</option><option>12288</option><option>16384</option></select></div>
         <div class="field"><label class="label">Extra Java Args</label>
@@ -139,7 +139,7 @@
     <div class="card" style="padding:22px">
       <h3>⚙️ server.properties</h3>
       <p class="muted small" style="margin:0 0 16px">save → restart korle apply hobe</p>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px" id="propForm"></div>
+      <div class="propGrid" id="propForm"></div>
       <div class="rowline" style="margin-top:16px">
         <button class="btn primary" onclick="saveProps()">💾 Save Properties</button>
         <label class="muted small" style="display:inline-flex;align-items:center;gap:6px;margin:0">
@@ -231,7 +231,7 @@
 <div class="toast" id="tip"></div>
 
 <script>
-const SID = location.pathname.split('/').pop();
+const SID = location.pathname.split('/').filter(Boolean).pop(); // trailing slash thakleo thik
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 // inline onclick string er jonno: quotes/backslash escape (apostrophe filename e API/xss break hoto)
@@ -289,7 +289,10 @@ async function loadSrv() {
     $('#footSrv').textContent = SRV.id;
     $('#netChip').innerHTML = '<span class="pulse-dot"></span>' + ((SRV.stats && SRV.stats.uptime) ? 'port 25565' : 'port 25565');
     updStats({ ...(SRV.stats || {}), running: SRV.running });
-  } catch (e) { if (String(e.message).includes('HTTP')) location.href = '/login'; else $('#svName').textContent = 'server nai'; }
+  } catch (e) {
+    $('#svName').textContent = e.message || 'server nai';
+    $('#svStatus').textContent = 'Offline';
+  }
 }
 function updStats(s) {
   const on = !!s.running;
@@ -443,15 +446,21 @@ async function newFolder() { const n = prompt('New folder naam:'); if (!n) retur
 async function renameItem(rel) { const to = prompt('Notun naam:', rel.split('/').pop()); if (!to) return; try { await api(`/api/servers/${SID}/rename`, { method: 'POST', body: JSON.stringify({ path: rel, to: (cwd ? cwd + '/' : '') + to }) }); loadFiles(); } catch (e) { toast(e.message, 'bad'); } }
 async function delItem(rel) { if (!confirm('Delete: ' + rel + ' ?')) return; try { await api(`/api/servers/${SID}/delete`, { method: 'POST', body: JSON.stringify({ path: rel }) }); if (editing === rel) closeEditor(); else loadFiles(); toast('Delete holo'); } catch (e) { toast(e.message, 'bad'); } }
 $('#upInput').addEventListener('change', async ev => {
-  for (const f of ev.target.files) {
+  const files = [...ev.target.files];
+  ev.target.value = ''; // same file abar select korleo change event fire hobe
+  for (const f of files) {
     const rel = (cwd ? cwd + '/' : '') + f.name;
     try {
-      const r = await fetch(`/api/servers/${SID}/upload?path=${encodeURIComponent(rel)}`, { method: 'POST', body: f });
-      if (!r.ok) throw new Error('upload fail ' + f.name);
+      const r = await fetch(`/api/servers/${SID}/upload?path=${encodeURIComponent(rel)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': f.type || 'application/octet-stream' }, // kichu file type khali thake — tahole raw parser skip kore error dit
+        body: f
+      });
+      if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(j.error || ('upload fail ' + f.name)); }
       toast(f.name + ' upload OK ✅');
     } catch (e) { toast(e.message, 'bad'); }
   }
-  ev.target.value = ''; loadFiles();
+  loadFiles();
 });
 
 /* ================= STARTUP ================= */

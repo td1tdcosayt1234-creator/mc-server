@@ -32,7 +32,7 @@
       <label class="label">① Server name</label>
       <input class="input" id="name" placeholder="survival-1" spellcheck="false">
     </div>
-    <div class="field" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <div class="field grid2c" style="gap:12px">
       <div><label class="label">② Platform</label>
         <select class="input" id="type" onchange="fillVer()">
           <optgroup label="Bukkit family">
@@ -102,7 +102,13 @@ async function list(){
       </div>`).join(''):'<div class="empty">kono server nai — upor theke create koro</div>';
   }catch(e){$('#list').innerHTML='<div class="empty">load fail</div>'}
 }
-async function start1(id){const r=await (await fetch(`/api/servers/${id}/start`,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})).json();if(r&&r.msg)alert(r.msg);setTimeout(list,1500);}
+async function start1(id){
+  try{
+    const r=await (await fetch(`/api/servers/${id}/start`,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})).json();
+    if(r&&r.error)alert(r.error); else if(r&&r.msg)alert(r.msg);
+  }catch(e){alert('start fail: '+e.message)}
+  setTimeout(list,1500);
+}
 async function stop1(id){await fetch(`/api/servers/${id}/stop`,{method:'POST'});setTimeout(list,1500);}
 versions();list();setInterval(list,10000);
 </script>
