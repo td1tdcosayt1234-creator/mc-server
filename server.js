@@ -20,6 +20,7 @@ const props = require('./lib/props');
 const java = require('./lib/java');
 const auth = require('./lib/auth');
 const plugins = require('./lib/plugins');
+const players = require('./lib/players');
 
 const SERVERS_DIR = mc.SERVERS_DIR;
 
@@ -137,13 +138,19 @@ app.get('/api/servers', ok(async (req, res) => {
     list = list.filter(s => s.owner === req.user.id);
   }
   if (!req.user) list = list.map(s => { const pub = { ...s }; delete pub.owner; delete pub.createdByName; return pub; }); // guest: uid/naam lukano
-  res.json(list.map(s => ({ ...s, ...mc.serverStatus(s.id), stats: mc.getStats(s.id) })));
+  res.json(list.map(s => {
+    const pub = { ...s, ...mc.serverStatus(s.id), stats: mc.getStats(s.id) };
+    delete pub.rconPass; delete pub.rconPort;   // RCON credentials client e jabe na
+    return pub;
+  }));
 }));
 
 app.get('/api/servers/:id', ok(async (req, res) => {
   const s = (await db.getServers()).find(x => x.id === req.params.id);
   if (!s) return res.status(404).json({ error: 'server nai' });
-  res.json({ ...s, ...mc.serverStatus(s.id), stats: mc.getStats(s.id) });
+  const pub = { ...s, ...mc.serverStatus(s.id), stats: mc.getStats(s.id) };
+  delete pub.rconPass; delete pub.rconPort;   // RCON credentials client e jabe na
+  res.json(pub);
 }));
 
 app.post('/api/servers', ok(async (req, res) => {
@@ -186,6 +193,7 @@ app.post('/api/servers/:id/start', ok(async (req, res) => {
   }
   const ram = parseInt(req.body.ram || (s && s.ram) || 4096, 10) || 4096;
   const extra = String((s && s.javaArgs) || req.body.javaArgs || '').trim().split(' ').filter(Boolean);
+  try { await players.ensureRcon(req.params.id); } catch (e) { mc.pushLog(req.params.id, '[Panel] rcon setup warn: ' + e.message); } // 🎮 Players feature auto-enable
   res.json(mc.startServer(req.params.id, ram, extra, true, javaBin));
 }));
 app.post('/api/servers/:id/stop', (req, res) => res.json(mc.stopServer(req.params.id)));
@@ -199,6 +207,7 @@ app.post('/api/servers/:id/restart', ok(async (req, res) => {
   }
   const ram = parseInt(req.body.ram || (s && s.ram) || 4096, 10) || 4096;
   const extra = String((s && s.javaArgs) || '').trim().split(' ').filter(Boolean);
+  try { await players.ensureRcon(req.params.id); } catch (e) { mc.pushLog(req.params.id, '[Panel] rcon setup warn: ' + e.message); } // 🎮 Players feature auto-enable
   res.json(mc.restartServer(req.params.id, ram, extra, javaBin));
 }));
 app.post('/api/servers/:id/kill', (req, res) => res.json(mc.killServer(req.params.id)));
@@ -224,6 +233,23 @@ app.get('/api/servers/:id/console', (req, res) => {
 
 app.get('/api/servers/:id/stats', (req, res) => res.json(mc.getStats(req.params.id)));
 app.post('/api/servers/:id/command', (req, res) => res.json(mc.sendCommand(req.params.id, req.body.cmd || '')));
+
+// ---- 🎮 Players (RCON): online list / inventory / location / op-deop-ban-kick-pardon ----
+const badName = res => res.status(400).json({ error: 'player name vul (A-Z a-z 0-9 _, max 16)' });
+app.get('/api/servers/:id/players', ok(async (req, res) => { res.json(await players.list(req.params.id)); }));
+app.get('/api/servers/:id/players/banned', ok(async (req, res) => { res.json(await players.bans(req.params.id)); }));
+app.get('/api/servers/:id/players/:name/inv', ok(async (req, res) => {
+  if (!players.PNAME_OK.test(req.params.name)) return badName(res);
+  res.json(await players.inventory(req.params.id, req.params.name));
+}));
+app.get('/api/servers/:id/players/:name/pos', ok(async (req, res) => {
+  if (!players.PNAME_OK.test(req.params.name)) return badName(res);
+  res.json(await players.location(req.params.id, req.params.name));
+}));
+app.post('/api/servers/:id/players/:name/action', ok(async (req, res) => {
+  if (!players.PNAME_OK.test(req.params.name)) return badName(res);
+  res.json(await players.action(req.params.id, req.params.name, String((req.body || {}).action || '')));
+}));
 
 // ---- File manager ----
 app.get('/api/servers/:id/files', ok((req, res) => { res.json(files.list(SERVERS_DIR, req.params.id, req.query.dir || '')); }));
@@ -432,6 +458,7 @@ app.listen(PORT, async () => {
           continue;
         }
         claimed.add(bootPort);
+        try { await players.ensureRcon(s.id); } catch (e) { console.log(`[AutoStart] rcon warn ${s.id}:`, e.message); } // 🎮 Players feature auto-enable
         const jb = (await java.ensureJava(java.neededJava(s.version), l => console.log(`[AutoStart ${s.id}] ${l}`))).bin;
         mc.startServer(s.id, s.ram || 4096, String(s.javaArgs || '').trim().split(' ').filter(Boolean), true, jb);
         console.log(`[AutoStart] ${s.id}`);

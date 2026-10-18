@@ -631,3 +631,41 @@ body.srv-on #bStart{box-shadow:0 0 0 3px rgba(45,212,191,.1),0 10px 30px -12px r
   .pkrow,.pkrow:hover{transition:none;transform:none}
 }
 
+/* ═══════════ 🎮 PLAYERS (RCON) — cards · badges · inventory modal ═══════════ */
+.plgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.plcard{display:flex;flex-direction:column;gap:11px;padding:13px 14px;border:1px solid var(--line);border-radius:14px;
+  background:linear-gradient(170deg,hsla(0,0%,100%,.05),hsla(0,0%,100%,.015))}
+.plhead{display:flex;align-items:center;gap:11px;min-width:0}
+.plavatar{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;font-weight:800;font-size:17px;color:#fff;flex:none;
+  box-shadow:inset 0 0 0 1px hsla(0,0%,100%,.14)}
+.plname{font-weight:700;font-size:14px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.opsbadge{font-size:9px;font-weight:800;letter-spacing:.09em;padding:2px 7px;border-radius:999px;
+  background:rgba(251,191,36,.14);color:#fcd34d;border:1px solid rgba(251,191,36,.3)}
+.opsbadge.ban{background:rgba(251,113,133,.14);color:#fda4af;border-color:rgba(251,113,133,.3)}
+.placts{display:flex;gap:6px;flex-wrap:wrap}
+.plloc{line-height:1.7}
+.plloc code{background:rgba(0,0,0,.32);border:1px solid var(--line);padding:2px 8px;border-radius:8px;font-size:12px}
+/* inventory modal */
+.modal{position:fixed;inset:0;z-index:130;display:flex;align-items:center;justify-content:center;padding:16px;
+  background:rgba(2,3,7,.74);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);animation:fadeIn .16s ease}
+.modal[hidden]{display:none}
+.modal-card{width:100%;max-width:600px;max-height:86vh;overflow-y:auto;padding:18px;border-radius:18px;border:1px solid var(--line);
+  background:#0a0d17;box-shadow:0 40px 90px -40px rgba(0,0,0,.95)}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.invrow{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.invslot{width:46px;height:46px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.025);
+  display:grid;place-items:center;position:relative;font-size:20px}
+.invslot.filled{border-color:rgba(139,92,246,.42);background:linear-gradient(160deg,rgba(139,92,246,.14),rgba(45,212,191,.07))}
+.invslot.armor{border-style:dashed}
+.invslot .cnt{position:absolute;right:4px;bottom:1px;font-size:9.5px;font-weight:800;color:#e2e8f0;text-shadow:0 1px 3px #000}
+.invslot .en{position:absolute;left:3px;top:1px;font-size:8.5px}
+.invsum{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.invsum span{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:8px;padding:3px 9px;background:rgba(255,255,255,.02)}
+@media (max-width:640px){
+  .plgrid{grid-template-columns:1fr}
+  .placts .btn{flex:1;min-height:40px;font-size:12px}
+  .invslot{width:40px;height:40px;font-size:17px;border-radius:8px}
+  .modal{padding:10px}
+  .modal-card{padding:14px;max-height:88vh}
+}
+

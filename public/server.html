@@ -21,6 +21,7 @@
     </button>
     <nav class="brandmenu" id="brandMenu" hidden aria-label="Sections">
       <a href="#console" data-t="console">🖥️ Console</a>
+      <a href="#players" data-t="players">🎮 Players</a>
       <a href="#files" data-t="files">📁 Files</a>
       <a href="#startup" data-t="startup">🚀 Startup</a>
       <a href="#settings" data-t="settings">⚙️ Settings</a>
@@ -77,6 +78,29 @@
         <button class="btn ghost sm" onclick="clearTerm()">Clear</button>
       </div>
       <div class="term-foot"><span class="hint"><kbd>Enter</kbd> send</span><span class="hint"><kbd>↑↓</kbd> history</span><span class="progress"><i></i></span><span id="footSrv">—</span></div>
+    </div>
+  </div>
+
+  <!-- ===== 🎮 PLAYERS ===== -->
+  <div class="view" id="v-players">
+    <div class="card" style="padding:22px;margin-bottom:16px">
+      <div class="rowline" style="margin-bottom:6px">
+        <h3 style="flex:1;margin:0">🎮 Players <span class="muted small" id="plMeta"></span></h3>
+        <span class="chip" id="plCount"><b>—</b>/–</span>
+        <button class="btn ghost sm" onclick="loadPlayers()" title="refresh">↻</button>
+      </div>
+      <p class="muted small" style="margin:0 0 13px">live player list · 1-click inventory / location / OP / ban — RCON diye (server start korle nijei enable hoy)</p>
+      <div id="plNotice" class="empty" style="display:none;margin-bottom:12px"></div>
+      <div id="plGrid" class="plgrid"></div>
+      <div class="empty" id="plEmpty" style="display:none">🎮 keu online nei</div>
+    </div>
+    <div class="card" style="padding:22px">
+      <div class="rowline" style="margin-bottom:12px">
+        <h3 style="flex:1;margin:0">🚫 Banned players</h3>
+        <button class="btn ghost sm" onclick="loadBans()" title="refresh">↻</button>
+      </div>
+      <div id="banList" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      <div class="empty" id="banEmpty" style="display:none">kono ban nei — sob porishkar ✅</div>
     </div>
   </div>
 
@@ -235,6 +259,15 @@
   </div>
 </main>
 </div>
+<div class="modal" id="invModal" hidden>
+  <div class="modal-card">
+    <div class="rowline" style="margin-bottom:12px">
+      <b style="flex:1;font-size:15px" id="invTitle">🎒 inventory</b>
+      <button class="btn ghost sm" onclick="closeInv()">✕</button>
+    </div>
+    <div id="invBody"></div>
+  </div>
+</div>
 <div class="toast" id="tip"></div>
 
 <script>
@@ -278,6 +311,7 @@ function setTab(tab) {
   if (t === 'startup') loadStartup();
   if (t === 'network') loadNetwork();
   if (t === 'backups') loadBackups();
+  if (t === 'players') { loadPlayers(); loadBans(); }
   if (t === 'plugins' && !pkSearched) { loadInstalled(); loadPlugSearch(); }
 }
 window.addEventListener('hashchange', () => setTab((location.hash || '#console').slice(1)));
@@ -631,6 +665,148 @@ async function delPlugin(f, folder) {
   catch (e) { toast(e.message, 'bad'); }
 }
 
+/* ================= 🎮 PLAYERS (RCON) ================= */
+const PL_DIM = { overworld: '🌍 Overworld', the_nether: '🔥 Nether', the_end: '🌌 The End' };
+const ITEM_EMOJI = [
+  [/sword|dagger|blade/, '🗡'], [/pickaxe/, '⛏'], [/axe|hatchet/, '🪓'], [/shovel|spade/, '🥄'],
+  [/helmet|cap\b|hat\b|crown|turtle/, '⛑'], [/chestplate|tunic|elytra/, '🦺'], [/leggings|pants/, '👖'], [/boots|shoes/, '🥾'],
+  [/crossbow|bow/, '🏹'], [/arrow/, '🏹'], [/shield/, '🛡'], [/potion|brew/, '🧪'],
+  [/apple|bread|beef|pork|chicken|cooked|potato|carrot|fish|melon|berry|stew|soup|pie|cake|cookie|golden/, '🍖'],
+  [/bucket/, '🪣'], [/torch|lantern|campfire|candle/, '🕯'], [/book/, '📖'], [/ender_pearl|ender_eye/, '🔮'],
+  [/tnt/, '💥'], [/diamond|emerald|amethyst/, '💎'], [/gold/, '🪙'], [/iron/, '⚙'], [/coal|charcoal/, '⬛'],
+  [/redstone/, '🔴'], [/lapis|quartz|prismarine/, '🔷'], [/netherite|obsidian/, '⬛'], [/wool|carpet/, '🧶'],
+  [/glass/, '🪟'], [/log|planks|_wood/, '🪵'], [/sapling|leaves|flower|seed|grass|vine|moss/, '🌿'],
+  [/water/, '🌊'], [/lava|magma/, '🌋'], [/egg/, '🥚'], [/bone/, '🦴'], [/string|cobweb/, '🕸'],
+  [/gunpowder/, '🌫'], [/slime/, '🟩'], [/spawner/, '🕷'], [/shulker/, '📦'], [/compass|clock|spyglass/, '🧭'],
+  [/paper|map/, '📄'], [/brick|stone|dirt|sand|cobble|terracotta|concrete|deepslate|granite|diorite|andesite|netherrack|soul|bedrock/, '🧱'],
+];
+function itemEmoji(id) { const x = String(id || '').toLowerCase(); for (const [re, e] of ITEM_EMOJI) if (re.test(x)) return e; return '📦'; }
+function avaGrad(n) {
+  let h = 0; for (const c of String(n)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  const a = h % 360, b = (a + 70) % 360;
+  return `linear-gradient(145deg,hsl(${a} 70% 55%),hsl(${b} 75% 45%))`;
+}
+let plBusy = false;
+async function loadPlayers() {
+  if (plBusy) return; plBusy = true;
+  try {
+    const d = await api(`/api/servers/${SID}/players`);
+    const notice = $('#plNotice');
+    if (!d.ok) {
+      $('#plGrid').innerHTML = '';
+      $('#plEmpty').style.display = 'none';
+      notice.style.display = 'block';
+      notice.innerHTML = `<b>⚠️ ${esc(d.error || 'players load hoy nai')}</b>` +
+        (d.reason === 'notconfigured' ? '<br><span class="muted small">Server ekbar Start/Restart dile Players feature nijei on hoye jabe ✅</span>' : '') +
+        (d.reason === 'offline' ? '<br><span class="muted small">Start korle player list · inventory · location · op/ban sob cholbe</span>' : '');
+      $('#plCount').innerHTML = '<b>—</b>/–';
+      $('#plMeta').textContent = '· offline';
+      renderBans(d.banned || []);
+      return;
+    }
+    notice.style.display = 'none';
+    $('#plCount').innerHTML = `<b>${d.count}</b>/${d.max} online`;
+    $('#plMeta').textContent = '';
+    renderPlayers(d.names || [], d.ops || [], d.banned || []);
+    $('#plEmpty').style.display = d.count ? 'none' : 'block';
+    renderBans(d.banned || []);
+  } catch (e) {
+    $('#plNotice').style.display = 'block';
+    $('#plNotice').innerHTML = esc(e.message);
+  } finally { plBusy = false; }
+}
+function renderPlayers(names, ops, banned) {
+  const lc = s => String(s || '').toLowerCase();
+  const opsSet = new Set((ops || []).map(lc));
+  const banSet = new Set((banned || []).map(b => lc(b && b.name || b)));
+  $('#plGrid').innerHTML = names.map(n => {
+    const isOp = opsSet.has(lc(n)), isBan = banSet.has(lc(n));
+    return `<div class="plcard">
+      <div class="plhead">
+        <div class="plavatar" style="background:${avaGrad(n)}">${esc((n[0] || '?').toUpperCase())}</div>
+        <div style="min-width:0;flex:1">
+          <div class="plname">${esc(n)}${isOp ? ' <span class="opsbadge">OP</span>' : ''}${isBan ? ' <span class="opsbadge ban">BANNED</span>' : ''}</div>
+        </div>
+      </div>
+      <div class="placts">
+        <button class="btn sm ghost" onclick="showInv('${qe(n)}')">🎒 Inventory</button>
+        <button class="btn sm ghost" onclick="showPos('${qe(n)}')">📍 Location</button>
+        <button class="btn sm ghost" onclick="plAction('${qe(n)}','${isOp ? 'deop' : 'op'}')">${isOp ? '⬇ DeOP' : '⬆ OP'}</button>
+        <button class="btn sm ghost" onclick="plAction('${qe(n)}','kick')">👋 Kick</button>
+        <button class="btn sm stop" onclick="plAction('${qe(n)}','ban')">🚫 Ban</button>
+      </div>
+      <div class="plloc muted small" id="pl-loc-${n}" style="display:none"></div>
+    </div>`;
+  }).join('');
+}
+async function plAction(name, action) {
+  const okMsg = { op: 'OP deya holo ✅', deop: 'DeOP holo ✅', kick: 'Kick', ban: 'Ban', pardon: 'Unban' };
+  if ((action === 'ban' || action === 'kick') && !confirm(name + ' ke ' + action + ' korbe?')) return;
+  try {
+    const d = await api(`/api/servers/${SID}/players/${encodeURIComponent(name)}/action`, { method: 'POST', body: JSON.stringify({ action }) });
+    toast((okMsg[action] || action) + ': ' + (d.msg || 'done'));
+    loadPlayers();
+  } catch (e) { toast(e.message, 'bad'); }
+}
+async function plPardon(name) {
+  if (!confirm(name + ' ke unban (pardon) korbe?')) return;
+  try {
+    const d = await api(`/api/servers/${SID}/players/${encodeURIComponent(name)}/action`, { method: 'POST', body: JSON.stringify({ action: 'pardon' }) });
+    toast('Unban: ' + (d.msg || 'done'));
+    loadPlayers();
+  } catch (e) { toast(e.message, 'bad'); }
+}
+async function showPos(name) {
+  const el = $('#pl-loc-' + name);
+  if (!el) return;
+  el.style.display = 'block';
+  el.innerHTML = '📍 ⏳ location nicchi…';
+  try {
+    const d = await api(`/api/servers/${SID}/players/${encodeURIComponent(name)}/pos`);
+    const dim = PL_DIM[String(d.dim || '').toLowerCase()] || ('🌐 ' + esc(d.dim || '?'));
+    el.innerHTML = `📍 ${dim} · <code>${d.x}, ${d.y}, ${d.z}</code>`;
+  } catch (e) { el.innerHTML = '📍 ❌ ' + esc(e.message); }
+}
+function slotCell(it, cls) {
+  if (!it) return `<div class="invslot ${cls || ''}"></div>`;
+  const nm = esc(it.name) + (it.count > 1 ? ' ×' + it.count : '') + (it.ench ? ' ✨' : '');
+  return `<div class="invslot filled ${cls || ''}" title="${qe(it.name)}">${itemEmoji(it.id)}${it.count > 1 ? `<span class="cnt">${it.count}</span>` : ''}${it.ench ? '<span class="en">✨</span>' : ''}</div>`;
+}
+async function showInv(name) {
+  $('#invModal').hidden = false;
+  $('#invTitle').textContent = '🎒 ' + name + ' — inventory';
+  $('#invBody').innerHTML = '<div class="muted small" style="padding:20px 0;text-align:center">⏳ inventory load hocche…</div>';
+  try {
+    const d = await api(`/api/servers/${SID}/players/${encodeURIComponent(name)}/inv`);
+    $('#invBody').innerHTML = renderInv(d);
+  } catch (e) { $('#invBody').innerHTML = `<div class="empty">❌ ${esc(e.message)}</div>`; }
+}
+function closeInv() { const m = $('#invModal'); if (m) m.hidden = true; }
+function renderInv(d) {
+  if (!d.total) return '<div class="empty">🎒 inventory khali — kono item nei</div>';
+  const wear = [d.armor.helmet, d.armor.chestplate, d.armor.leggings, d.armor.boots];
+  let h = '<div class="muted small" style="margin-bottom:5px;font-weight:700">🛡 Armor + Hand</div><div class="invrow">' +
+    wear.map(it => slotCell(it, 'armor')).join('') + slotCell(d.hand.main, 'armor') + slotCell(d.hand.off, 'armor') + '</div>';
+  h += '<div class="muted small" style="margin-bottom:5px;font-weight:700">📦 Main (slot 10–36)</div><div class="invrow">' +
+    d.main.slice(9, 36).map(it => slotCell(it)).join('') + '</div>';
+  h += '<div class="muted small" style="margin-bottom:5px;font-weight:700">🎯 Hotbar (slot 1–9)</div><div class="invrow">' +
+    d.main.slice(0, 9).map(it => slotCell(it)).join('') + '</div>';
+  h += `<p class="muted small" style="margin:12px 0 4px"><b style="color:var(--text)">${d.total}</b> stack — hover/tap korle naam</p>`;
+  h += '<div class="invsum">' + d.list.map(it => `<span title="${qe(it.id)}">${itemEmoji(it.id)} ${esc(it.name)}${it.count > 1 ? ' ×' + it.count : ''}${it.ench ? ' ✨' : ''}</span>`).join('') + '</div>';
+  h += '<p class="muted small" style="margin:12px 0 0;opacity:.65">⚠️ ekhane shudhu dekha jay — item banate/give korte Console tab e command dao</p>';
+  return h;
+}
+async function loadBans() {
+  try { const d = await api(`/api/servers/${SID}/players/banned`); renderBans(d.banned || []); } catch {}
+}
+function renderBans(list) {
+  const arr = list || [];
+  $('#banList').innerHTML = arr.map(b => `<span class="chip" style="gap:8px">🚫 <b>${esc(b.name)}</b>${b.reason ? ` <span class="muted small" style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(b.reason)}</span>` : ''} <button class="btn sm ghost" style="padding:2px 9px" onclick="plPardon('${qe(b.name)}')">✅ Unban</button></span>`).join('');
+  $('#banEmpty').style.display = arr.length ? 'none' : 'block';
+}
+$('#invModal').addEventListener('click', e => { if (e.target === $('#invModal')) closeInv(); });
+setInterval(() => { const v = $('#v-players'); if (v && v.classList.contains('show') && !document.hidden) loadPlayers(); }, 6000);
+
 /* ================= PICKAXE BRAND → SECTION MENU ================= */
 const bmBtn = $('#brandBtn'), bmMenu = $('#brandMenu');
 function bmClose() { if (!bmMenu.hidden) { bmMenu.hidden = true; bmBtn.setAttribute('aria-expanded', 'false'); } }
@@ -643,7 +819,7 @@ function bmOpen() {
 bmBtn.addEventListener('click', e => { e.stopPropagation(); bmMenu.hidden ? bmOpen() : bmClose(); });
 bmMenu.addEventListener('click', e => { if (e.target.closest('a')) bmClose(); });   // select → bondho (hash nijei tab switch korbe)
 document.addEventListener('click', e => { if (!bmMenu.hidden && !bmMenu.contains(e.target) && !bmBtn.contains(e.target)) bmClose(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') bmClose(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { bmClose(); closeInv(); } });
 
 /* ================= INIT ================= */
 function out(){ fetch('/api/auth/logout',{method:'POST'}).then(()=>location.href='/login'); }
