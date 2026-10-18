@@ -478,3 +478,8 @@ body.srv-on #bStart{box-shadow:0 0 0 3px rgba(45,212,191,.1),0 10px 30px -12px r
   body,.auth-card,.btn.primary,.logo-mark::after{animation:none!important}
   .burstfx{display:none!important}
 }
+
+/* market row — hover lift */
+.pkrow{transition:border-color .18s,box-shadow .18s,transform .18s}
+.pkrow:hover{border-color:hsla(160,90%,55%,.45);box-shadow:0 6px 22px -10px hsla(160,90%,55%,.35);transform:translateY(-1px)}
+@media(prefers-reduced-motion:reduce){.pkrow,.pkrow:hover{transition:none;transform:none}}

@@ -579,15 +579,15 @@ async function loadPlugSearch() {
     const d = await api(`/api/servers/${SID}/plugins/search?q=${encodeURIComponent(q)}&kind=${kind}` + (strict ? '' : '&all=1'));
     $('#pkMeta').textContent = strict ? ('🔒 v' + d.version + ' matched · ' + (d.loaders || []).join('/')) : ('🔓 sob version · ' + (d.loaders || []).join('/'));
     box.innerHTML = (d.hits || []).length ? d.hits.map(h => `
-      <div class="rowline" style="gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:hsla(0,0%,100%,.02)">
-        <button class="btn primary sm" title="${qe(h.title)} install" onclick="installPlugin('${qe(h.slug)}')">⬇ Install</button>
-        <div style="display:flex;gap:11px;align-items:center;min-width:0;flex:1">
+      <div class="pkrow" style="padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:hsla(0,0%,100%,.02)">
+        <div style="display:flex;gap:11px;align-items:center;min-width:0">
           <span style="font-size:20px;width:28px;text-align:center">${h.icon ? `<img src="${esc(h.icon)}" style="width:26px;height:26px;border-radius:7px" loading="lazy" alt="">` : '🧩'}</span>
           <div style="min-width:0">
             <b style="font-size:13.5px">${esc(h.title)}</b> <span class="muted small">by ${esc(h.author || '—')} · ⬇ ${fmtPkNum(h.downloads)}</span>
             <div class="muted small" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(h.desc || '')}</div>
           </div>
         </div>
+        <div style="margin-top:9px"><button class="btn primary sm" title="${qe(h.title)} install" onclick="installPlugin('${qe(h.slug)}')">⬇ Install</button></div>
       </div>`).join('') :
       '<div class="empty">🔒 kichu pawa nai — ' + (strict ? ('<b>v' + esc(d.version) + '</b> er jonno ei keyword e compatible plugin nai. onno keyword try koro, othoba 🔒 box off kore sob version dekho') : 'onno keyword try koro') + '</div>';
     pkSearched = true;
