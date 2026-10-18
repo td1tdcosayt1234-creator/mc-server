@@ -130,6 +130,10 @@ MC ≤ 1.16.5        → <span class="k">Java 8</span></div>
 <span class="k">POST</span> /api/servers/:id/command  <span class="cmt">#{cmd:'say hi'}</span>
 <span class="k">GET/POST</span> /api/servers/:id/properties
 <span class="k">POST</span> /api/servers/:id/backup   <span class="cmt">#+ /backups, /backups/:n/restore|download</span>
+<span class="k">GET</span>  /api/servers/:id/plugins          <span class="cmt"># installed plugins+mods list</span>
+<span class="k">GET</span>  /api/servers/:id/plugins/search   <span class="cmt"># 🧩 Market (Modrinth) ?q=&amp;kind=plugin|mod</span>
+<span class="k">POST</span> /api/servers/:id/plugins/install <span class="cmt">#{slug,kind} → jar auto download</span>
+<span class="k">POST</span> /api/servers/:id/plugins/delete  <span class="cmt">#{file,folder}</span>
 <span class="k">POST</span> /api/auth/signup|login|logout, GET /api/auth/me
 <span class="k">DELETE</span> /api/servers/:id        <span class="cmt"># admin/owner full delete</span></div>
     </section>
