@@ -210,6 +210,9 @@
   }
   document.querySelectorAll('.logo,.brand').forEach(el => {
     el.addEventListener('click', e => {
+      // data-menu wala element (dropdown trigger) nijer kaj korbe — hijack na,
+      // kintu confetti burst ta thakuk (pickaxe logo click e moja)
+      if (el.hasAttribute('data-menu')) { burstFX(e.clientX, e.clientY); return; }
       e.preventDefault(); e.stopPropagation();
       burstFX(e.clientX, e.clientY);
       setTimeout(() => {

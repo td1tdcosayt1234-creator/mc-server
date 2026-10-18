@@ -15,7 +15,23 @@
 
 <div class="layout">
 <aside class="sb">
-  <a class="brand" href="/" style="color:inherit"><span class="logo-mark">⛏️</span><span>MC Panel</span></a>
+  <div class="brandwrap">
+    <button class="brand" id="brandBtn" type="button" data-menu aria-haspopup="menu" aria-expanded="false" aria-controls="brandMenu" aria-label="Sections menu" title="Menu — sob section">
+      <span class="logo-mark">⛏️</span><span class="btxt">MC Panel</span><span class="caret">▾</span>
+    </button>
+    <nav class="brandmenu" id="brandMenu" hidden aria-label="Sections">
+      <a href="#console" data-t="console">🖥️ Console</a>
+      <a href="#files" data-t="files">📁 Files</a>
+      <a href="#startup" data-t="startup">🚀 Startup</a>
+      <a href="#settings" data-t="settings">⚙️ Settings</a>
+      <a href="#network" data-t="network">🌐 Network</a>
+      <a href="#backups" data-t="backups">💾 Backups</a>
+      <a href="#plugins" data-t="plugins">🧩 Plugins · Market</a>
+      <span class="sep" aria-hidden="true"></span>
+      <a href="/">🏠 Dashboard</a>
+      <a href="#" onclick="out();return false">↩ Exit</a>
+    </nav>
+  </div>
   <div class="srvhead">
     <div class="avatar" id="srvAvatar" style="width:42px;height:42px;font-size:21px">🎮</div>
     <div class="flex1" style="min-width:0">
@@ -623,6 +639,20 @@ async function delPlugin(f, folder) {
   try { await api(`/api/servers/${SID}/plugins/delete`, { method: 'POST', body: JSON.stringify({ file: f, folder }) }); toast('Delete holo ✅'); loadInstalled(); }
   catch (e) { toast(e.message, 'bad'); }
 }
+
+/* ================= PICKAXE BRAND → SECTION MENU ================= */
+const bmBtn = $('#brandBtn'), bmMenu = $('#brandMenu');
+function bmClose() { if (!bmMenu.hidden) { bmMenu.hidden = true; bmBtn.setAttribute('aria-expanded', 'false'); } }
+function bmOpen() {
+  const cur = (location.hash || '#console').slice(1);
+  bmMenu.querySelectorAll('a[data-t]').forEach(a => a.classList.toggle('cur', a.dataset.t === cur));
+  bmMenu.hidden = false;
+  bmBtn.setAttribute('aria-expanded', 'true');
+}
+bmBtn.addEventListener('click', e => { e.stopPropagation(); bmMenu.hidden ? bmOpen() : bmClose(); });
+bmMenu.addEventListener('click', e => { if (e.target.closest('a')) bmClose(); });   // select → bondho (hash nijei tab switch korbe)
+document.addEventListener('click', e => { if (!bmMenu.hidden && !bmMenu.contains(e.target) && !bmBtn.contains(e.target)) bmClose(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') bmClose(); });
 
 /* ================= INIT ================= */
 function out(){ fetch('/api/auth/logout',{method:'POST'}).then(()=>location.href='/login'); }
