@@ -107,7 +107,7 @@ async function servers(){
     if(window.__uxCount){window.__uxCount($('#stOnline'),run);window.__uxCount($('#stTotal'),s.length);}
     $('#allClear').innerHTML=run?`<span class="dot" style="background:var(--green)"></span>${run} online`:`<span class="dot" style="background:#f87171"></span>sob offline`;
     $('#srvWrap').innerHTML=s.length?`<div class="stat-table">${s.map(x=>`
-      <div class="stat-row">
+      <div class="stat-row${x.running?' live':''}">
         <div style="display:flex;gap:10px;align-items:center;min-width:0">
           <span style="font-size:18px">${ICON[x.type]||'🎮'}</span>
           <div style="min-width:0"><b style="font-size:14.5px">${esc(x.name)}</b> <span class="ownerchip">${x.type} ${esc(x.version)}</span></div>

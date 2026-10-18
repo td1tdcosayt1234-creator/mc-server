@@ -74,6 +74,38 @@
     });
   }
 
+  // --- card spotlight: --mx/--my vars (CSS radial follow kore) ---
+  const SPOT = '.card,.statband .big';
+  let spotEl = null, spotRaf = 0, lastEv = null;
+  addEventListener('pointermove', e => {
+    lastEv = e;
+    if (spotRaf) return;
+    spotRaf = requestAnimationFrame(() => {
+      spotRaf = 0;
+      const ev = lastEv;
+      const t = ev.target && ev.target.closest ? ev.target.closest(SPOT) : null;
+      if (t) {
+        const r = t.getBoundingClientRect();
+        t.style.setProperty('--mx', ((ev.clientX - r.left) / r.width * 100).toFixed(1) + '%');
+        t.style.setProperty('--my', ((ev.clientY - r.top) / r.height * 100).toFixed(1) + '%');
+      }
+    });
+  }, { passive: true });
+
+  // --- button click ripple ---
+  addEventListener('pointerdown', e => {
+    const b = e.target && e.target.closest ? e.target.closest('.btn') : null;
+    if (!b || matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+    const r = b.getBoundingClientRect();
+    const s = document.createElement('i');
+    s.className = 'rip';
+    s.style.left = (e.clientX - r.left) + 'px';
+    s.style.top = (e.clientY - r.top) + 'px';
+    b.appendChild(s);
+    s.addEventListener('animationend', () => s.remove());
+    setTimeout(() => s.remove(), 800);
+  }, { passive: true });
+
   // --- starfield + shooting stars ---
   const stars = $('.stars');
   if (stars) {

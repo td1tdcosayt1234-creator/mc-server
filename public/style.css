@@ -354,8 +354,7 @@ body.warm #slist .fade-up{animation:none!important;opacity:1!important;transform
 @keyframes shoot{0%{opacity:0;transform:translate3d(0,0,0) rotate(222deg)}6%{opacity:.9}20%{opacity:0}100%{transform:translate3d(-34vw,44vh,0) rotate(222deg);opacity:0}}
 
 /* 404 glitch */
-.glitch{position:relative;display:inline-block}
-.glitch:before,.glitch:after{content:attr(data-t);position:absolute;left:0;top:0;width:100%;overflow:hidden;letter-spacing:inherit}
+.glitch{position:relative;display:inline-block}.glitch:before,.glitch:after{content:attr(data-t);position:absolute;left:0;top:0;width:100%;overflow:hidden;letter-spacing:inherit}
 .glitch:before{color:var(--sky);transform:translate(3px,0);clip-path:inset(0 0 58% 0);animation:glA 2.6s steps(2) infinite}
 .glitch:after{color:var(--rose);transform:translate(-3px,0);clip-path:inset(62% 0 0 0);animation:glB 3.1s steps(2) infinite}
 @keyframes glA{0%,88%{transform:translate(3px,0)}90%{transform:translate(-8px,-3px)}93%{transform:translate(6px,2px)}96%{transform:translate(-4px,0)}100%{transform:translate(3px,0)}}
@@ -363,3 +362,77 @@ body.warm #slist .fade-up{animation:none!important;opacity:1!important;transform
 .float-soft{animation:floatY 7s ease-in-out infinite}
 .zoom-hover{transition:transform .5s var(--ease)}
 .zoom-hover:hover{transform:scale(1.02)}
+
+/* ═══════════════ COOL LAYER v3 — spotlight / ripple / beam / flow ═══════════════ */
+
+/* aurora er mauji hue drift — background ta dhire dhire color mood change kore */
+.cine-aurora{animation:hueDrift 38s ease-in-out infinite alternate}
+@keyframes hueDrift{from{filter:hue-rotate(0deg)}to{filter:hue-rotate(46deg)}}
+
+/* gradient text e flow — headline e rainbow slide */
+.gradtext{background-size:230% 100%;animation:gradFlow 7.5s linear infinite}
+@keyframes gradFlow{0%{background-position:0% 50%}100%{background-position:-230% 50%}}
+
+/* mouse spotlight inside cards (ux.js --mx/--my set kore) */
+.card::before{content:"";position:absolute;inset:0;border-radius:inherit;opacity:0;pointer-events:none;z-index:0;
+  background:radial-gradient(340px circle at var(--mx,50%) var(--my,50%),rgba(139,92,246,.11),transparent 66%);
+  transition:opacity .4s ease}
+.card:hover::before{opacity:1}
+.statband .big::before{content:"";position:absolute;inset:0;border-radius:inherit;opacity:0;pointer-events:none;
+  background:radial-gradient(240px circle at var(--mx,50%) var(--my,50%),rgba(45,212,191,.09),transparent 64%);
+  transition:opacity .4s ease}
+.statband .big{position:relative;overflow:hidden}
+.statband .big:hover::before{opacity:1}
+
+/* button hover shine sweep + click ripple */
+.btn.primary,.btn.start{--sweep:1}
+.btn.primary::before,.btn.start::before{content:"";position:absolute;top:-10%;left:-120%;width:48%;height:120%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.28),transparent);transform:skewX(-18deg);transition:left .55s var(--ease);z-index:0}
+.btn.primary:hover::before,.btn.start:hover::before{left:150%}
+.btn .rip{position:absolute;width:10px;height:10px;border-radius:50%;pointer-events:none;z-index:0;transform:translate(-50%,-50%) scale(0);
+  background:radial-gradient(circle,rgba(255,255,255,.55),rgba(255,255,255,.12) 55%,transparent 70%);animation:ripE .6s var(--ease) forwards}
+@keyframes ripE{to{transform:translate(-50%,-50%) scale(26);opacity:0}}
+
+/* running server row — green glow edge + hairline */
+.srvrow.live{border-color:rgba(52,211,153,.3);box-shadow:0 0 40px -22px rgba(52,211,153,.55),inset 0 1px 0 hsla(0,0%,100%,.05)}
+.srvrow.live::after{content:"";position:absolute;left:-1px;top:18%;bottom:18%;width:2.5px;border-radius:9px;
+  background:linear-gradient(180deg,transparent,var(--green),transparent);animation:liveBar 2.4s ease-in-out infinite}
+@keyframes liveBar{0%,100%{opacity:.3}50%{opacity:1}}
+.srvrow.live:hover::after{animation:none;opacity:1}
+
+/* conic beam border — featured plan / live chip */
+@property --ba{syntax:'<angle>';inherits:false;initial-value:0deg}
+.beam,.plan.featured{position:relative}
+.plan.featured::before,.beam::before{content:"";position:absolute;inset:-1.5px;border-radius:inherit;pointer-events:none;
+  padding:1.5px;background:conic-gradient(from var(--ba),transparent 0 62%,rgba(139,92,246,.9) 76%,rgba(45,212,191,.7) 88%,transparent 100%);
+  -webkit-mask:linear-gradient(#000,#000) content-box,linear-gradient(#000,#000);-webkit-mask-composite:xor;
+  mask:linear-gradient(#000,#000) content-box,linear-gradient(#000,#000);mask-composite:exclude;
+  animation:beamSpin 5.5s linear infinite}
+@keyframes beamSpin{to{--ba:360deg}}
+
+/* terminal lines — console e notun line slotted hoy */
+.term-body>div{animation:lineIn .2s var(--ease) both}
+@keyframes lineIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+.term-live{animation:liveTxt 2.6s ease-in-out infinite}
+@keyframes liveTxt{50%{text-shadow:0 0 14px rgba(94,234,212,.9)}}
+
+/* marquee — hover e thame + boost */
+.marquee:hover .marquee-track{animation-play-state:paused;filter:brightness(1.35)}
+.marquee-track{transition:filter .3s}
+
+/* neon scrollbar */
+::-webkit-scrollbar-thumb{background:linear-gradient(180deg,rgba(139,92,246,.5),rgba(45,212,191,.45));background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg,rgba(196,181,253,.75),rgba(94,234,212,.7));background-clip:content-box}
+
+/* halka glow e nav on scroll paoa cards */
+.hoverable{transition:transform .45s var(--ease),border-color .4s ease,box-shadow .45s ease}
+.hoverable:hover{box-shadow:0 22px 55px -30px rgba(0,0,0,.9),0 0 50px -28px rgba(139,92,246,.55)}
+
+/* status page stat-row live glow */
+.stat-row.live{border-color:rgba(52,211,153,.3);box-shadow:0 0 44px -24px rgba(52,211,153,.5)}
+
+/* reduced-motion — sob notun anim off */
+@media (prefers-reduced-motion:reduce){
+  .cine-aurora,.gradtext,.plan.featured::before,.beam::before,.srvrow.live::after,
+  .term-body>div,.term-live,.btn .rip,.btn.primary::before,.btn.start::before{animation:none!important}
+}

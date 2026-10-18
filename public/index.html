@@ -137,7 +137,7 @@ async function load(){
     if(sbL&&window.__uxCount){window.__uxCount(sbL,run);window.__uxCount($('#sbTotal'),s.length);}
     else if(sbL){sbL.textContent=run;$('#sbTotal').textContent=s.length;}
     const html=s.length?s.map(x=>`
-      <div class="card srvrow hoverable fade-up">
+      <div class="card srvrow hoverable fade-up${x.running?' live':''}">
         <div class="l">
           <div class="avatar">${ICON[x.type]||'🎮'}</div>
           <div style="min-width:0">
