@@ -39,15 +39,6 @@
       <span class="pill" id="svPill"><span class="dot"></span><span id="svStatus">Offline</span></span>
     </div>
   </div>
-  <nav class="sn" id="nav">
-    <a href="#console" data-tab="console" class="active">🖥️ Console</a>
-    <a href="#files" data-tab="files">📁 Files</a>
-    <a href="#startup" data-tab="startup">🚀 Startup</a>
-    <a href="#settings" data-tab="settings">⚙️ Settings</a>
-    <a href="#network" data-tab="network">🌐 Network</a>
-    <a href="#backups" data-tab="backups">💾 Backups</a>
-    <a href="#plugins" data-tab="plugins">🧩 Plugins</a>
-  </nav>
   <div class="meta">
     <span class="chip" id="mType">type —</span>
     <span class="chip" id="mVer">version —</span>
@@ -281,7 +272,7 @@ function setTab(tab) {
   const t = $('#v-' + tab) ? tab : 'console';
   document.querySelectorAll('.view').forEach(v => v.classList.remove('show'));
   const v = $('#v-' + t); if (v) v.classList.add('show');
-  document.querySelectorAll('#nav a').forEach(a => a.classList.toggle('active', a.dataset.tab === t));
+  document.querySelectorAll('#brandMenu a[data-t]').forEach(a => a.classList.toggle('cur', a.dataset.t === t)); // section list ekhon pickaxe menu te
   if (t === 'files' && fileLoaded === false) loadFiles();
   if (t === 'settings' && propsLoaded === false) loadProps();
   if (t === 'startup') loadStartup();
