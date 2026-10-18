@@ -162,12 +162,25 @@ async function load(){
 }
 // hero terminal - REAL logs of first running/any server via SSE
 let heroEs=null;
+async function typeInto(sel,txt,sp){const el=typeof sel==='string'?$(sel):sel;if(!el)return;if(matchMedia('(prefers-reduced-motion: reduce)').matches){el.textContent=txt;return}el.textContent='';for(let i=1;i<=txt.length;i++){if(!el.isConnected)return;el.textContent=txt.slice(0,i);await new Promise(r=>setTimeout(r,sp||20))}}
 async function heroTerm(){
   try{
     const rr=await fetch('/api/servers');
-    if(rr.status===401){$('#heroTermId').textContent='mc — locked';$('#heroTerm').innerHTML='<div class="tsys">[panel] 🔒 live console dekhte login koro — <a href="/login" style="color:var(--mint2)">/login →</a></div><span class="cursor"></span>';return}
+    if(rr.status===401){
+      $('#heroTermId').textContent='mc — locked';
+      $('#heroTerm').innerHTML='<div class="tsys" id="heroT"></div><div id="heroLink"></div><span class="cursor"></span>';
+      await typeInto('#heroT','[panel] booting MC-Panel v2.0 … [auth] 🔒 live console dekhte login lagbe',18);
+      if($('#heroLink')&&$('#heroLink').isConnected)$('#heroLink').innerHTML='<a href="/login" style="color:var(--mint2)">/login →</a>';
+      return;
+    }
     const s=await rr.json();
-    if(!s.length){$('#heroTermId').textContent='mc — ready'; $('#heroTerm').innerHTML='<span class="tsys">[panel] kono server nai — /user theke create koro</span><span class="cursor"></span>';return}
+    if(!s.length){
+      $('#heroTermId').textContent='mc — ready';
+      $('#heroTerm').innerHTML='<div class="tsys" id="heroT"></div><div id="heroLink"></div><span class="cursor"></span>';
+      await typeInto('#heroT','[panel] booting MC-Panel v2.0 … [scan] 0 server found — bored?',18);
+      if($('#heroLink')&&$('#heroLink').isConnected)$('#heroLink').innerHTML='<a href="/user" style="color:var(--mint2)">/user theke first server create koro →</a>';
+      return;
+    }
     const pick=s.find(x=>x.running)||s[0];
     $('#heroTermId').textContent=pick.id+' — live';
     $('#heroFoot').textContent=pick.id+(pick.running?'':' · offline');

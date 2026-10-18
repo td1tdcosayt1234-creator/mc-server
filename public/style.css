@@ -436,3 +436,45 @@ body.warm #slist .fade-up{animation:none!important;opacity:1!important;transform
   .cine-aurora,.gradtext,.plan.featured::before,.beam::before,.srvrow.live::after,
   .term-body>div,.term-live,.btn .rip,.btn.primary::before,.btn.start::before{animation:none!important}
 }
+
+/* ═══════════════ COOL LAYER v4 — magnetic / pagetrans / typewriter / confetti ═══════════════ */
+
+/* logo mark e ghuri-jawa conic glow ring */
+.logo-mark,.sb .brand .logo-mark{position:relative;overflow:visible}
+.logo-mark::after{content:"";position:absolute;inset:-3px;border-radius:inherit;pointer-events:none;opacity:.5;
+  background:conic-gradient(from var(--ba,0deg),transparent 0 66%,rgba(139,92,246,.85) 80%,rgba(94,234,212,.6) 90%,transparent 100%);
+  -webkit-mask:linear-gradient(#000,#000) content-box,linear-gradient(#000,#000);-webkit-mask-composite:xor;
+  mask:linear-gradient(#000,#000) content-box,linear-gradient(#000,#000);mask-composite:exclude;padding:1.5px;
+  animation:beamSpin 6s linear infinite}
+
+/* primary button e breathing violet aura */
+.btn.primary{animation:btnGlow 3.4s ease-in-out infinite}
+@keyframes btnGlow{0%,100%{box-shadow:0 10px 30px -12px rgba(139,92,246,.55)}50%{box-shadow:0 14px 44px -10px rgba(139,92,246,.9)}}
+
+/* page transition — soft fade+lift (ux.js exit class add kore nav kore) */
+body{animation:pageIn .5s var(--ease) both}
+html.page-exit body{opacity:0;transform:translateY(7px) scale(.995);transition:opacity .17s ease,transform .22s var(--ease)}
+@keyframes pageIn{from{opacity:0;transform:translateY(10px) scale(.996)}to{opacity:1;transform:none}}
+
+/* logo click → MC particle burst */
+.burstfx{position:fixed;left:0;top:0;z-index:999;pointer-events:none;transform:translate(-50%,-50%) rotate(0) scale(.5);
+  animation:burstF 1s var(--ease) forwards}
+@keyframes burstF{0%{opacity:1;transform:translate(-50%,-50%) rotate(0deg) scale(.5)}
+  70%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--dx,0px)),calc(-50% + var(--dy,-30px))) rotate(var(--rot,120deg)) scale(1.1)}}
+
+/* login/signup: spring pop + error shake */
+.auth-card{animation:popSpring .8s var(--spring) both}
+@keyframes popSpring{0%{opacity:0;transform:translateY(22px) scale(.955)}100%{opacity:1;transform:none}}
+.shakeit{display:inline-block;animation:shakeX .55s var(--ease)}
+@keyframes shakeX{0%,100%{transform:none}20%{transform:translateX(-8px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(3px)}}
+
+/* server page: running thakle terminal e soft mint aura + start e halo */
+body.srv-on .term{box-shadow:0 50px 100px -46px rgba(0,0,0,.95),0 0 70px -30px rgba(139,92,246,.5),0 0 110px -40px rgba(45,212,191,.32)}
+body.srv-on .term-bar{border-bottom-color:rgba(45,212,191,.22)}
+body.srv-on #bStart{box-shadow:0 0 0 3px rgba(45,212,191,.1),0 10px 30px -12px rgba(45,212,191,.4)}
+
+/* v4 reduced-motion kill */
+@media (prefers-reduced-motion:reduce){
+  body,.auth-card,.btn.primary,.logo-mark::after{animation:none!important}
+  .burstfx{display:none!important}
+}

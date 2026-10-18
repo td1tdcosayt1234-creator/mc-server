@@ -128,4 +128,93 @@
       stars.appendChild(s);
     }
   }
+  // ═════════ COOL LAYER v4 JS: magnetic / pagetrans / parallax / confetti ═════════
+  const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const FINE = matchMedia('(pointer:fine)').matches;
+
+  // magnetic buttons: cursor er dike halka attract hoy
+  if (FINE && !REDUCED) {
+    const bound = new WeakSet();
+    const magnetize = b => {
+      if (bound.has(b)) return;
+      bound.add(b);
+      b.addEventListener('pointerenter', () => { b.__mr = b.getBoundingClientRect(); });
+      b.addEventListener('pointermove', e => {
+        if (!b.__mr || !b.__mr.width) b.__mr = b.getBoundingClientRect();
+        const nx = Math.max(-1, Math.min(1, (e.clientX - (b.__mr.left + b.__mr.width / 2)) / (b.__mr.width / 2)));
+        const ny = Math.max(-1, Math.min(1, (e.clientY - (b.__mr.top + b.__mr.height / 2)) / (b.__mr.height / 2)));
+        b.style.transform = `translate(${(nx * 4).toFixed(1)}px, ${(ny * 4 - 2).toFixed(1)}px)`;
+      });
+      b.addEventListener('pointerleave', () => { b.style.transform = ''; b.__mr = null; });
+    };
+    const scanBtns = () => document.querySelectorAll('.btn').forEach(magnetize);
+    scanBtns();
+    let moT = 0;
+    new MutationObserver(() => {
+      clearTimeout(moT); moT = setTimeout(() => requestAnimationFrame(scanBtns), 120);
+    }).observe(document.body, { childList: true, subtree: true });
+  }
+
+  // page transitions: internal link click → soft exit → nav
+  if (!REDUCED) {
+    document.addEventListener('click', e => {
+      const a = e.target && e.target.closest ? e.target.closest('a') : null;
+      if (!a) return;
+      const href = a.getAttribute('href') || '';
+      if (!href || href.startsWith('#') || a.target === '_blank' || a.hasAttribute('download')) return;
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+      let u;
+      try { u = new URL(a.href, location.href); } catch { return; }
+      if (u.origin !== location.origin) return;
+      if (u.pathname === location.pathname && u.hash) return;   // tab hash — nav na
+      if (u.pathname === location.pathname && u.search === location.search) return;
+      e.preventDefault();
+      document.documentElement.classList.add('page-exit');
+      setTimeout(() => { location.href = a.href; }, 175);
+    });
+  }
+
+  // scroll parallax: hero-er stars + aurora layer’er depth
+  if (!REDUCED) {
+    const heroStars = document.querySelector('.hero .stars');
+    const cineA = document.querySelector('.cine-aurora');
+    let pRaf = 0;
+    addEventListener('scroll', () => {
+      if (pRaf) return;
+      pRaf = requestAnimationFrame(() => {
+        pRaf = 0;
+        const y = scrollY;
+        if (heroStars) heroStars.style.transform = `translateY(${(y * 0.16).toFixed(1)}px)`;
+        if (cineA) cineA.style.transform = `translateY(${(-y * 0.05).toFixed(1)}px)`;
+      });
+    }, { passive: true });
+  }
+
+  // logo/brand click → MC particle burst (⛏💎⚡ confetti)
+  function burstFX(x, y) {
+    if (REDUCED) return;
+    const EM = ['⛏️', '💎', '⚡', '🟪', '🟩', '🧱', '☘️'];
+    for (let i = 0; i < 18; i++) {
+      const s = document.createElement('span');
+      s.className = 'burstfx';
+      s.textContent = EM[i % EM.length];
+      const ang = Math.random() * Math.PI * 2, dist = 42 + Math.random() * 78;
+      s.style.left = x + 'px'; s.style.top = y + 'px';
+      s.style.fontSize = (11 + Math.random() * 9) + 'px';
+      s.style.setProperty('--dx', (Math.cos(ang) * dist).toFixed(0) + 'px');
+      s.style.setProperty('--dy', (Math.sin(ang) * dist - 24).toFixed(0) + 'px');
+      s.style.setProperty('--rot', (Math.random() * 260 - 130).toFixed(0) + 'deg');
+      document.body.appendChild(s);
+      setTimeout(() => s.remove(), 1050);
+    }
+  }
+  document.querySelectorAll('.logo,.brand').forEach(el => {
+    el.addEventListener('click', e => {
+      e.preventDefault(); e.stopPropagation();
+      burstFX(e.clientX, e.clientY);
+      setTimeout(() => {
+        if (location.pathname !== '/' ) location.href = '/';
+      }, 620);
+    }, true);
+  });
 })();

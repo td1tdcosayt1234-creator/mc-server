@@ -270,6 +270,7 @@ function updStats(s) {
   const bc = $('#bCpu'); bc.style.width = cpuPct + '%';
   bc.style.background = cpuPct > 85 ? 'var(--red)' : cpuPct > 55 ? 'var(--amber)' : 'var(--grad)';
   const mem = s.memMB || 0, cap = (SRV && SRV.ram) || 4096;
+  document.body.classList.toggle('srv-on', !!s.running);   // running thakle terminal e aura
   $('#rMem').textContent = mem + ' MB';
   const memPct = Math.min(100, mem / cap * 100);
   const bm = $('#bMem'); bm.style.width = memPct + '%';
@@ -329,6 +330,25 @@ $('#cmdInput').addEventListener('keydown', e => {
   else if (e.key === 'ArrowUp' && hIdx > 0) { hIdx--; $('#cmdInput').value = hist[hIdx]; e.preventDefault(); }
   else if (e.key === 'ArrowDown') { if (hIdx < hist.length - 1) { hIdx++; $('#cmdInput').value = hist[hIdx]; } else { hIdx = hist.length; $('#cmdInput').value = ''; } }
 });
+
+// rotating placeholder — input khali/unfocused thakle command suggestion circle kore
+const CMD_HINTS = [
+  'say hello, world!',
+  'list — ke kone online?',
+  'op PlayerOne',
+  'whitelist add notch',
+  'gamerule keepInventory true',
+  'time set day 🌞',
+  'difficulty hard',
+  'tp @a 0 70 0'
+];
+let hintIdx = 0;
+setInterval(() => {
+  const i = $('#cmdInput');
+  if (!i || document.activeElement === i || $('#cmdInput').value) return;
+  hintIdx = (hintIdx + 1) % CMD_HINTS.length;
+  i.setAttribute('placeholder', CMD_HINTS[hintIdx]);
+}, 2400);
 
 /* ================= FILES ================= */
 let cwd = '', fileLoaded = false, editing = null;
