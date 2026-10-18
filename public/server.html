@@ -200,6 +200,10 @@
     <div class="card" style="padding:22px;margin-bottom:16px">
       <div class="rowline" style="margin-bottom:12px">
         <h3 style="flex:1;margin:0">🧩 Market <span class="muted small">· Modrinth</span></h3>
+        <label class="muted small" style="display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;margin-right:10px;white-space:nowrap" title="shudhu ei version er plugin dekhabe">
+          <input type="checkbox" id="pkStrict" checked onchange="loadPlugSearch()" style="accent-color:var(--pri,#7c5cff);cursor:pointer">
+          <span>🔒 <b id="pkVerLbl" style="color:var(--text)">v…</b> only</span>
+        </label>
         <select class="input" id="pkKind" style="width:auto;padding:7px 11px" onchange="loadPlugSearch()"><option value="plugin">🔌 Plugins (Paper/Spigot)</option><option value="mod">🧱 Mods (Fabric/NeoForge)</option></select>
       </div>
       <div class="rowline">
@@ -568,11 +572,12 @@ async function restoreBackup(n) {
 let pkSearched = false;
 function fmtPkNum(n) { n = n || 0; return n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1e3 ? (n / 1e3).toFixed(1) + 'k' : String(n); }
 async function loadPlugSearch() {
-  const q = $('#pkQ').value.trim(), kind = $('#pkKind').value;
+  const q = $('#pkQ').value.trim(), kind = $('#pkKind').value, strict = $('#pkStrict').checked;
+  $('#pkVerLbl').textContent = 'v' + (SRV && SRV.version ? SRV.version : '1.21.1');
   const box = $('#pkResults'); box.innerHTML = '<div class="muted small">🔍 searching…</div>';
   try {
-    const d = await api(`/api/servers/${SID}/plugins/search?q=${encodeURIComponent(q)}&kind=${kind}`);
-    $('#pkMeta').textContent = 'loaders: ' + (d.loaders || []).join('/');
+    const d = await api(`/api/servers/${SID}/plugins/search?q=${encodeURIComponent(q)}&kind=${kind}` + (strict ? '' : '&all=1'));
+    $('#pkMeta').textContent = strict ? ('🔒 v' + d.version + ' matched · ' + (d.loaders || []).join('/')) : ('🔓 sob version · ' + (d.loaders || []).join('/'));
     box.innerHTML = (d.hits || []).length ? d.hits.map(h => `
       <div class="rowline" style="justify-content:space-between;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:hsla(0,0%,100%,.02)">
         <div style="display:flex;gap:11px;align-items:center;min-width:0">
@@ -583,7 +588,8 @@ async function loadPlugSearch() {
           </div>
         </div>
         <button class="btn primary sm" onclick="installPlugin('${qe(h.slug)}')">⬇ Install</button>
-      </div>`).join('') : '<div class="empty">kichu pawa nai — onno keyword try koro</div>';
+      </div>`).join('') :
+      '<div class="empty">🔒 kichu pawa nai — ' + (strict ? ('<b>v' + esc(d.version) + '</b> er jonno ei keyword e compatible plugin nai. onno keyword try koro, othoba 🔒 box off kore sob version dekho') : 'onno keyword try koro') + '</div>';
     pkSearched = true;
   } catch (e) { box.innerHTML = `<div class="empty">❌ ${esc(e.message)}</div>`; }
 }
