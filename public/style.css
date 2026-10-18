@@ -483,3 +483,66 @@ body.srv-on #bStart{box-shadow:0 0 0 3px rgba(45,212,191,.1),0 10px 30px -12px r
 .pkrow{transition:border-color .18s,box-shadow .18s,transform .18s}
 .pkrow:hover{border-color:hsla(160,90%,55%,.45);box-shadow:0 6px 22px -10px hsla(160,90%,55%,.35);transform:translateY(-1px)}
 @media(prefers-reduced-motion:reduce){.pkrow,.pkrow:hover{transition:none;transform:none}}
+/* ================= 📱 MOBILE COMFORT LAYER (≤640px phone polish) ================= */
+@media (max-width:640px){
+  /* ar kom padding — khali phone e content boro boro */
+  main.mn{padding:12px 12px 84px}
+  aside.sb{padding:10px 10px 12px}
+  h2{font-size:18px}
+  .srv-topline h1{font-size:19px}
+
+  /* table gulo horizontal scroll — phone e bhenge bdhake na */
+  .t{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch;border-radius:12px}
+  .t td,.t th{font-size:11.5px;padding:8px 10px}
+
+  /* power button 2x2 grid — tap comfortable */
+  .pwr{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .pwr .btn{width:100%;min-height:42px}
+  .powerbar{gap:10px}
+
+  /* CPU/RAM/uptime compact */
+  .res{gap:7px}
+  .stat{min-width:0;padding:8px 10px}
+  .stat .v{font-size:13px}
+
+  /* market rows — install button full-width tap target */
+  .pkrow{padding:12px}
+  .pkrow>div:last-child{display:flex}
+  .pkrow .btn{flex:1;min-height:42px;font-size:13.5px}
+
+  /* boro touch target sob input/button e */
+  .input{padding:11px 12px;font-size:14px;min-height:42px}
+  .btn{min-height:40px}
+  .rowline{gap:8px}
+  .rowbtn .btn{min-height:36px;padding:7px 14px}
+
+  /* sidebar nav chips comfortably scrollable */
+  nav.sn{gap:5px}
+  nav.sn a{padding:8px 13px;font-size:12.5px;font-weight:600}
+
+  /* console phone e thikmoto height + boro font tap-friendly */
+  .term-body{height:max(46vh,320px);font-size:11.5px;padding:12px 14px}
+  .terminput{padding:10px 12px}
+  .terminput input{font-size:13px;min-height:36px}
+
+  /* pricing/homepage/plans single col */
+  .plans{grid-template-columns:1fr}
+  .statband{grid-template-columns:1fr 1fr}
+  .hero{padding-top:30px}
+
+  /* auth (login/signup) phone prime */
+  .auth-wrap{padding:0}
+  .auth-card{padding:22px 18px;width:auto;max-width:100%}
+
+  /* scroll horizontal bar kom dekhay */
+  ::-webkit-scrollbar{height:6px}
+}
+/* very small phones (iPhone SE etc.) */
+@media (max-width:380px){
+  .pwr{grid-template-columns:1fr}
+  .statband{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){
+  .pkrow,.pkrow:hover{transition:none;transform:none}
+}
+
