@@ -27,15 +27,21 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const ok = fn => (req, res) => fn(req, res).catch(e => res.status(400).json({ error: e.message }));
+// ok(): sync + async + res.json() dujoner handler-i handle kore (res.json 'this' return kore — promise na!)
+const ok = fn => (req, res) => { try { return Promise.resolve(fn(req, res)).catch(e => { if (!res.headersSent) res.status(400).json({ error: e.message }); else console.log('[err]', e.message); }); } catch (e) { if (!res.headersSent) res.status(400).json({ error: e.message }); } };
 
 // ---- AUTH: cookie session middleware (requireLogin toggle on/off — admin page theke) ----
 const loginRequired = () => auth.settings().requireLogin !== false; // default ON (admin page theke off kora jai)
 const OPEN_API = ['/auth/signup', '/auth/login', '/auth/me', '/auth/logout', '/versions', '/info'];
+// public showcase (home/docs/pricing/status): LOGIN CHARA guest READ-ONLY — nam/status/live logs dekhbe,
+// kintu start/stop/command/file/upload/backup/user — sob login er PORE (write action)
+const PUBLIC_READ = p =>
+  p === '/servers' || /^\/servers\/[^/]+\/(logs|stats|console)$/.test(p);
 app.use('/api', async (req, res, next) => {
   req.user = auth.userFromReq(req) || null;
   const p = req.path;
   if (OPEN_API.some(x => p === x || p.startsWith(x))) return next();
+  if (req.method === 'GET' && PUBLIC_READ(p)) return next();
   if (loginRequired() && !req.user) return res.status(401).json({ error: 'login lagbe — /login' });
   if (p.startsWith('/users')) {
     if (!req.user || req.user.role !== 'admin') return res.status(403).json({ error: 'admin only' });
@@ -96,6 +102,7 @@ app.get('/api/servers', ok(async (req, res) => {
   if (req.__ownerOnly && req.user && req.user.role !== 'admin') {
     list = list.filter(s => s.owner === req.user.id);
   }
+  if (!req.user) list = list.map(s => { const o = s.owner, pub = { ...s }; delete pub.owner; return pub; }); // guest: uid lukano
   res.json(list.map(s => ({ ...s, ...mc.serverStatus(s.id), stats: mc.getStats(s.id) })));
 }));
 
@@ -185,7 +192,7 @@ app.get('/api/servers/:id/stats', (req, res) => res.json(mc.getStats(req.params.
 app.post('/api/servers/:id/command', (req, res) => res.json(mc.sendCommand(req.params.id, req.body.cmd || '')));
 
 // ---- File manager ----
-app.get('/api/servers/:id/files', ok((req, res) => res.json(files.list(SERVERS_DIR, req.params.id, req.query.dir || ''))));
+app.get('/api/servers/:id/files', ok((req, res) => { res.json(files.list(SERVERS_DIR, req.params.id, req.query.dir || '')); }));
 app.get('/api/servers/:id/file', (req, res) => {
   try { res.json(files.read(SERVERS_DIR, req.params.id, req.query.path)); }
   catch (e) { res.status(400).json({ error: e.message }); }
@@ -194,9 +201,9 @@ app.post('/api/servers/:id/file', (req, res) => {
   try { res.json(files.write(SERVERS_DIR, req.params.id, req.body.path, req.body.content)); }
   catch (e) { res.status(400).json({ error: e.message }); }
 });
-app.post('/api/servers/:id/mkdir', ok((req, res) => res.json(files.mkdir(SERVERS_DIR, req.params.id, req.body.path))));
-app.post('/api/servers/:id/delete', ok((req, res) => res.json(files.remove(SERVERS_DIR, req.params.id, req.body.path))));
-app.post('/api/servers/:id/rename', ok((req, res) => res.json(files.rename(SERVERS_DIR, req.params.id, req.body.path, req.body.to))));
+app.post('/api/servers/:id/mkdir', ok((req, res) => { res.json(files.mkdir(SERVERS_DIR, req.params.id, req.body.path)); }));
+app.post('/api/servers/:id/delete', ok((req, res) => { res.json(files.remove(SERVERS_DIR, req.params.id, req.body.path)); }));
+app.post('/api/servers/:id/rename', ok((req, res) => { res.json(files.rename(SERVERS_DIR, req.params.id, req.body.path, req.body.to)); }));
 app.post('/api/servers/:id/upload', express.raw({ type: '*/*', limit: '500mb' }), (req, res) => {
   try { res.json(files.upload(SERVERS_DIR, req.params.id, req.query.path, req.body)); }
   catch (e) { res.status(400).json({ error: e.message }); }
@@ -256,7 +263,7 @@ app.post('/api/servers/:id/backups/:name/restore', ok(async (req, res) => {
   await backup.restoreBackup(req.params.id, req.params.name, SERVERS_DIR);
   res.json({ ok: true });
 }));
-app.delete('/api/servers/:id/backups/:name', ok((req, res) => res.json(backup.deleteBackup(req.params.id, req.params.name))));
+app.delete('/api/servers/:id/backups/:name', ok((req, res) => { res.json(backup.deleteBackup(req.params.id, req.params.name)); }));
 app.get('/api/servers/:id/backups/:name/download', (req, res) => {
   try {
     const p = backup.backupPath(req.params.id, req.params.name);

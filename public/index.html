@@ -119,6 +119,7 @@ const ICON={paper:'📄',purpur:'🟣',vanilla:'🌱',spigot:'⚡',fabric:'🧵'
 async function authState(){
   try{
     const me=await (await fetch('/api/auth/me')).json();
+    window.__me=me.user||null;
     if(me.user){ $('#navAuth').style.display='inline-flex'; $('#navAuth').textContent=me.user.role==='admin'?'👑 '+me.user.name:'👤 '+me.user.name; $('#navAuth').href=me.user.role==='admin'?'/admin':'/user'; }
     else $('#navAuth').style.display='inline-flex';
   }catch{}
@@ -149,7 +150,7 @@ async function load(){
             </div>
           </div>
         </div>
-        <a class="btn ${x.running?'primary':''}" href="/server/${x.id}">🖥️ Panel</a>
+        <a class="btn ${x.running?'primary':''}" href="${window.__me?'/server/'+x.id:'/login'}">${window.__me?'🖥️ Panel':'🔓 Manage'}</a>
       </div>`).join(''):
       `<div class="empty">kono server nai — <a href="/user">first server create koro →</a></div>`;
     if(html!==lastHtml){                    // update holei DOM ghotbe — else fade-up abar replay hobe na (glitch fix)
