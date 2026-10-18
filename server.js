@@ -1,10 +1,17 @@
-require('dotenv').config();
+// .env setup BEFORE dotenv loads (CWD-independent: always panel folder)
+const fs0 = require('fs');
+const path0 = require('path');
+const ENV_PATH = path0.join(__dirname, '.env');
+if (!fs0.existsSync(ENV_PATH) && fs0.existsSync(path0.join(__dirname, '.env.example'))) {
+  fs0.copyFileSync(path0.join(__dirname, '.env.example'), ENV_PATH);
+}
+require('dotenv').config({ path: ENV_PATH });
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const os = require('os');
 const { exec } = require('child_process');
-const fs = require('fs');
+const fs = fs0;
 const db = require('./lib/db');
 const mc = require('./lib/minecraft');
 const backup = require('./lib/backup');
@@ -19,8 +26,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
-
-if (!fs.existsSync('.env') && fs.existsSync('.env.example')) fs.copyFileSync('.env.example', '.env');
 
 const ok = fn => (req, res) => fn(req, res).catch(e => res.status(400).json({ error: e.message }));
 
@@ -103,7 +108,11 @@ app.get('/api/servers/:id', ok(async (req, res) => {
 app.post('/api/servers', ok(async (req, res) => {
   const { name, type, version, ram } = req.body;
   if (!name || !version) return res.status(400).json({ error: 'name + version lagbe' });
-  const id = name.toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 40) || 'srv';
+  const base = name.toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 40) || 'srv';
+  // ID collision guard: same name hole overwrite na hobe — -2, -3 suffix
+  let id = base, n = 2;
+  const all = await db.getServers();
+  while (all.some(x => x.id === id) || fs.existsSync(path.join(SERVERS_DIR, id))) id = `${base}-${n++}`;
   await mc.downloadServerJar(id, type || 'paper', version);
   const srv = await db.saveServer({ id, name, type: type || 'paper', version, ram: ram || 4096, javaArgs: '', owner: req.user ? req.user.id : 'legacy', createdByName: req.user ? (req.user.name || req.user.email) : 'pre-auth', createdAt: new Date().toISOString() });
   res.json({ ...srv, ...mc.serverStatus(id) });
@@ -310,6 +319,7 @@ app.delete('/api/servers/:id', ok(async (req, res) => {
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 app.get('/user', (req, res) => res.sendFile(path.join(__dirname, 'public', 'user.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
+app.get('/server', (req, res) => res.redirect('/user'));  // "/server" ake — page list e pathao (404 na)
 app.get('/server/:id', (req, res) => res.sendFile(path.join(__dirname, 'public', 'server.html')));
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
 app.get('/signup', (req, res) => res.sendFile(path.join(__dirname, 'public', 'signup.html')));

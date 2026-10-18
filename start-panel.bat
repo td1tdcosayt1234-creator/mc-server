@@ -1,4 +1,4 @@
 @echo off
-cd /d "C:\Users\RDP\Documents\mc-server"
+cd /d "%~dp0"
 node server.js
 pause
