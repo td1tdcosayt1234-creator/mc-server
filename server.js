@@ -19,6 +19,7 @@ const files = require('./lib/files');
 const props = require('./lib/props');
 const java = require('./lib/java');
 const auth = require('./lib/auth');
+const plugins = require('./lib/plugins');
 
 const SERVERS_DIR = mc.SERVERS_DIR;
 
@@ -28,7 +29,8 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ok(): sync + async + res.json() dujoner handler-i handle kore (res.json 'this' return kore — promise na!)
-const ok = fn => (req, res) => { try { return Promise.resolve(fn(req, res)).catch(e => { if (!res.headersSent) res.status(400).json({ error: e.message }); else console.log('[err]', e.message); }); } catch (e) { if (!res.headersSent) res.status(400).json({ error: e.message }); } };
+// middleware mounted holeo next thake — er jonno (req,res,next) signature
+const ok = fn => (req, res, next) => { try { return Promise.resolve(fn(req, res, next)).catch(e => { if (!res.headersSent) res.status(400).json({ error: e.message }); else console.log('[err]', e.message); }); } catch (e) { if (!res.headersSent) res.status(400).json({ error: e.message }); } };
 
 // ---- AUTH: cookie session middleware (requireLogin toggle on/off — admin page theke) ----
 const loginRequired = () => auth.settings().requireLogin !== false; // default ON (admin page theke off kora jai)
@@ -270,6 +272,19 @@ app.get('/api/servers/:id/backups/:name/download', (req, res) => {
     res.download(p);
   } catch (e) { res.status(400).json({ error: e.message }); }
 });
+
+// ---- 🧩 Plugin/Mod Market (Modrinth) — install plugins/mods server folder e ----
+// server record (type+version) — plugin routes er upor e middleware hisebe
+app.use('/api/servers/:id/plugins', ok(async (req, res, next) => {
+  const s = (await db.getServers()).find(x => x.id === req.params.id);
+  req.__srvType = (s && s.type) || 'paper'; req.__srvVersion = (s && s.version) || '1.21.1';
+  next();
+}));
+// search + installed list gated (PUBLIC_READ nei — manage route), install/delete login-er por
+app.get('/api/servers/:id/plugins/search', plugins.search);
+app.get('/api/servers/:id/plugins', plugins.listInstalled);
+app.post('/api/servers/:id/plugins/install', ok(plugins.install));
+app.post('/api/servers/:id/plugins/delete', ok(plugins.remove));
 
 // ---- Users (Firebase / local) ----
 app.get('/api/users', ok(async (req, res) => res.json(await db.getUsers())));

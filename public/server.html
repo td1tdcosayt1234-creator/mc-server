@@ -30,6 +30,7 @@
     <a href="#settings" data-tab="settings">⚙️ Settings</a>
     <a href="#network" data-tab="network">🌐 Network</a>
     <a href="#backups" data-tab="backups">💾 Backups</a>
+    <a href="#plugins" data-tab="plugins">🧩 Plugins</a>
   </nav>
   <div class="meta">
     <span class="chip" id="mType">type —</span>
@@ -193,6 +194,34 @@
       <div class="empty" id="bkEmpty" style="display:none;margin-top:12px">kono backup nai — “Take Backup” tap koro</div>
     </div>
   </div>
+
+  <!-- ===== 🧩 PLUGINS MARKET ===== -->
+  <div class="view" id="v-plugins">
+    <div class="card" style="padding:22px;margin-bottom:16px">
+      <div class="rowline" style="margin-bottom:12px">
+        <h3 style="flex:1;margin:0">🧩 Market <span class="muted small">· Modrinth</span></h3>
+        <select class="input" id="pkKind" style="width:auto;padding:7px 11px" onchange="loadPlugSearch()"><option value="plugin">🔌 Plugins (Paper/Spigot)</option><option value="mod">🧱 Mods (Fabric/NeoForge)</option></select>
+      </div>
+      <div class="rowline">
+        <input class="input flex1" id="pkQ" placeholder=" khujo… (essentials, luckperms, worldedit, vault, spark)" onkeydown="if(event.key==='Enter')loadPlugSearch()">
+        <button class="btn primary sm" onclick="loadPlugSearch()">🔍 Search</button>
+        <span class="muted small" id="pkMeta"></span>
+      </div>
+      <div id="pkResults" style="margin-top:14px;display:flex;flex-direction:column;gap:9px"><div class="muted small">search daftar koro…</div></div>
+    </div>
+    <div class="card" style="padding:22px">
+      <div class="rowline" style="margin-bottom:12px">
+        <h3 style="flex:1;margin:0">📦 Installed plugins &amp; mods</h3>
+        <button class="btn ghost sm" onclick="loadInstalled()">↻</button>
+      </div>
+      <table class="t">
+        <thead><tr><th>File</th><th style="width:88px">Size</th><th style="width:150px">Added</th><th style="width:110px;text-align:right">Action</th></tr></thead>
+        <tbody id="pkRows"></tbody>
+      </table>
+      <div class="empty" id="pkEmpty" style="display:none;margin-top:12px">kono plugin nai — upor er Market theke install koro</div>
+      <p class="muted small" style="margin:10px 0 0">install hole restart korle load hobe · config edit Files tab theke</p>
+    </div>
+  </div>
 </main>
 </div>
 <div class="toast" id="tip"></div>
@@ -238,6 +267,7 @@ function setTab(tab) {
   if (t === 'startup') loadStartup();
   if (t === 'network') loadNetwork();
   if (t === 'backups') loadBackups();
+  if (t === 'plugins' && !pkSearched) { loadInstalled(); loadPlugSearch(); }
 }
 window.addEventListener('hashchange', () => setTab((location.hash || '#console').slice(1)));
 
@@ -531,6 +561,51 @@ async function delBackup(n) { if (!confirm('Delete backup: ' + n)) return; try {
 async function restoreBackup(n) {
   if (!confirm('Restore korle server STOP hobe ar full backup overwrite hobe. OK?')) return;
   try { await api(`/api/servers/${SID}/backups/${encodeURIComponent(n)}/restore`, { method: 'POST' }); toast('Restore kora holo ✅'); }
+  catch (e) { toast(e.message, 'bad'); }
+}
+
+/* ================= 🧩 PLUGINS MARKET (Modrinth) ================= */
+let pkSearched = false;
+function fmtPkNum(n) { n = n || 0; return n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1e3 ? (n / 1e3).toFixed(1) + 'k' : String(n); }
+async function loadPlugSearch() {
+  const q = $('#pkQ').value.trim(), kind = $('#pkKind').value;
+  const box = $('#pkResults'); box.innerHTML = '<div class="muted small">🔍 searching…</div>';
+  try {
+    const d = await api(`/api/servers/${SID}/plugins/search?q=${encodeURIComponent(q)}&kind=${kind}`);
+    $('#pkMeta').textContent = 'loaders: ' + (d.loaders || []).join('/');
+    box.innerHTML = (d.hits || []).length ? d.hits.map(h => `
+      <div class="rowline" style="justify-content:space-between;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:hsla(0,0%,100%,.02)">
+        <div style="display:flex;gap:11px;align-items:center;min-width:0">
+          <span style="font-size:20px;width:28px;text-align:center">${h.icon ? `<img src="${esc(h.icon)}" style="width:26px;height:26px;border-radius:7px" loading="lazy" alt="">` : '🧩'}</span>
+          <div style="min-width:0">
+            <b style="font-size:13.5px">${esc(h.title)}</b> <span class="muted small">by ${esc(h.author || '—')} · ⬇ ${fmtPkNum(h.downloads)}</span>
+            <div class="muted small" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(h.desc || '')}</div>
+          </div>
+        </div>
+        <button class="btn primary sm" onclick="installPlugin('${qe(h.slug)}')">⬇ Install</button>
+      </div>`).join('') : '<div class="empty">kichu pawa nai — onno keyword try koro</div>';
+    pkSearched = true;
+  } catch (e) { box.innerHTML = `<div class="empty">❌ ${esc(e.message)}</div>`; }
+}
+async function installPlugin(slug) {
+  const kind = $('#pkKind').value;
+  toast('⬇ Downloading ' + slug + '…');
+  try {
+    const r = await api(`/api/servers/${SID}/plugins/install`, { method: 'POST', body: JSON.stringify({ slug, kind }) });
+    toast(`${r.file} installed ✅ (${r.version}) — Restart korle load hobe`);
+    loadInstalled();
+  } catch (e) { toast(e.message, 'bad'); }
+}
+async function loadInstalled() {
+  try {
+    const d = await api(`/api/servers/${SID}/plugins`);
+    $('#pkRows').innerHTML = d.map(x => `<tr><td class="mono" style="font-size:11.5px">${esc(x.file)}</td><td>${fmtSize(x.size)}</td><td class="muted small">${new Date(x.mtime).toLocaleString()}</td><td><div class="rowbtn"><button class="btn sm ghost" onclick="delPlugin('${qe(x.file)}','${x.folder}')">🗑</button></div></td></tr>`).join('');
+    $('#pkEmpty').style.display = d.length ? 'none' : 'block';
+  } catch (e) { $('#pkRows').innerHTML = ''; $('#pkEmpty').style.display = 'block'; }
+}
+async function delPlugin(f, folder) {
+  if (!confirm('Delete: ' + f + ' ?')) return;
+  try { await api(`/api/servers/${SID}/plugins/delete`, { method: 'POST', body: JSON.stringify({ file: f, folder }) }); toast('Delete holo ✅'); loadInstalled(); }
   catch (e) { toast(e.message, 'bad'); }
 }
 
