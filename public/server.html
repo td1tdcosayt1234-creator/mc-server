@@ -440,6 +440,41 @@ function colorLine(t) {
   if (/joined the game|left the game|Achievement|Advancement|logged in with entity/i.test(t)) return `<span class="tchat">${esc(t)}</span>`;
   return `<span class="tdefault">${esc(t)}</span>`;
 }
+/* ═══ BOOT-DONE CONFETTI — console-এ "Done (" ashle celebration burst (1 min debounce) ═══ */
+let __lastFx = 0;
+function bootConfetti() {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (Date.now() - __lastFx < 60000) return;
+  __lastFx = Date.now();
+  const cv = document.createElement('canvas');
+  cv.className = 'fxcanvas'; cv.width = innerWidth; cv.height = innerHeight;
+  document.body.appendChild(cv);
+  const cx = cv.getContext('2d');
+  const COLORS = ['#2dd4bf', '#c4b5fd', '#f472b6', '#38bdf8', '#fbbf24', '#a3e635'];
+  const parts = Array.from({ length: 150 }, (_, i) => ({
+    x: innerWidth / 2 + (Math.random() - .5) * innerWidth * .55,
+    y: innerHeight * .3 + (Math.random() - .5) * 46,
+    vx: (Math.random() - .5) * 10, vy: -5 - Math.random() * 10,
+    s: 3 + Math.random() * 5.5, c: COLORS[i % COLORS.length],
+    r: Math.random() * 6.28, vr: (Math.random() - .5) * .34, life: 1
+  }));
+  let fr = 0;
+  (function tick() {
+    fr++; cx.clearRect(0, 0, cv.width, cv.height);
+    let alive = false;
+    for (const p of parts) {
+      p.vy += .27; p.x += p.vx; p.y += p.vy; p.r += p.vr; p.life -= .011;
+      if (p.life > 0 && p.y < cv.height + 60) {
+        alive = true;
+        cx.save(); cx.translate(p.x, p.y); cx.rotate(p.r);
+        cx.globalAlpha = Math.min(1, p.life * 1.5);
+        cx.fillStyle = p.c; cx.fillRect(-p.s / 2, -p.s / 2, p.s, p.s * .62);
+        cx.restore();
+      }
+    }
+    if (alive && fr < 320) requestAnimationFrame(tick); else cv.remove();
+  })();
+}
 function appendTerm(t) {
   const el = $('#term');
   const stick = el.scrollHeight - el.scrollTop - el.clientHeight < 60;
@@ -447,6 +482,7 @@ function appendTerm(t) {
   el.insertBefore(d, el.lastElementChild);
   while (el.childElementCount > 900) el.removeChild(el.firstChild);
   if (stick) el.scrollTop = el.scrollHeight;
+  if (/Done \(/.test(t)) bootConfetti();   // boot complete → celebrate 🎉
 }
 function clearTerm() { $('#term').innerHTML = '<span class="l-cmd">$ cleared —</span><span class="cursor"></span>'; }
 function connectSSE() {

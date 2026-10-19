@@ -670,3 +670,42 @@ body.srv-on #bStart{box-shadow:0 0 0 3px rgba(45,212,191,.1),0 10px 30px -12px r
   .modal-card{padding:14px;max-height:88vh}
 }
 
+/* ═══════════════ COOL LAYER v5 — 3D logo orbit · CPU sparkline · boot confetti canvas ═══════════════ */
+
+/* ---- 3D platform logo orbit (index: 16 platforms ekta ring e ghure — billboard facing) ---- */
+.orbit-band{display:grid;place-items:center;gap:14px;padding:26px 16px 10px}
+.orbit{position:relative;width:100%;max-width:560px;height:250px;perspective:1100px}
+.orbitRing{position:absolute;left:50%;top:50%;margin:-64px 0 0 -64px;width:128px;height:128px;
+  transform-style:preserve-3d;animation:ringSpin 34s linear infinite}
+.oitem{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateY(var(--a,0deg)) translateZ(var(--r,190px))}
+.oitem b{position:absolute;left:50%;top:50%;margin:-30px 0 0 -30px;width:60px;height:60px;border-radius:16px;
+  display:grid;place-items:center;background:linear-gradient(165deg,hsla(0,0%,100%,.09),hsla(0,0%,100%,.03));
+  border:1px solid var(--line2,hsla(0,0%,100%,.14));box-shadow:0 8px 26px -12px rgba(0,0,0,.85),inset 0 0 0 1px hsla(0,0%,100%,.05);
+  animation:ringSpinRev 34s linear infinite;backface-visibility:hidden}
+.oitem img{width:34px;height:34px;border-radius:8px}
+.orbit:hover .orbitRing,.orbit:hover .oitem b{animation-play-state:paused}
+@keyframes ringSpin{from{transform:rotateY(0)}to{transform:rotateY(360deg)}}
+@keyframes ringSpinRev{from{transform:rotateY(0)}to{transform:rotateY(-360deg)}}
+.orbit-cap{display:flex;align-items:center;gap:9px;color:var(--muted,#9aa3b5);font-size:12.5px}
+.orbit-cap b{color:var(--text,#e8ecf4)}
+.orbit-dot{width:6px;height:6px;border-radius:50%;background:#2dd4bf;flex:none;
+  box-shadow:0 0 10px 2px rgba(45,212,191,.55);animation:pulseDot 2.2s ease-in-out infinite}
+@keyframes pulseDot{0%,100%{opacity:1}50%{opacity:.35}}
+@media (max-width:720px){
+  .orbit{height:210px}
+  .orbitRing{margin:-52px 0 0 -52px;width:104px;height:104px}
+  .oitem{transform:rotateY(var(--a,0deg)) translateZ(128px)}
+  .oitem b{width:48px;height:48px;margin:-24px 0 0 -24px;border-radius:13px}
+  .oitem img{width:27px;height:27px}
+}
+@media (prefers-reduced-motion:reduce){.orbitRing,.oitem b{animation:none}}
+
+/* ---- CPU sparkline (dashboard row: last 16 sample er mini graph) ---- */
+svg.spark{width:62px;height:18px;display:block;opacity:.92;flex:none}
+svg.spark polyline{fill:none;stroke:url(#sparkStroke);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+svg.spark .sarea{fill:url(#sparkArea);opacity:.55}
+
+/* ---- boot-done confetti canvas ---- */
+.fxcanvas{position:fixed;inset:0;z-index:997;pointer-events:none}
+@media (prefers-reduced-motion:reduce){.fxcanvas{display:none}}
+

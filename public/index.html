@@ -75,6 +75,11 @@
   </div>
 </section>
 
+<div class="orbit-band fade-up d6">
+  <div class="orbit" aria-hidden="true"><div class="orbitRing" id="orbitRing"></div></div>
+  <div class="orbit-cap"><span class="orbit-dot"></span><b>16 platforms</b>&nbsp;· one panel · zero setup — hover to pause</div>
+</div>
+
 <div class="stack-band fade-up d6">
   <span class="stack-band-label"><i></i>Runs on</span>
   <div class="marquee"><div class="marquee-track" id="mq">
@@ -111,6 +116,15 @@
 </div>
 <footer style="position:relative;z-index:2;text-align:center;color:var(--muted2);padding:26px;font-size:12.5px">MC Panel v2.0 • self-host • <a href="/user">create</a> · <a href="/status">status</a> · <a href="/docs">docs</a> · <a href="/pricing">pricing</a></footer>
 
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <linearGradient id="sparkStroke" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#c4b5fd"/>
+  </linearGradient>
+  <linearGradient id="sparkArea" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#c4b5fd" stop-opacity=".5"/><stop offset="1" stop-color="#c4b5fd" stop-opacity="0"/>
+  </linearGradient>
+</defs></svg>
+
 <script>
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -131,12 +145,25 @@ async function authState(){
 
 // server list
 let lastHtml='';
+// dashboard CPU sparkline — live server-er shesh 16 sample er mini graph (in-memory history)
+const HIST={};
+function sparkOf(id){
+  const h=HIST[id]||[]; if(h.length<2)return'';
+  const W=62,H=18,P=2.5,mx=Math.max(25,...h);
+  const pts=h.map((v,i)=>`${(i/(h.length-1)*(W-2*P)+P).toFixed(1)},${(H-P-(v/mx)*(H-2*P)).toFixed(1)}`).join(' ');
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><polygon class="sarea" points="${P},${H-P} ${pts} ${W-P},${H-P}"></polygon><polyline points="${pts}"></polyline></svg>`;
+}
 async function load(){
   try{
     const r=await fetch('/api/servers');
     if(r.status===401){$('#slist').innerHTML='<div class="empty">🔒 log in to see your servers — <a href="/login">login →</a></div>';$('#liveCount').textContent='login to see';return}
     const s=await r.json();
+    for(const x of s){ if(x.running){ const h=HIST[x.id]=HIST[x.id]||[]; h.push(x.stats&&x.stats.cpu||0); if(h.length>16)h.shift(); } }
     const run=s.filter(x=>x.running).length;
+    // live favicon — kono server online hole pickaxe er pashe green dot
+    const fv=document.querySelector('link[rel="icon"]');
+    if(fv){const on=run>0;if(fv.dataset.liveOn!==String(on)){fv.dataset.liveOn=String(on);
+      fv.href=`data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⛏️</text><circle cx=%2280%22 cy=%2280%22 r=%2219%22 fill=%22%23${on?'2dd4bf':'64748b'}%22 stroke=%22%230b0e19%22 stroke-width=%227%22/></svg>`;}}
     $('#liveCount').innerHTML=`<b>${run}</b> online · ${s.length} servers`;
     const sbL=$('#sbLive');
     if(sbL&&window.__uxCount){window.__uxCount(sbL,run);window.__uxCount($('#sbTotal'),s.length);}
@@ -150,7 +177,7 @@ async function load(){
             <b style="margin-left:9px;font-size:15px">${esc(x.name)}</b>
             <div class="mini">
               <span class="chip">${x.type} ${x.version}</span><span class="chip">${x.ram||4096}MB RAM</span>
-              ${x.running?`<span class="chip">CPU <b>${x.stats&&x.stats.cpu||0}%</b></span><span class="chip">MEM <b>${x.stats&&x.stats.memMB||0}MB</b></span>`:''}
+              ${x.running?`<span class="chip sparkchip">${sparkOf(x.id)}CPU <b>${x.stats&&x.stats.cpu||0}%</b></span><span class="chip">MEM <b>${x.stats&&x.stats.memMB||0}MB</b></span>`:''}
             </div>
           </div>
         </div>
@@ -216,6 +243,20 @@ function colorLine(t){
 load();heroTerm();setInterval(load,8000);authState();
 // marquee seamless loop (ekbar i)
 $('#mq').innerHTML=$('#mq').innerHTML+$('#mq').innerHTML;
+
+// 3D logo orbit — 16 platform ekta ring e ghure (hover → pause; billboard face: per-item counter-spin delay)
+(function buildOrbit(){
+  const ring=document.getElementById('orbitRing'); if(!ring)return;
+  const order=['paper','folia','purpur','spigot','craftbukkit','leaf','vanilla','fabric','quilt','neoforge','forge','mohist','arclight','velocity','waterfall','bungeecord'];
+  const NAME={paper:'Paper',folia:'Folia',purpur:'Purpur',spigot:'Spigot',craftbukkit:'CraftBukkit',leaf:'Leaf',vanilla:'Vanilla',fabric:'Fabric',quilt:'Quilt',neoforge:'NeoForge',forge:'Forge',mohist:'Mohist',arclight:'Arclight',velocity:'Velocity',waterfall:'Waterfall',bungeecord:'BungeeCord'};
+  const n=order.length,T=34;   // 34s = CSS ringSpin period er sthe match
+  order.forEach((t,i)=>{
+    const sp=document.createElement('span');
+    sp.className='oitem'; sp.style.setProperty('--a',(i*(360/n))+'deg');
+    sp.innerHTML=`<b title="${NAME[t]}" style="animation-delay:${(-(i*(360/n)/360*T)).toFixed(2)}s"><img src="${logo(t)}" alt="${NAME[t]}" onerror="this.outerHTML='${ICON[t]||'🎮'}'"></b>`;
+    ring.appendChild(sp);
+  });
+})();
 </script>
 <script src="/ux.js"></script>
 </body>
