@@ -28,6 +28,7 @@
       <a href="#network" data-t="network">🌐 Network</a>
       <a href="#backups" data-t="backups">💾 Backups</a>
       <a href="#plugins" data-t="plugins">🧩 Plugins · Market</a>
+      <a href="#access" data-t="access">👥 Access</a>
       <span class="sep" aria-hidden="true"></span>
       <a href="/">🏠 Dashboard</a>
       <a href="#" onclick="out();return false">↩ Exit</a>
@@ -259,6 +260,20 @@
       <p class="muted small" style="margin:10px 0 0">installed plugins load on next restart · edit configs from the Files tab</p>
     </div>
   </div>
+  <div class="view" id="v-access">
+    <div class="card" style="padding:22px">
+      <h3 style="margin:0 0 4px">👥 Access</h3>
+      <p class="muted small" style="margin:0 0 14px">Share this server with trusted users — sub-owners can use console / files / start / stop, but <b style="color:var(--text)">cannot delete the server or change access</b>.</p>
+      <div id="acWrap"><div class="muted small">loading…</div></div>
+      <div id="acForm" style="display:none">
+        <div class="rowline" style="margin-top:14px;gap:10px">
+          <input class="input" id="acEmail" placeholder="friend@email.com" spellcheck="false" style="max-width:320px">
+          <button class="btn primary sm" onclick="acAdd()">＋ Add sub-owner</button>
+        </div>
+        <p class="muted small" style="margin:8px 0 0">the user must have signed up on this panel first (their email is the key)</p>
+      </div>
+    </div>
+  </div>
 </main>
 </div>
 <div class="modal" id="invModal" hidden>
@@ -318,8 +333,46 @@ function setTab(tab) {
   if (t === 'backups') loadBackups();
   if (t === 'players') { loadPlayers(); loadBans(); }
   if (t === 'plugins' && !pkSearched) { loadInstalled(); loadPlugSearch(); }
+  if (t === 'access') loadAccess();
 }
 window.addEventListener('hashchange', () => setTab((location.hash || '#console').slice(1)));
+
+/* ================= ACCESS (sub-owners) ================= */
+async function loadAccess() {
+  try {
+    const [me, s] = await Promise.all([api('/api/auth/me'), api(`/api/servers/${SID}`)]);
+    const meU = me.user;
+    const canManage = !!(meU && (meU.role === 'admin' || (s.owner && s.owner === meU.id)));
+    const isSub = !canManage && !!(meU && Array.isArray(s.subOwners) && s.subOwners.some(e => e && e.uid === meU.id));
+    document.getElementById('acForm').style.display = canManage ? '' : 'none';
+    const rows = (s.subOwners || []).map(e => `
+      <div class="acrow" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:11px;margin-bottom:8px">
+        <div style="flex:1;min-width:0"><b style="font-size:13.5px">${esc(e.name || e.email)}</b> <span class="muted small">${esc(e.email)}</span></div>
+        ${canManage ? `<button class="btn stop sm" onclick="acDel('${qe(e.uid)}')">✕ Remove</button>` : ''}
+      </div>`).join('');
+    const note = canManage
+      ? (s.owner ? '' : '<p class="muted small" style="margin:10px 0 0">legacy server (owner unknown) — only admins manage access</p>')
+      : (isSub ? '<p class="muted small" style="margin:10px 0 0">✅ You have shared access — console / files / power are usable; deleting & access edits stay with the owner.</p>' : '');
+    document.getElementById('acWrap').innerHTML =
+      (rows || '<div class="empty">no sub-owners — only you have access</div>') + note;
+  } catch (e) { document.getElementById('acWrap').innerHTML = `<div class="empty">⚠️ ${esc(e.message)}</div>`; }
+}
+async function acAdd() {
+  const em = document.getElementById('acEmail').value.trim();
+  if (!em) return toast('Enter an email first', 'bad');
+  try {
+    await api(`/api/servers/${SID}/subowners`, { method: 'POST', body: JSON.stringify({ email: em }) });
+    document.getElementById('acEmail').value = '';
+    toast('Sub-owner added ✅'); loadAccess();
+  } catch (e) { toast(e.message, 'bad'); }
+}
+async function acDel(uid) {
+  if (!confirm('Remove this sub-owner?')) return;
+  try {
+    await api(`/api/servers/${SID}/subowners/${encodeURIComponent(uid)}`, { method: 'DELETE' });
+    toast('Sub-owner removed ✅'); loadAccess();
+  } catch (e) { toast(e.message, 'bad'); }
+}
 
 /* ================= SERVER INFO + STATS ================= */
 async function loadSrv() {

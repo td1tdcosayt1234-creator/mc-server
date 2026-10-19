@@ -80,9 +80,12 @@ app.use('/api', async (req, res, next) => {
       let rec = null;
       try { rec = (await db.getServers()).find(x => x.id === sid); } catch {}
       if (!rec) return res.status(404).json({ error: 'server not found: ' + sid });
-      // non-admin: owner-only server access (admin sob dekhbe)
+      // non-admin: owner + sub-owner (shared access) — admin sob dekhbe
       if (req.user && req.user.role !== 'admin' && rec.owner !== req.user.id) {
-        return res.status(403).json({ error: 'this server is not yours (owner: ' + (rec.owner || 'admin') + ')' });
+        const isSub = Array.isArray(rec.subOwners) && rec.subOwners.some(e => e && e.uid === req.user.id);
+        if (!isSub) return res.status(403).json({ error: 'this server is not yours (owner: ' + (rec.owner || 'admin') + ')' });
+        const subRoute = String(p).startsWith(`/servers/${sid}/subowners`);
+        if (subRoute || req.method === 'DELETE') return res.status(403).json({ error: 'shared access only — the owner can change access or delete the server' });
       }
       // guest → shudhu GET public read (logs/stats/console)
       if (!req.user && loginRequired() && !(req.method === 'GET' && PUBLIC_READ(p))) {
@@ -96,14 +99,15 @@ app.use('/api', async (req, res, next) => {
     if (authLimited(ip)) return res.status(429).json({ error: 'too many attempts — try again after 1 min' });
   }
   if (OPEN_API.some(x => p === x || p.startsWith(x + '/'))) return next();
-  if (req.method === 'GET' && PUBLIC_READ(p)) return next();
+  // GET /servers public-read er aghei __ownerOnly set — na dogo list-er owner-filter bypass hoto (pre-existing leak fix)
+  if (req.user && req.user.role !== 'admin' && p.startsWith('/servers')) {
+    req.__ownerOnly = true; // list/create — route-handle aponar moto filter kore dekhabe
+  }
   if (loginRequired() && !req.user) return res.status(401).json({ error: 'login required — /login' });
+  if (req.method === 'GET' && PUBLIC_READ(p)) return next();
   if (p.startsWith('/users')) {
     if (!req.user || req.user.role !== 'admin') return res.status(403).json({ error: 'admin only' });
     return next();
-  }
-  if (req.user && req.user.role !== 'admin' && p.startsWith('/servers')) {
-    req.__ownerOnly = true; // list/create — route-handle aponar moto filter kore dekhabe
   }
   return next();
 });
@@ -145,12 +149,14 @@ app.get('/api/info', ok(async (req, res) => {
 app.get('/api/servers', ok(async (req, res) => {
   let list = await db.getServers();
   if (req.__ownerOnly && req.user && req.user.role !== 'admin') {
-    list = list.filter(s => s.owner === req.user.id);
+    // owner + sub-owner (shared servers) er list
+    list = list.filter(s => s.owner === req.user.id || (Array.isArray(s.subOwners) && s.subOwners.some(e => e && e.uid === req.user.id)));
   }
-  if (!req.user) list = list.map(s => { const pub = { ...s }; delete pub.owner; delete pub.createdByName; return pub; }); // guest: uid/naam lukano
+  if (!req.user) list = list.map(s => { const pub = { ...s }; delete pub.owner; delete pub.createdByName; delete pub.subOwners; return pub; }); // guest: uid/naam lukano
   res.json(list.map(s => {
     const pub = { ...s, ...mc.serverStatus(s.id), stats: mc.getStats(s.id) };
     delete pub.rconPass; delete pub.rconPort;   // RCON credentials client e jabe na
+    if (req.__ownerOnly && pub.owner !== req.user.id) pub.shared = true;  // sub-owner er kace shared mark
     return pub;
   }));
 }));
@@ -338,6 +344,45 @@ app.post('/api/servers/:id/startup', ok(async (req, res) => {
   res.json({ ok: true, ram, javaArgs, cpu });
 }));
 
+// ---- Sub-owners: server share kora — manage korte pare (console/files/power), kintu delete +
+//      access change owner-i korbe (middleware thekeo guard ache, guest/all case eo route-level check) ----
+const SUB_CAP = 8;
+const ownerOrAdmin = (rec, user) => !!(user && (user.role === 'admin' || rec.owner === user.id));
+app.get('/api/servers/:id/subowners', ok(async (req, res) => {
+  const s = (await db.getServers()).find(x => x.id === req.params.id);
+  if (!s) return res.status(404).json({ error: 'server not found' });
+  res.json({ subOwners: (s.subOwners || []).map(e => ({ uid: e.uid, email: e.email, name: e.name, createdAt: e.createdAt })) });
+}));
+app.post('/api/servers/:id/subowners', ok(async (req, res) => {
+  const s = (await db.getServers()).find(x => x.id === req.params.id);
+  if (!s) return res.status(404).json({ error: 'server not found' });
+  if (!ownerOrAdmin(s, req.user)) return res.status(403).json({ error: 'only the owner can manage access' });
+  const email = String((req.body || {}).email || '').trim().toLowerCase();
+  if (!email) return res.status(400).json({ error: 'email required' });
+  if (!s.owner) return res.status(400).json({ error: 'this is a legacy server (no owner) — sharing unavailable' });
+  const u = (await db.getUsers()).find(x => String(x.email).toLowerCase() === email);
+  if (!u) return res.status(400).json({ error: 'no user with that email (ask them to sign up first)' });
+  if (u.id === s.owner) return res.status(400).json({ error: 'that user is already the owner' });
+  s.subOwners = Array.isArray(s.subOwners) ? s.subOwners : [];
+  if (s.subOwners.some(e => e && e.uid === u.id)) return res.status(400).json({ error: 'already a sub-owner' });
+  if (s.subOwners.length >= SUB_CAP) return res.status(400).json({ error: `sub-owner limit hit (${SUB_CAP})` });
+  s.subOwners.push({ uid: u.id, email: u.email, name: u.name || '', createdAt: new Date().toISOString() });
+  await db.saveServer({ ...s, subOwners: s.subOwners });
+  mc.pushLog(req.params.id, `[Panel] access: ${u.name || u.email} (${u.email}) added as sub-owner`);
+  res.json({ ok: true, subOwners: s.subOwners.map(e => ({ uid: e.uid, email: e.email, name: e.name, createdAt: e.createdAt })) });
+}));
+app.delete('/api/servers/:id/subowners/:uid', ok(async (req, res) => {
+  const s = (await db.getServers()).find(x => x.id === req.params.id);
+  if (!s) return res.status(404).json({ error: 'server not found' });
+  if (!ownerOrAdmin(s, req.user)) return res.status(403).json({ error: 'only the owner can manage access' });
+  const gone = (s.subOwners || []).find(e => e && e.uid === req.params.uid);
+  const rest = (s.subOwners || []).filter(e => e && e.uid !== req.params.uid);
+  s.subOwners = rest;
+  await db.saveServer({ ...s, subOwners: rest });
+  if (gone) mc.pushLog(req.params.id, `[Panel] access: ${gone.name || gone.email} (${gone.email}) removed`);
+  res.json({ ok: true, subOwners: rest.map(e => ({ uid: e.uid, email: e.email, name: e.name, createdAt: e.createdAt })) });
+}));
+
 // ---- Backups ----
 app.get('/api/servers/:id/backups', (req, res) => res.json(backup.listBackups(req.params.id)));
 app.post('/api/servers/:id/backup', ok(async (req, res) => {
@@ -394,7 +439,7 @@ app.post('/api/auth/signup', ok(async (req, res) => {
   const u = await auth.signup(req.body || {});
   const { token, ttl } = await auth.login(u.email, (req.body || {}).password, !!(req.body || {}).remember);
   auth.setUserCookie(res, token, ttl / 1000, req);
-  res.json({ ok: true, user });
+  res.json({ ok: true, user: u });
 }));
 app.post('/api/auth/login', ok(async (req, res) => {
   // remember checkbox thakle 30 din session, na hole 7 din
