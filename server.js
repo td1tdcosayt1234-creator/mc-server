@@ -171,7 +171,13 @@ app.post('/api/servers', ok(async (req, res) => {
   let id = base, n = 2;
   const all = await db.getServers();
   while (all.some(x => x.id === id) || fs.existsSync(path.join(SERVERS_DIR, id))) id = `${base}-${n++}`;
-  await mc.downloadServerJar(id, type || 'paper', version);
+  try {
+    await mc.downloadServerJar(id, type || 'paper', version);
+  } catch (e) {
+    // download fail hole khali dir residue jeno porer create-ke block na kore — fooliye dey
+    try { fs.rmSync(path.join(SERVERS_DIR, id), { recursive: true, force: true }); } catch {}
+    throw e;
+  }
   const srv = await db.saveServer({ id, name, type: type || 'paper', version, ram: ram || 4096, javaArgs: '', owner: req.user ? req.user.id : 'legacy', createdByName: req.user ? (req.user.name || req.user.email) : 'pre-auth', createdAt: new Date().toISOString() });
   res.json({ ...srv, ...mc.serverStatus(id) });
 }));
@@ -180,7 +186,13 @@ app.post('/api/servers', ok(async (req, res) => {
 app.post('/api/servers/:id/start', ok(async (req, res) => {
   const s = (await db.getServers()).find(x => x.id === req.params.id);
   if (!fs.existsSync(path.join(SERVERS_DIR, req.params.id, 'server.jar'))) {
-    return res.status(400).json({ error: 'server.jar nai - reinstall koro' });
+    // server.jar nai? (files tab e delete hoye chilo / startup fail) — record er type+version diye abar namiye dei
+    if (!s) return res.status(404).json({ error: 'server nai' });
+    try {
+      await mc.downloadServerJar(req.params.id, s.type || 'paper', s.version);
+    } catch (e) {
+      return res.status(400).json({ error: 'server.jar nai chilo + redownload fail: ' + e.message });
+    }
   }
   // AUTO JAVA: server version onujayi matching JRE - system e thakle seta, na thakle runtime download
   let javaBin = null;
@@ -474,6 +486,11 @@ const server = app.listen(PORT, async () => {
         claimed.add(bootPort);
         try { await players.ensureRcon(s.id); } catch (e) { console.log(`[AutoStart] rcon warn ${s.id}:`, e.message); } // 🎮 Players feature auto-enable
         const jb = (await java.ensureJava(java.neededJava(s.version), l => console.log(`[AutoStart ${s.id}] ${l}`))).bin;
+        // jar missing hole age bar ko kore nijei (files delete/failed download er por reborn)
+        if (!fs.existsSync(path.join(SERVERS_DIR, s.id, 'server.jar'))) {
+          try { await mc.downloadServerJar(s.id, s.type || 'paper', s.version); }
+          catch (e) { console.log(`[AutoStart] skip ${s.id}: jar redownload fail — ${e.message}`); continue; }
+        }
         mc.startServer(s.id, s.ram || 4096, String(s.javaArgs || '').trim().split(' ').filter(Boolean), true, jb);
         console.log(`[AutoStart] ${s.id}`);
       } catch (e) { console.log(`[AutoStart] fail ${s.id}:`, e.message); }
