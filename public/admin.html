@@ -140,8 +140,8 @@ async function list(){
 }
 async function restart(id){toast('Restarting…');await fetch(`/api/servers/${id}/restart`,{method:'POST'});setTimeout(list,2500);}
 async function del(id){if(!confirm('SERVER DELETE — puro folder chole jabe! Nishchit?'))return;const r=await (await fetch('/api/servers/'+id,{method:'DELETE'})).json();toast(r.error?('❌ '+r.error):(r.warning?('⚠ '+r.warning):'Deleted ✅'),r.error?'bad':(r.warning?'bad':'ok'));setTimeout(list,800);}
-me().then(() => { if(ME) list(); });
-setInterval(list,12000);
+me().then(() => { if (ME && ME.role === 'admin') list(); }); // non-admin holei list() chole jeto — adpathi server list overwrite hoto
+setInterval(() => { if (ME && ME.role === 'admin') list(); }, 12000);
 </script>
 <script src="/ux.js"></script>
 </body>

@@ -28,16 +28,20 @@ const app = express();
 app.disable('x-powered-by');
 app.use(cors());
 // 10mb: file editor er save (5MB limit) + raw properties JSON e jate dhore (default 100kb chilo — boro file save fail hoto)
-app.use(express.json({ limit: '10mb' }));
+// upload route skip: age ".json" file upload (browser CT=application/json dito) global json
+// parser-i body consume kore feli — "upload body khali" hoto. upload pathhole RAW parser-i parse korbe.
+app.use(express.json({ limit: '10mb', type: req => !req.path.endsWith('/upload') }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// body-parser error (payload too large / malformed json) — HTML na, clean JSON pathai
-app.use('/api', (err, req, res, next) => {
+// body-parser + route error JSON handler — ERROR handler sob route er PORE boshate hobe
+// (age route er agei chilo — tai route error ekhane pouchhoto na, default HTML error pathaito)
+const apiErrHandler = (err, req, res, next) => {
   if (!err) return next();
   const code = err.status || err.statusCode || 400;
   const msg = err.type === 'entity.too.large' ? `body onek boro (${Math.round((err.limit || 0) / 1048576)}MB limit)` : err.message;
   if (!res.headersSent) res.status(code).json({ error: msg });
-});
+};
+// NOTE: apiErrHandler app.use('/api', ...) diye niche (404 catch-all er age) register kora hoyeche
 
 // ok(): sync + async + res.json() dujoner handler-i handle kore (res.json 'this' return kore — promise na!)
 // middleware mounted holeo next thake — er jonno (req,res,next) signature
@@ -66,10 +70,26 @@ function authLimited(ip) {
 app.use('/api', async (req, res, next) => {
   req.user = auth.userFromReq(req) || null;
   const p = req.path;
-  // /servers/:id er id validation sob route er age (guest logs/console o ekhane dhore)
+  // /servers/:id er id validation + record existence guard sob route er age
+  // (guest logs/console o ekhane dhore) — fake/dead id diye file write/folder
+  // create block hoy (age: auth user "x" er moto id e upload kore folder banat)
   if (p.startsWith('/servers/')) {
     const sid = p.split('/')[2];
     if (sid && !SID_OK.test(sid)) return res.status(400).json({ error: 'server id vul' });
+    if (sid) {
+      let rec = null;
+      try { rec = (await db.getServers()).find(x => x.id === sid); } catch {}
+      if (!rec) return res.status(404).json({ error: 'server nai: ' + sid });
+      // non-admin: owner-only server access (admin sob dekhbe)
+      if (req.user && req.user.role !== 'admin' && rec.owner !== req.user.id) {
+        return res.status(403).json({ error: 'ei server tomar na (owner: ' + (rec.owner || 'admin') + ')' });
+      }
+      // guest → shudhu GET public read (logs/stats/console)
+      if (!req.user && loginRequired() && !(req.method === 'GET' && PUBLIC_READ(p))) {
+        return res.status(401).json({ error: 'login lagbe — /login' });
+      }
+      return next();
+    }
   }
   if (p.startsWith('/auth/login') || p.startsWith('/auth/signup')) {
     const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket.remoteAddress || 'x';
@@ -82,18 +102,8 @@ app.use('/api', async (req, res, next) => {
     if (!req.user || req.user.role !== 'admin') return res.status(403).json({ error: 'admin only' });
     return next();
   }
-  // non-admin: owner-only server access (admin sob dekhbe)
   if (req.user && req.user.role !== 'admin' && p.startsWith('/servers')) {
-    const sid = p.split('/')[2];
-    if (sid) {
-      try {
-        const s = (await db.getServers()).find(x => x.id === sid);
-        if (s && s.owner !== req.user.id) return res.status(403).json({ error: 'ei server tomar na (owner: ' + (s.owner || 'admin') + ')' });
-      } catch {}
-      return next();
-    }
-    req.__ownerOnly = true; // list/create emnei route-handle
-    return next();
+    req.__ownerOnly = true; // list/create — route-handle aponar moto filter kore dekhabe
   }
   return next();
 });
@@ -323,8 +333,9 @@ app.post('/api/servers/:id/backup', ok(async (req, res) => {
 }));
 app.post('/api/servers/:id/backups/:name/restore', ok(async (req, res) => {
   // stop → process exit + port release porjonto wait (Windows e file-lock thakle restore adha-adhura hoto)
+  // grace 25s + force kill er path er time dhore 32s wait
   try { mc.stopServer(req.params.id); } catch {}
-  const stopped = await mc.waitStopped(req.params.id, 20000);
+  const stopped = await mc.waitStopped(req.params.id, 32000);
   if (!stopped) return res.status(400).json({ error: 'server stop hoy nai — age Stop/Kill kore abar try koro' });
   await backup.restoreBackup(req.params.id, req.params.name, SERVERS_DIR);
   res.json({ ok: true });
@@ -398,7 +409,7 @@ app.delete('/api/servers/:id', ok(async (req, res) => {
   const s = (await db.getServers()).find(x => x.id === id);
   if (!s) return res.status(404).json({ error: 'server nai' });
   mc.killServer(id);
-  await mc.waitStopped(id, 15000); // pid liveness check — Windows file lock fix (agei map delete hoa wait bypass hoto)
+  await mc.waitStopped(id, 32000); // pid liveness check — Windows file lock fix + graceful stop window cover
   await db.deleteServer(id);
   // folder purge — Windows e handle release e delay thake, tai retry/backoff (age silent catch e folder pore thakto)
   const dir = path.join(SERVERS_DIR, id);
@@ -426,6 +437,9 @@ app.get('/signup', (req, res) => res.sendFile(path.join(__dirname, 'public', 'si
 app.get('/pricing', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pricing.html')));
 app.get('/docs', (req, res) => res.sendFile(path.join(__dirname, 'public', 'docs.html')));
 app.get('/status', (req, res) => res.sendFile(path.join(__dirname, 'public', 'status.html')));
+
+// ---- API error handler (body-parser payload-too large / route throw) — 404 er AGE ----
+app.use('/api', apiErrHandler);
 
 // ---- 404 catch-all (page + api json) — sob route er PORE ----
 app.use((req, res) => {

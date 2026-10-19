@@ -494,7 +494,10 @@ $('#upInput').addEventListener('change', async ev => {
     try {
       const r = await fetch(`/api/servers/${SID}/upload?path=${encodeURIComponent(rel)}`, {
         method: 'POST',
-        headers: { 'Content-Type': f.type || 'application/octet-stream' }, // kichu file type khali thake — tahole raw parser skip kore error dit
+        // SHUDHU application/octet-stream: file.type pathale .json file er header
+        // application/json hoy — panel er json parser oguli body consume kore feli
+        // "upload body khali" error dit(o 10mb json limit chepres).
+        headers: { 'Content-Type': 'application/octet-stream' },
         body: f
       });
       if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(j.error || ('upload fail ' + f.name)); }
