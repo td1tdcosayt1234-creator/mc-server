@@ -354,6 +354,7 @@ main.mn{flex:1;padding:24px 28px 70px;max-width:1080px;min-width:0}
 .code .cmt{color:#5d6478}
 .code .k{color:var(--violet2)}
 .code .s{color:var(--mint2)}
+.code img.s.lo{width:18px;height:18px;border-radius:5px;vertical-align:-3px;object-fit:cover}
 .copybtn{position:absolute;top:8px;right:8px;font-size:10.5px;padding:4px 10px;border-radius:8px;border:1px solid var(--line2);background:hsla(0,0%,100%,.05);color:var(--muted);cursor:pointer;font-family:var(--mono)}
 .copybtn:hover{color:var(--text);border-color:hsla(0,0%,100%,.25)}
 .doc-note{border-left:3px solid var(--violet);background:rgba(139,92,246,.07);padding:12px 16px;border-radius:0 12px 12px 0;font-size:13.5px;color:var(--muted);margin:10px 0}

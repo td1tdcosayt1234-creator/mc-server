@@ -391,19 +391,20 @@ app.get('/api/auth/me', (req, res) => {
   res.json({ user: req.user ? { id: req.user.id, name: req.user.name, email: req.user.email, role: req.user.role } : null, requireLogin: loginRequired() });});
 app.post('/api/auth/signup', ok(async (req, res) => {
   const u = await auth.signup(req.body || {});
-  const { user, token } = await auth.login(u.email, (req.body || {}).password);
-  auth.setUserCookie(res, token);
+  const { token, ttl } = await auth.login(u.email, (req.body || {}).password, !!(req.body || {}).remember);
+  auth.setUserCookie(res, token, ttl / 1000, req);
   res.json({ ok: true, user });
 }));
 app.post('/api/auth/login', ok(async (req, res) => {
-  const { user, token } = await auth.login((req.body || {}).email, (req.body || {}).password);
-  auth.setUserCookie(res, token);
+  // remember checkbox thakle 30 din session, na hole 7 din
+  const { user, token, ttl } = await auth.login((req.body || {}).email, (req.body || {}).password, !!(req.body || {}).remember);
+  auth.setUserCookie(res, token, ttl / 1000, req);
   res.json({ ok: true, user });
 }));
 app.post('/api/auth/logout', (req, res) => {
   const m = String(req.headers.cookie || '').match(new RegExp('(?:^|;\\s*)mcpanel_session=([a-f0-9]{64})'));
   if (m) auth.revoke(m[1]);
-  auth.clearUserCookie(res);
+  auth.clearUserCookie(res, req);
   res.json({ ok: true });
 });
 app.post('/api/auth/settings', ok(async (req, res) => {

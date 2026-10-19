@@ -32,6 +32,10 @@
         <label class="label">Password</label>
         <input class="input" id="password" type="password" placeholder="••••••••" autocomplete="current-password">
       </div>
+      <label class="rowline" style="gap:8px;cursor:pointer;margin-bottom:14px;justify-content:flex-start">
+        <input type="checkbox" id="remember" style="accent-color:var(--mint);width:15px;height:15px">
+        <span class="muted" style="font-size:13px">Remember me — 30 din porjonto logged-in thakbo</span>
+      </label>
       <button class="btn primary btn-lg shine" id="go" style="width:100%">→ Login</button>
       <div class="rowline" style="margin-top:16px;justify-content:space-between">
         <span class="hint" id="msg"></span>
@@ -63,7 +67,7 @@ const send = async () => {
   try {
     const r = await fetch('/api/auth/login', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: $('#email').value, password: $('#password').value })
+      body: JSON.stringify({ email: $('#email').value, password: $('#password').value, remember: $('#remember').checked })
     });
     const j = await r.json();
     if (!r.ok) throw new Error(j.error || 'login fail');
