@@ -9,6 +9,12 @@
 .step{display:flex;gap:11px;margin-bottom:16px}
 .step .n{width:24px;height:24px;flex:none;display:grid;place-items:center;border-radius:50%;background:linear-gradient(100deg,rgba(139,92,246,.3),rgba(45,212,191,.15));border:1px solid var(--line2);font-family:var(--mono);font-size:11.5px;color:var(--violet2);font-weight:700}
 .srvrow{padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:14px}
+.platform-picker-row .plat-chip{display:flex;align-items:center;gap:7px;padding:7px 12px 7px 8px;border-radius:11px;border:1px solid var(--line2);background:rgba(255,255,255,.025);cursor:pointer;transition:all .15s ease;user-select:none}
+.plat-chip img{width:18px;height:18px;border-radius:5px;display:block}
+.plat-chip span{font-size:11.5px;color:var(--muted);font-weight:600;letter-spacing:.2px}
+.plat-chip:hover{border-color:var(--violet2);background:rgba(139,92,246,.08);transform:translateY(-1px)}
+.plat-chip.on{border-color:var(--mint2);background:rgba(45,212,191,.1);box-shadow:0 0 0 1px rgba(45,212,191,.25)}
+.plat-chip.on span{color:var(--mint2)}
 </style>
 </head>
 <body>
@@ -34,7 +40,7 @@
     </div>
     <div class="field grid2c" style="gap:12px">
       <div><label class="label">② Platform</label>
-        <select class="input" id="type" onchange="fillVer()">
+        <select class="input" id="type" onchange="fillVer();platSync()">
           <optgroup label="Bukkit family">
             <option value="paper">📄 Paper — best performance</option>
             <option value="folia">🍃 Folia — multithreaded regions</option>
@@ -48,6 +54,7 @@
             <option value="quilt">🪡 Quilt — mods</option>
             <option value="neoforge">🔥 NeoForge — big mods</option>
             <option value="forge">⚒️ Forge — classic mods (1.17+)</option>
+            <option value="leaf">🍃 Leaf — paper fork (performance)</option>
             <option value="velocity">🪂 Velocity — modern proxy</option>
             <option value="waterfall">🌊 Waterfall — bungee fork</option>
             <option value="bungeecord">🔗 BungeeCord — classic proxy</option>
@@ -57,6 +64,7 @@
         </select></div>
       <div><label class="label">Version</label><select class="input" id="version"></select></div>
     </div>
+    <div id="platPicker" style="display:flex;flex-wrap:wrap;gap:8px;margin:-4px 0 14px"></div>
     <div class="field" style="max-width:220px">
       <label class="label">③ RAM (MB)</label>
       <select class="input" id="ram"><option>1024</option><option selected>2048</option><option>3072</option><option>4096</option><option>6144</option><option>8192</option></select>
@@ -76,9 +84,24 @@
 let V={};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const ICON={paper:'📄',purpur:'🟣',vanilla:'🌱',spigot:'⚡',fabric:'🧵',folia:'🍃',quilt:'🪡',neoforge:'🔥',forge:'⚒️',velocity:'🪂',waterfall:'🌊',bungeecord:'🔗',mohist:'🏮',arclight:'💡',craftbukkit:'🔨'};
-// chrome anims → /ux.js
-async function versions(){try{V=await (await fetch('/api/versions')).json();fillVer();}catch{}}
+const ICON={paper:'📄',purpur:'🟣',vanilla:'🌱',spigot:'⚡',fabric:'🧵',folia:'🍃',quilt:'🪡',neoforge:'🔥',forge:'⚒️',velocity:'🪂',waterfall:'🌊',bungeecord:'🔗',mohist:'🏮',arclight:'💡',leaf:'🍃',craftbukkit:'🔨'};
+// real logos — github org avatars (github.com/<Org>.png hotlink, onerror hole emoji thakbe)
+const LOGO={paper:'PaperMC',folia:'PaperMC',waterfall:'PaperMC',purpur:'PurpurMC',vanilla:'Mojang',spigot:'SpigotMC',craftbukkit:'Bukkit',fabric:'FabricMC',quilt:'QuiltMC',neoforge:'neoforged',forge:'MinecraftForge',velocity:'VelocityPowered',mohist:'MohistMC',arclight:'Arclight-Team',leaf:'Winds-Studio'};
+const logo=t=>`https://github.com/${LOGO[t]||''}.png?size=48`;
+const avat=t=>LOGO[t]?`<img src="${logo(t)}" alt="${t}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.outerHTML='${ICON[t]||'🎮'}'">`:(ICON[t]||'🎮');
+// platform picker — real logo card click → select
+function platPicker(){
+  const g=document.getElementById('platPicker');
+  if(!g)return;
+  g.innerHTML=Object.keys(LOGO).map(t=>`<div class="plat-chip" data-t="${t}" onclick="pickPlat('${t}')" title="${t}"><img src="${logo(t)}" alt="${t}" onerror="this.style.display='none'"><span>${ICON[t]||'📦'} ${t}</span></div>`).join('');
+}
+function pickPlat(t){
+  document.getElementById('type').value=t;fillVer();
+  document.querySelectorAll('.plat-chip').forEach(c=>c.classList.toggle('on',c.dataset.t===t));
+}
+async function versions(){try{V=await (await fetch('/api/versions')).json();fillVer();platPicker();platSync();}catch{}}
+// select change hole picker er highlight sync
+function platSync(){const t=document.getElementById('type').value;document.querySelectorAll('.plat-chip').forEach(c=>c.classList.toggle('on',c.dataset.t===t));}
 function fillVer(){const arr=V[document.getElementById('type').value]||[];document.getElementById('version').innerHTML=arr.map(x=>`<option>${x}</option>`).join('');}
 async function create(){
   const type=$('#type').value,version=$('#version').value,name=$('#name').value.trim(),ram=+$('#ram').value;
@@ -98,7 +121,7 @@ async function list(){
     $('#list').innerHTML=d.length?d.map(x=>`
       <div class="card srvrow hoverable">
         <div style="display:flex;gap:12px;align-items:center;min-width:0">
-          <div class="avatar" style="width:40px;height:40px;font-size:19px">${ICON[x.type]||'🎮'}</div>
+          <div class="avatar" style="width:40px;height:40px;font-size:19px;overflow:hidden">${avat(x.type)}</div>
           <div><b>${esc(x.name)}</b><br><span class="muted small">${x.type} ${x.version} • ${x.ram||4096}MB</span></div>
         </div>
         <div class="rowbtn">

@@ -67,7 +67,11 @@
 <script>
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const ICON={paper:'📄',purpur:'🟣',vanilla:'🌱',spigot:'⚡',fabric:'🧵',folia:'🍃',quilt:'🪡',neoforge:'🔥',forge:'⚒️',velocity:'🪂',waterfall:'🌊',bungeecord:'🔗',mohist:'🏮',arclight:'💡',craftbukkit:'🔨'};
+const ICON={paper:'📄',purpur:'🟣',vanilla:'🌱',spigot:'⚡',fabric:'🧵',folia:'🍃',quilt:'🪡',neoforge:'🔥',forge:'⚒️',velocity:'🪂',waterfall:'🌊',bungeecord:'🔗',mohist:'🏮',arclight:'💡',leaf:'🍃',craftbukkit:'🔨'};
+// real logos — github org avatar hotlink (onerror → emoji fallback)
+const LOGO={paper:'PaperMC',folia:'PaperMC',waterfall:'PaperMC',purpur:'PurpurMC',vanilla:'Mojang',spigot:'SpigotMC',craftbukkit:'Bukkit',fabric:'FabricMC',quilt:'QuiltMC',neoforge:'neoforged',forge:'MinecraftForge',velocity:'VelocityPowered',mohist:'MohistMC',arclight:'Arclight-Team',leaf:'Winds-Studio'};
+const logo=t=>`https://github.com/${LOGO[t]||''}.png?size=48`;
+const avat=t=>LOGO[t]?`<img src="${logo(t)}" alt="${t}" style="width:19px;height:19px;vertical-align:-4px;border-radius:5px" onerror="this.outerHTML='${ICON[t]||'🎮'}'">`:(ICON[t]||'🎮');
 let ME=null;
 function toast(msg,typ='ok'){const t=$('#tip');t.textContent=msg;t.className='toast show '+typ;clearTimeout(t._to);t._to=setTimeout(()=>t.className='toast',2600)}
 // chrome anims → /ux.js
@@ -127,7 +131,7 @@ async function list(){
     const d=await r.json();
     $('#list').innerHTML=d.map(s=>`
       <div class="card srvrow hoverable">
-        <div><b style="font-size:14.5px">${ICON[s.type]||'🎮'} ${esc(s.name)}</b> <span class="muted small">${s.type} ${s.version} • ${s.ram||4096}MB</span>
+        <div><b style="font-size:14.5px">${avat(s.type)} ${esc(s.name)}</b> <span class="muted small">${s.type} ${s.version} • ${s.ram||4096}MB</span>
           <br><span class="pill ${s.running?'on':''}" style="margin-top:5px"><span class="dot"></span>${s.running?'Online':'Offline'}</span>
           ${s.owner?`<span class="ownerchip" style="margin-left:8px">owner: ${esc(s.createdByName||s.owner.slice(0,8))}</span>`:'<span class="ownerchip" style="margin-left:8px">legacy</span>'}</div>
         <div class="rowbtn">

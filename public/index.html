@@ -114,7 +114,11 @@
 <script>
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const ICON={paper:'📄',purpur:'🟣',vanilla:'🌱',spigot:'⚡',fabric:'🧵',folia:'🍃',quilt:'🪡',neoforge:'🔥',forge:'⚒️',velocity:'🪂',waterfall:'🌊',bungeecord:'🔗',mohist:'🏮',arclight:'💡',craftbukkit:'🔨'};
+const ICON={paper:'📄',purpur:'🟣',vanilla:'🌱',spigot:'⚡',fabric:'🧵',folia:'🍃',quilt:'🪡',neoforge:'🔥',forge:'⚒️',velocity:'🪂',waterfall:'🌊',bungeecord:'🔗',mohist:'🏮',arclight:'💡',leaf:'🍃',craftbukkit:'🔨'};
+// real logos — github org avatar hotlink (onerror → emoji fallback)
+const LOGO={paper:'PaperMC',folia:'PaperMC',waterfall:'PaperMC',purpur:'PurpurMC',vanilla:'Mojang',spigot:'SpigotMC',craftbukkit:'Bukkit',fabric:'FabricMC',quilt:'QuiltMC',neoforge:'neoforged',forge:'MinecraftForge',velocity:'VelocityPowered',mohist:'MohistMC',arclight:'Arclight-Team',leaf:'Winds-Studio'};
+const logo=t=>`https://github.com/${LOGO[t]||''}.png?size=48`;
+const avat=t=>LOGO[t]?`<img src="${logo(t)}" alt="${t}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.outerHTML='${ICON[t]||'🎮'}'">`:(ICON[t]||'🎮');
 // chrome (scroll progress, cursor glow, reveal, tilt, stars) → /ux.js dekhchu
 async function authState(){
   try{
@@ -140,7 +144,7 @@ async function load(){
     const html=s.length?s.map(x=>`
       <div class="card srvrow hoverable fade-up${x.running?' live':''}">
         <div class="l">
-          <div class="avatar">${ICON[x.type]||'🎮'}</div>
+          <div class="avatar" style="overflow:hidden">${avat(x.type)}</div>
           <div style="min-width:0">
             <span class="pill ${x.running?'on':''}"><span class="dot"></span>${x.running?'Online':'Offline'}</span>
             <b style="margin-left:9px;font-size:15px">${esc(x.name)}</b>

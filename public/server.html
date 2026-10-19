@@ -277,7 +277,10 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':
 // inline onclick string er jonno: quotes/backslash escape (apostrophe filename e API/xss break hoto)
 const qe = s => esc(String(s).replace(/[\\'`]/g, '\\$&'));
 let SRV = null, es = null;
-const TYPE_ICON = {paper:'📄',purpur:'🟣',vanilla:'🌱',spigot:'⚡',fabric:'🧵',folia:'🍃',quilt:'🪡',neoforge:'🔥',forge:'⚒️',velocity:'🪂',waterfall:'🌊',bungeecord:'🔗',mohist:'🏮',arclight:'💡',craftbukkit:'🔨'};
+const TYPE_ICON = {paper:'📄',purpur:'🟣',vanilla:'🌱',spigot:'⚡',fabric:'🧵',folia:'🍃',quilt:'🪡',neoforge:'🔥',forge:'⚒️',velocity:'🪂',waterfall:'🌊',bungeecord:'🔗',mohist:'🏮',arclight:'💡',leaf:'🍃',craftbukkit:'🔨'};
+// real logos — github org avatar hotlink (#srvAvatar e img hobe, onerror → emoji)
+const LOGO={paper:'PaperMC',folia:'PaperMC',waterfall:'PaperMC',purpur:'PurpurMC',vanilla:'Mojang',spigot:'SpigotMC',craftbukkit:'Bukkit',fabric:'FabricMC',quilt:'QuiltMC',neoforge:'neoforged',forge:'MinecraftForge',velocity:'VelocityPowered',mohist:'MohistMC',arclight:'Arclight-Team',leaf:'Winds-Studio'};
+const logo=t=>`https://github.com/${LOGO[t]||''}.png?size=48`;
 let hist = []; let hIdx = 0;
 
 function toast(msg, type='ok') {
@@ -322,7 +325,9 @@ async function loadSrv() {
     SRV = await api(`/api/servers/${SID}`);
     $('#svName').textContent = SRV.name || SRV.id;
     $('#srvTitle').textContent = SRV.name || SRV.id;
-    $('#srvAvatar').textContent = TYPE_ICON[SRV.type] || '🎮';
+    $('#srvAvatar').innerHTML = LOGO[SRV.type]
+      ? `<img src="${logo(SRV.type)}" alt="${SRV.type}" style="width:100%;height:100%;object-fit:cover;border-radius:11px" onerror="this.parentNode.textContent='${TYPE_ICON[SRV.type]||'🎮'}'">`
+      : (TYPE_ICON[SRV.type] || '🎮');
     $('#mType').textContent = (SRV.type || '').toUpperCase();
     $('#mVer').textContent = SRV.version || '';
     $('#mRam').textContent = 'RAM ' + (SRV.ram || 4096) + 'MB';

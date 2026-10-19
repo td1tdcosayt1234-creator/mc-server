@@ -26,7 +26,7 @@ file manager, startup/settings edit, backup + restore — sob nijer server hobe 
   Download, delete. Auto backup proti `BACKUP_MINUTES` min por por.
 
 ## Platforms (auto jar download)
-Server: Paper (fill v3) • Purpur • Vanilla (Mojang) • Spigot • Fabric • Quilt • Folia • NeoForge • Forge (installer, 1.17+) • CraftBukkit • Mohist (Forge+Bukkit hybrid) • Arclight (Forge+Bukkit hybrid)
+Server: Paper (fill v3) • Purpur • Vanilla (Mojang) • Spigot • Fabric • Quilt • Folia • NeoForge • Forge (installer, 1.17+) • CraftBukkit • Leaf (paper fork) • Mohist (Forge+Bukkit hybrid) • Arclight (Forge+Bukkit hybrid)
 Proxy: Velocity • Waterfall • BungeeCord (stop command auto: end/shutdown, nogui off)
 
 ## Run

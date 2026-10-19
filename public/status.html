@@ -73,7 +73,11 @@
 <script src="/ux.js"></script>
 <script>
 const $=s=>document.querySelector(s);
-const ICON={paper:'📄',purpur:'🟣',vanilla:'🌱',spigot:'⚡',fabric:'🧵',folia:'🍃',quilt:'🪡',neoforge:'🔥',forge:'⚒️',velocity:'🪂',waterfall:'🌊',bungeecord:'🔗',mohist:'🏮',arclight:'💡',craftbukkit:'🔨'};
+const ICON={paper:'📄',purpur:'🟣',vanilla:'🌱',spigot:'⚡',fabric:'🧵',folia:'🍃',quilt:'🪡',neoforge:'🔥',forge:'⚒️',velocity:'🪂',waterfall:'🌊',bungeecord:'🔗',mohist:'🏮',arclight:'💡',leaf:'🍃',craftbukkit:'🔨'};
+// real logos — github org avatar hotlink (onerror → emoji fallback)
+const LOGO={paper:'PaperMC',folia:'PaperMC',waterfall:'PaperMC',purpur:'PurpurMC',vanilla:'Mojang',spigot:'SpigotMC',craftbukkit:'Bukkit',fabric:'FabricMC',quilt:'QuiltMC',neoforge:'neoforged',forge:'MinecraftForge',velocity:'VelocityPowered',mohist:'MohistMC',arclight:'Arclight-Team',leaf:'Winds-Studio'};
+const logo=t=>`https://github.com/${LOGO[t]||''}.png?size=48`;
+const avat=t=>LOGO[t]?`<img src="${logo(t)}" alt="${t}" style="width:22px;height:22px;border-radius:6px;vertical-align:middle" onerror="this.outerHTML='${ICON[t]||'🎮'}'">`:(ICON[t]||'🎮');
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 let authed=null;
 function updTime(){$('#lastUpd').textContent='✳ last checked '+new Date().toLocaleTimeString()}
@@ -109,7 +113,7 @@ async function servers(){
     $('#srvWrap').innerHTML=s.length?`<div class="stat-table">${s.map(x=>`
       <div class="stat-row${x.running?' live':''}">
         <div style="display:flex;gap:10px;align-items:center;min-width:0">
-          <span style="font-size:18px">${ICON[x.type]||'🎮'}</span>
+          <span style="font-size:18px;display:grid;place-items:center;width:22px;height:22px;overflow:hidden">${avat(x.type)}</span>
           <div style="min-width:0"><b style="font-size:14.5px">${esc(x.name)}</b> <span class="ownerchip">${x.type} ${esc(x.version)}</span></div>
         </div>
         <div class="rowline" style="gap:8px">
