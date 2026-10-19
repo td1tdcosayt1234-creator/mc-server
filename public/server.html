@@ -1,4 +1,4 @@
-<!doctype html><html lang="bn"><head>
+<!doctype html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#04050a">
 <title>Server Panel — MC</title>
@@ -16,7 +16,7 @@
 <div class="layout">
 <aside class="sb">
   <div class="brandwrap">
-    <button class="brand" id="brandBtn" type="button" data-menu aria-haspopup="menu" aria-expanded="false" aria-controls="brandMenu" aria-label="Sections menu" title="Menu — sob section">
+    <button class="brand" id="brandBtn" type="button" data-menu aria-haspopup="menu" aria-expanded="false" aria-controls="brandMenu" aria-label="Sections menu" title="Menu — all sections">
       <span class="logo-mark">⛏️</span><span class="btxt">MC Panel</span><span class="caret">▾</span>
     </button>
     <nav class="brandmenu" id="brandMenu" hidden aria-label="Sections">
@@ -62,7 +62,7 @@
       <button class="btn start" id="bStart" onclick="power('start')">▶ Start</button>
       <button class="btn restart" id="bRestart" onclick="power('restart')">🔄 Restart</button>
       <button class="btn stop" id="bStop" onclick="power('stop')">■ Stop</button>
-      <button class="btn kill" id="bKill" onclick="power('kill')" title="data save hoyna — last resort">✖ Kill</button>
+      <button class="btn kill" id="bKill" onclick="power('kill')" title="no data save — last resort">✖ Kill</button>
     </div>
     <span class="chip" id="netChip"><span class="pulse-dot"></span>25565</span>
   </div>
@@ -89,7 +89,7 @@
         <span class="chip" id="plCount"><b>—</b>/–</span>
         <button class="btn ghost sm" onclick="loadPlayers()" title="refresh">↻</button>
       </div>
-      <p class="muted small" style="margin:0 0 13px">live player list · 1-click inventory / location / OP / ban — RCON diye (server start korle nijei enable hoy)</p>
+      <p class="muted small" style="margin:0 0 13px">live player list · 1-click inventory / location / OP / ban — via RCON (auto-enabled once the server starts)</p>
       <div id="plNotice" class="empty" style="display:none;margin-bottom:12px"></div>
       <div id="plGrid" class="plgrid"></div>
       <div class="empty" id="plEmpty" style="display:none">🎮 keu online nei</div>
@@ -100,7 +100,7 @@
         <button class="btn ghost sm" onclick="loadBans()" title="refresh">↻</button>
       </div>
       <div id="banList" style="display:flex;flex-wrap:wrap;gap:8px"></div>
-      <div class="empty" id="banEmpty" style="display:none">kono ban nei — sob porishkar ✅</div>
+      <div class="empty" id="banEmpty" style="display:none">no bans — all clear ✅</div>
     </div>
   </div>
 
@@ -155,13 +155,13 @@
       </div>
       <div class="rowline" style="margin-top:14px">
         <button class="btn primary" onclick="saveStartup()">💾 Save Startup</button>
-        <span class="muted small">change korle <b style="color:var(--text)">Restart</b> dile apply hobe</span>
+        <span class="muted small">changes apply after <b style="color:var(--text)">Restart</b></span>
       </div>
     </div>
     <div class="card" style="padding:22px">
       <h3>⚠️ EULA</h3>
-      <div class="rowline"><button class="btn" onclick="acceptEula()">eula.txt accept koro</button>
-      <span class="muted small">eula=false thakle server start hobe na</span></div>
+      <div class="rowline"><button class="btn" onclick="acceptEula()">Accept eula.txt</button>
+      <span class="muted small">server won't start while eula=false</span></div>
     </div>
   </div>
 
@@ -169,7 +169,7 @@
   <div class="view" id="v-settings">
     <div class="card" style="padding:22px">
       <h3>⚙️ server.properties</h3>
-      <p class="muted small" style="margin:0 0 16px">save → restart korle apply hobe</p>
+      <p class="muted small" style="margin:0 0 16px">save → then restart to apply</p>
       <div class="propGrid" id="propForm"></div>
       <div class="rowline" style="margin-top:16px">
         <button class="btn primary" onclick="saveProps()">💾 Save Properties</button>
@@ -202,8 +202,8 @@
         <p class="muted small" style="margin:12px 0 0;line-height:1.85">
           🔹 Same machine: <code>localhost:25565</code><br>
           🔹 Tailscale/LAN friends: upor er address<br>
-          🔹 Internet friend ra: router <b>port-forward</b> (TCP+UDP 25565) nai hole <b>playit.gg / cloudflare tunnel</b><br>
-          🔹 Firewall: TCP+UDP 25565 allow korte hobe (panel nijei rule add korar try kore)
+          🔹 Internet friends: router <b>port-forward</b> (TCP+UDP 25565), or if not possible use <b>playit.gg / cloudflare tunnel</b><br>
+          🔹 Firewall: allow TCP+UDP 25565 (the panel will try adding the rule itself)
         </p>
       </div>
     </div>
@@ -217,12 +217,12 @@
         <button class="btn primary sm" onclick="createBackup()">+ Take Backup</button>
         <button class="btn ghost sm" onclick="loadBackups()">↻</button>
       </div>
-      <p class="muted small" style="margin:0 0 12px">auto backup proti <code>BACKUP_MINUTES</code> min por por (Drive ba local)</p>
+      <p class="muted small" style="margin:0 0 12px">auto backup every <code>BACKUP_MINUTES</code> minutes (Drive or local)</p>
       <table class="t">
         <thead><tr><th>Name</th><th style="width:88px">Size</th><th style="width:158px">Created</th><th style="width:238px;text-align:right">Actions</th></tr></thead>
         <tbody id="bkRows"></tbody>
       </table>
-      <div class="empty" id="bkEmpty" style="display:none;margin-top:12px">kono backup nai — “Take Backup” tap koro</div>
+      <div class="empty" id="bkEmpty" style="display:none;margin-top:12px">no backups — hit "Take Backup" first</div>
     </div>
   </div>
 
@@ -231,7 +231,7 @@
     <div class="card" style="padding:22px;margin-bottom:16px">
       <div class="rowline" style="margin-bottom:12px">
         <h3 style="flex:1;margin:0">🧩 Market <span class="muted small">· Modrinth</span></h3>
-        <label class="muted small" style="display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;margin-right:10px;white-space:nowrap" title="shudhu ei version er plugin dekhabe">
+        <label class="muted small" style="display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;margin-right:10px;white-space:nowrap" title="show only plugins for this version">
           <input type="checkbox" id="pkStrict" checked onchange="loadPlugSearch()" style="accent-color:var(--pri,#7c5cff);cursor:pointer">
           <span>🔒 <b id="pkVerLbl" style="color:var(--text)">v…</b> only</span>
         </label>
@@ -242,7 +242,7 @@
         <button class="btn primary sm" onclick="loadPlugSearch()">🔍 Search</button>
         <span class="muted small" id="pkMeta"></span>
       </div>
-      <div id="pkResults" style="margin-top:14px;display:flex;flex-direction:column;gap:9px"><div class="muted small">search daftar koro…</div></div>
+      <div id="pkResults" style="margin-top:14px;display:flex;flex-direction:column;gap:9px"><div class="muted small">search the market…</div></div>
     </div>
     <div class="card" style="padding:22px">
       <div class="rowline" style="margin-bottom:12px">
@@ -253,8 +253,8 @@
         <thead><tr><th>File</th><th style="width:88px">Size</th><th style="width:150px">Added</th><th style="width:110px;text-align:right">Action</th></tr></thead>
         <tbody id="pkRows"></tbody>
       </table>
-      <div class="empty" id="pkEmpty" style="display:none;margin-top:12px">kono plugin nai — upor er Market theke install koro</div>
-      <p class="muted small" style="margin:10px 0 0">install hole restart korle load hobe · config edit Files tab theke</p>
+      <div class="empty" id="pkEmpty" style="display:none;margin-top:12px">no plugins — install from the Market above</div>
+      <p class="muted small" style="margin:10px 0 0">installed plugins load on next restart · edit configs from the Files tab</p>
     </div>
   </div>
 </main>
@@ -291,7 +291,7 @@ function toast(msg, type='ok') {
 
 async function api(url, opt = {}) {
   const r = await fetch(url, Object.assign({ headers: { 'Content-Type': 'application/json' } }, opt));
-  if (r.status === 401) { location.href = '/login'; throw new Error('login lagbe'); }
+  if (r.status === 401) { location.href = '/login'; throw new Error('login required'); }
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
   return j;
@@ -336,7 +336,7 @@ async function loadSrv() {
     $('#netChip').innerHTML = '<span class="pulse-dot"></span>' + ((SRV.stats && SRV.stats.uptime) ? 'port 25565' : 'port 25565');
     updStats({ ...(SRV.stats || {}), running: SRV.running });
   } catch (e) {
-    $('#svName').textContent = e.message || 'server nai';
+    $('#svName').textContent = e.message || 'server not found';
     $('#svStatus').textContent = 'Offline';
   }
 }
@@ -366,7 +366,7 @@ async function refreshStats() {
 
 /* ================= POWER ================= */
 async function power(a) {
-  if (a === 'kill' && !confirm('Force kill korle data save hoyna. Kill?')) return;
+  if (a === 'kill' && !confirm('Force kill does NOT save world data. Kill anyway?')) return;
   try {
     await api(`/api/servers/${SID}/${a}`, { method: 'POST' });
     toast(a.toUpperCase() + ' command pathano holo ⚡');
@@ -414,7 +414,7 @@ $('#cmdInput').addEventListener('keydown', e => {
   else if (e.key === 'ArrowDown') { if (hIdx < hist.length - 1) { hIdx++; $('#cmdInput').value = hist[hIdx]; } else { hIdx = hist.length; $('#cmdInput').value = ''; } }
 });
 
-// rotating placeholder — input khali/unfocused thakle command suggestion circle kore
+// rotating placeholder — khali/unfocused input e command suggestion cycle kore
 const CMD_HINTS = [
   'say hello, world!',
   'list — ke kone online?',
@@ -526,7 +526,7 @@ async function loadStartup() {
 async function saveStartup() {
   try {
     await api(`/api/servers/${SID}/startup`, { method: 'POST', body: JSON.stringify({ ram: +$('#suRam').value, javaArgs: $('#suArgs').value }) });
-    toast('Startup save holo — Restart dile apply hobe ✅');
+    toast('Startup saved — applies on Restart ✅');
   } catch (e) { toast(e.message, 'bad'); }
 }
 async function acceptEula() {
@@ -557,7 +557,7 @@ async function loadProps() {
     propMap = d.map || {};
     renderPropForm();
     $('#rawText').value = d.raw || '';
-    if (!d.exists) toast('server.properties nai — first start er por pai', 'bad');
+    if (!d.exists) toast('server.properties not found — appears after first start', 'bad');
   } catch (e) { toast(e.message, 'bad'); }
 }
 function renderPropForm() {
@@ -578,7 +578,7 @@ async function saveProps() {
   document.querySelectorAll('#propForm [data-key]').forEach(el => { values[el.dataset.key] = el.value; });
   try {
     await api(`/api/servers/${SID}/properties`, { method: 'POST', body: JSON.stringify({ values }) });
-    toast('Properties save holo — Restart koro ✅');
+    toast('Properties saved — Restart now ✅');
     await loadPropsRaw();
   } catch (e) { toast(e.message, 'bad'); }
 }
@@ -586,7 +586,7 @@ rawMode = () => { $('#rawWrap').style.display = $('#rawToggle').checked ? 'block
 async function saveRaw() {
   try {
     await api(`/api/servers/${SID}/properties`, { method: 'POST', body: JSON.stringify({ raw: $('#rawText').value }) });
-    toast('Raw properties save holo — Restart koro ✅');
+    toast('Raw properties saved — Restart now ✅');
     const d = await api(`/api/servers/${SID}/properties`); propMap = d.map || {}; $('#rawText').value = d.raw || ''; renderPropForm();
   } catch (e) { toast(e.message, 'bad'); }
 }
@@ -621,7 +621,7 @@ async function createBackup() {
 }
 async function delBackup(n) { if (!confirm('Delete backup: ' + n)) return; try { await api(`/api/servers/${SID}/backups/${encodeURIComponent(n)}`, { method: 'DELETE' }); toast('Delete holo'); loadBackups(); } catch (e) { toast(e.message, 'bad'); } }
 async function restoreBackup(n) {
-  if (!confirm('Restore korle server STOP hobe ar full backup overwrite hobe. OK?')) return;
+  if (!confirm('Restoring will STOP the server and fully overwrite it with the backup. OK?')) return;
   try { await api(`/api/servers/${SID}/backups/${encodeURIComponent(n)}/restore`, { method: 'POST' }); toast('Restore kora holo ✅'); }
   catch (e) { toast(e.message, 'bad'); }
 }
@@ -635,7 +635,7 @@ async function loadPlugSearch() {
   const box = $('#pkResults'); box.innerHTML = '<div class="muted small">🔍 searching…</div>';
   try {
     const d = await api(`/api/servers/${SID}/plugins/search?q=${encodeURIComponent(q)}&kind=${kind}` + (strict ? '' : '&all=1'));
-    $('#pkMeta').textContent = strict ? ('🔒 v' + d.version + ' matched · ' + (d.loaders || []).join('/')) : ('🔓 sob version · ' + (d.loaders || []).join('/'));
+    $('#pkMeta').textContent = strict ? ('🔒 v' + d.version + ' matched · ' + (d.loaders || []).join('/')) : ('🔓 all versions · ' + (d.loaders || []).join('/'));
     box.innerHTML = (d.hits || []).length ? d.hits.map(h => `
       <div class="pkrow" style="padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:hsla(0,0%,100%,.02)">
         <div style="display:flex;gap:11px;align-items:center;min-width:0">
@@ -647,7 +647,7 @@ async function loadPlugSearch() {
         </div>
         <div style="margin-top:9px"><button class="btn primary sm" title="${qe(h.title)} install" onclick="installPlugin('${qe(h.slug)}')">⬇ Install</button></div>
       </div>`).join('') :
-      '<div class="empty">🔒 kichu pawa nai — ' + (strict ? ('<b>v' + esc(d.version) + '</b> er jonno ei keyword e compatible plugin nai. onno keyword try koro, othoba 🔒 box off kore sob version dekho') : 'onno keyword try koro') + '</div>';
+      '<div class="empty">🔒 nothing found — ' + (strict ? ('no compatible plugins for <b>v' + esc(d.version) + '</b> with this keyword. try another keyword, or turn the 🔒 box off to see all versions') : 'try another keyword') + '</div>';
     pkSearched = true;
   } catch (e) { box.innerHTML = `<div class="empty">❌ ${esc(e.message)}</div>`; }
 }
@@ -656,7 +656,7 @@ async function installPlugin(slug) {
   toast('⬇ Downloading ' + slug + '…');
   try {
     const r = await api(`/api/servers/${SID}/plugins/install`, { method: 'POST', body: JSON.stringify({ slug, kind }) });
-    toast(`${r.file} installed ✅ (${r.version}) — Restart korle load hobe`);
+    toast(`${r.file} installed ✅ (${r.version}) — loads on next restart`);
     loadInstalled();
   } catch (e) { toast(e.message, 'bad'); }
 }
@@ -704,9 +704,9 @@ async function loadPlayers() {
       $('#plGrid').innerHTML = '';
       $('#plEmpty').style.display = 'none';
       notice.style.display = 'block';
-      notice.innerHTML = `<b>⚠️ ${esc(d.error || 'players load hoy nai')}</b>` +
-        (d.reason === 'notconfigured' ? '<br><span class="muted small">Server ekbar Start/Restart dile Players feature nijei on hoye jabe ✅</span>' : '') +
-        (d.reason === 'offline' ? '<br><span class="muted small">Start korle player list · inventory · location · op/ban sob cholbe</span>' : '');
+      notice.innerHTML = `<b>⚠️ ${esc(d.error || 'players failed to load')}</b>` +
+        (d.reason === 'notconfigured' ? '<br><span class="muted small">Press Start/Restart once and auto-enable the Players feature ✅</span>' : '') +
+        (d.reason === 'offline' ? '<br><span class="muted small">After starting the server, player list · inventory · location · op/ban all go live</span>' : '');
       $('#plCount').innerHTML = '<b>—</b>/–';
       $('#plMeta').textContent = '· offline';
       renderBans(d.banned || []);
@@ -749,7 +749,7 @@ function renderPlayers(names, ops, banned) {
 }
 async function plAction(name, action) {
   const okMsg = { op: 'OP deya holo ✅', deop: 'DeOP holo ✅', kick: 'Kick', ban: 'Ban', pardon: 'Unban' };
-  if ((action === 'ban' || action === 'kick') && !confirm(name + ' ke ' + action + ' korbe?')) return;
+  if ((action === 'ban' || action === 'kick') && !confirm(action + ' ' + name + '?')) return;
   try {
     const d = await api(`/api/servers/${SID}/players/${encodeURIComponent(name)}/action`, { method: 'POST', body: JSON.stringify({ action }) });
     toast((okMsg[action] || action) + ': ' + (d.msg || 'done'));
@@ -757,7 +757,7 @@ async function plAction(name, action) {
   } catch (e) { toast(e.message, 'bad'); }
 }
 async function plPardon(name) {
-  if (!confirm(name + ' ke unban (pardon) korbe?')) return;
+  if (!confirm('Unban (pardon) ' + name + '?')) return;
   try {
     const d = await api(`/api/servers/${SID}/players/${encodeURIComponent(name)}/action`, { method: 'POST', body: JSON.stringify({ action: 'pardon' }) });
     toast('Unban: ' + (d.msg || 'done'));
@@ -783,7 +783,7 @@ function slotCell(it, cls) {
 async function showInv(name) {
   $('#invModal').hidden = false;
   $('#invTitle').textContent = '🎒 ' + name + ' — inventory';
-  $('#invBody').innerHTML = '<div class="muted small" style="padding:20px 0;text-align:center">⏳ inventory load hocche…</div>';
+  $('#invBody').innerHTML = '<div class="muted small" style="padding:20px 0;text-align:center">⏳ loading inventory…</div>';
   try {
     const d = await api(`/api/servers/${SID}/players/${encodeURIComponent(name)}/inv`);
     $('#invBody').innerHTML = renderInv(d);
@@ -791,7 +791,7 @@ async function showInv(name) {
 }
 function closeInv() { const m = $('#invModal'); if (m) m.hidden = true; }
 function renderInv(d) {
-  if (!d.total) return '<div class="empty">🎒 inventory khali — kono item nei</div>';
+  if (!d.total) return '<div class="empty">🎒 inventory empty — no items</div>';
   const wear = [d.armor.helmet, d.armor.chestplate, d.armor.leggings, d.armor.boots];
   let h = '<div class="muted small" style="margin-bottom:5px;font-weight:700">🛡 Armor + Hand</div><div class="invrow">' +
     wear.map(it => slotCell(it, 'armor')).join('') + slotCell(d.hand.main, 'armor') + slotCell(d.hand.off, 'armor') + '</div>';
@@ -799,9 +799,9 @@ function renderInv(d) {
     d.main.slice(9, 36).map(it => slotCell(it)).join('') + '</div>';
   h += '<div class="muted small" style="margin-bottom:5px;font-weight:700">🎯 Hotbar (slot 1–9)</div><div class="invrow">' +
     d.main.slice(0, 9).map(it => slotCell(it)).join('') + '</div>';
-  h += `<p class="muted small" style="margin:12px 0 4px"><b style="color:var(--text)">${d.total}</b> stack — hover/tap korle naam</p>`;
+  h += `<p class="muted small" style="margin:12px 0 4px"><b style="color:var(--text)">${d.total}</b> stack — hover/tap for the name</p>`;
   h += '<div class="invsum">' + d.list.map(it => `<span title="${qe(it.id)}">${itemEmoji(it.id)} ${esc(it.name)}${it.count > 1 ? ' ×' + it.count : ''}${it.ench ? ' ✨' : ''}</span>`).join('') + '</div>';
-  h += '<p class="muted small" style="margin:12px 0 0;opacity:.65">⚠️ ekhane shudhu dekha jay — item banate/give korte Console tab e command dao</p>';
+  h += '<p class="muted small" style="margin:12px 0 0;opacity:.65">⚠️ view-only here — to give/ban items use commands in the Console tab</p>';
   return h;
 }
 async function loadBans() {

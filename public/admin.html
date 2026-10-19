@@ -1,4 +1,4 @@
-<!doctype html><html lang="bn"><head>
+<!doctype html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#04050a">
 <title>Admin — MC Panel</title>
@@ -51,7 +51,7 @@
       <label class="toggle"><input type="checkbox" id="reqLogin" onchange="saveSettings()"><i></i></label>
       <div>
         <b style="font-size:14px">Login required</b>
-        <div class="muted small">on = panel access e account lagbe · owner-only server access · off = khola mode (jemon age chilo)</div>
+        <div class="muted small">on = panel access needs an account · owners only see their own servers · off = open mode (like before)</div>
       </div>
       <span class="muted small" id="setStat" style="margin-left:auto"></span>
     </div>
@@ -82,12 +82,12 @@ async function me(){
     ME=j.user;
     if(!ME){location.href='/login';return null}
     $('#whoami').textContent=(ME.role==='admin'?'👑 ':'👤 ')+ME.name+' ('+ME.role+')';
-    if(ME.role!=='admin'){$('#list').innerHTML='<div class="empty">🔒 admin only page — tomar dashboard: <a href="/user">/user</a></div>';users();$('#users').innerHTML='<div class="empty">🔒 admin only</div>';$('#reqLogin').disabled=true;return ME}
+    if(ME.role!=='admin'){$('#list').innerHTML='<div class="empty">🔒 admin only page — your dashboard: <a href="/user">/user</a></div>';users();$('#users').innerHTML='<div class="empty">🔒 admin only</div>';$('#reqLogin').disabled=true;return ME}
     try{
       const s=await (await fetch('/api/auth/settings')).json();
       $('#reqLogin').checked=!!s.requireLogin;
       $('#reqLogin').disabled=false;
-      $('#setStat').textContent=s.requireLogin?'active':'khola (off)';
+      $('#setStat').textContent=s.requireLogin?'active':'open (off)';
     }catch{}
   }catch(e){}
   return ME;
@@ -97,7 +97,7 @@ async function saveSettings(){
   try{
     const r=await (await fetch('/api/auth/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({requireLogin:on})})).json();
     if(r.error){toast('❌ '+r.error,'bad');return}
-    $('#setStat').textContent=on?'✅ login required ON':'✅ khola mode (login off)';
+    $('#setStat').textContent=on?'✅ login required ON':'✅ open mode (login off)';
     toast('Panel security save ✅');
   }catch(e){toast('❌ '+e.message,'bad')}
 }
@@ -108,14 +108,14 @@ async function users(errOnly){
     const d=await r.json();
     $('#users').innerHTML=d.length?d.map(u=>`
       <div class="userrow">
-        <div style="display:flex;gap:10px;align-items:center"><b style="font-size:14px">${esc(u.name||u.email||u.id)}</b><span class="rolechip ${u.role==='admin'?'admin':''}">${esc(u.role||'user')}</span><span class="muted small">${esc(u.email||'')}</span>${u.hasPassword?'':'<span class="ownerchip">password nai</span>'}</div>
+        <div style="display:flex;gap:10px;align-items:center"><b style="font-size:14px">${esc(u.name||u.email||u.id)}</b><span class="rolechip ${u.role==='admin'?'admin':''}">${esc(u.role||'user')}</span><span class="muted small">${esc(u.email||'')}</span>${u.hasPassword?'':'<span class="ownerchip">no password</span>'}</div>
         <button class="btn stop sm" onclick="delUser('${esc(u.id)}')">Delete</button>
-      </div>`).join(''):'<div class="empty">kono user nai</div>';
+      </div>`).join(''):'<div class="empty">no users</div>';
   }catch(e){$('#users').innerHTML='<div class="empty">load fail</div>'}
 }
 async function addUser(){
   const email=$('#email').value.trim(),role=$('#role').value,name=$('#uname').value.trim(),password=$('#upw').value;
-  if(!email)return alert('email daw');
+  if(!email)return alert('Enter an email');
   if(password&&password.length<6)return alert('password min 6');
   const body={email,role}; if(name)body.name=name; if(password)body.password=password;
   const r=await (await fetch('/api/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
@@ -127,7 +127,7 @@ async function delUser(id){if(!confirm('delete user?'))return;await fetch('/api/
 async function list(){
   try{
     const r=await fetch('/api/servers');
-    if(!r.ok){$('#list').innerHTML='<div class="empty">🔒 admin login lagbe — <a href="/login">/login</a></div>';return}
+    if(!r.ok){$('#list').innerHTML='<div class="empty">🔒 admin login required — <a href="/login">/login</a></div>';return}
     const d=await r.json();
     $('#list').innerHTML=d.map(s=>`
       <div class="card srvrow hoverable">
@@ -143,7 +143,7 @@ async function list(){
   }catch(e){$('#list').innerHTML='<div class="empty">load fail</div>'}
 }
 async function restart(id){toast('Restarting…');await fetch(`/api/servers/${id}/restart`,{method:'POST'});setTimeout(list,2500);}
-async function del(id){if(!confirm('SERVER DELETE — puro folder chole jabe! Nishchit?'))return;const r=await (await fetch('/api/servers/'+id,{method:'DELETE'})).json();toast(r.error?('❌ '+r.error):(r.warning?('⚠ '+r.warning):'Deleted ✅'),r.error?'bad':(r.warning?'bad':'ok'));setTimeout(list,800);}
+async function del(id){if(!confirm('DELETE SERVER - the whole folder will be removed! Sure?'))return;const r=await (await fetch('/api/servers/'+id,{method:'DELETE'})).json();toast(r.error?('❌ '+r.error):(r.warning?('⚠ '+r.warning):'Deleted ✅'),r.error?'bad':(r.warning?'bad':'ok'));setTimeout(list,800);}
 me().then(() => { if (ME && ME.role === 'admin') list(); }); // non-admin holei list() chole jeto — adpathi server list overwrite hoto
 setInterval(() => { if (ME && ME.role === 'admin') list(); }, 12000);
 </script>

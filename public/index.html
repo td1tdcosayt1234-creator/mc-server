@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="bn">
+<html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#04050a">
@@ -54,7 +54,7 @@
       <span class="gradtext"><span class="word-mask"><span style="animation-delay:.38s">Zero</span></span>
       <span class="word-mask"><span style="animation-delay:.45s">babysitting.</span></span></span>
     </h1>
-    <p class="sub fade-up d4">Paper/Purpur/Spigot/Vanilla/Fabric auto-download, ek real JVM panel e chole ase — live logs, command, file manager, server.properties, backup-restore. Sob ekhane.</p>
+    <p class="sub fade-up d4">Paper/Purpur/Spigot/Vanilla/Fabric auto-downloads and runs inside one real JVM panel — live logs, commands, file manager, server.properties, backup-restore. All right here.</p>
     <div class="fade-up d5" style="display:flex;gap:11px;flex-wrap:wrap">
       <a class="btn primary btn-lg shine" href="/user">Create your server</a>
       <a class="btn ghost btn-lg" href="/server">Open panel</a>
@@ -78,7 +78,7 @@
 <div class="stack-band fade-up d6">
   <span class="stack-band-label"><i></i>Runs on</span>
   <div class="marquee"><div class="marquee-track" id="mq">
-    <span><b>◆</b>Paper</span><span><b>◆</b>Folia</span><span><b>◆</b>Purpur</span><span><b>◆</b>Spigot</span><span><b>◆</b>CraftBukkit</span><span><b>◆</b>Vanilla</span><span><b>◆</b>Fabric</span><span><b>◆</b>Quilt</span><span><b>◆</b>NeoForge</span><span><b>◆</b>Java 8/17/21 auto</span>
+    <span><b>◆</b>Paper</span><span><b>◆</b>Folia</span><span><b>◆</b>Purpur</span><span><b>◆</b>Spigot</span><span><b>◆</b>Fabric</span><span><b>◆</b>Forge</span><span><b>◆</b>Leaf</span><span><b>◆</b>Mohist</span><span><b>◆</b>Arclight</span><span><b>◆</b>Velocity</span><span><b>◆</b>Java 8/17/21/25 auto</span>
   </div></div>
 </div>
 
@@ -86,7 +86,7 @@
   <div class="statband reveal" id="statband">
     <div class="big" data-tilt><b id="sbLive">0</b><span>servers online</span></div>
     <div class="big" data-tilt><b id="sbTotal">0</b><span>total servers</span></div>
-    <div class="big" data-tilt><b>9</b><span>platforms</span></div>
+    <div class="big" data-tilt><b>16</b><span>platforms</span></div>
     <div class="big" data-tilt><b>3</b><span>java majors auto</span></div>
   </div>
 
@@ -102,10 +102,10 @@
   </div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:13px">
     <div class="card hoverable reveal" data-tilt style="transition-delay:.02s"><h3>🖥️ Real Console</h3><p class="muted" style="font-size:13.5px;margin:0">Live SSE stream, colored logs, command history, Start/Restart/Stop/Kill + CPU/RAM bars.</p></div>
-    <div class="card hoverable reveal" data-tilt style="transition-delay:.1s"><h3>📁 File Manager</h3><p class="muted" style="font-size:13.5px;margin:0">Explorer + editor (Ctrl+S), upload/download, rename, delete — puro server folder.</p></div>
-    <div class="card hoverable reveal" data-tilt style="transition-delay:.18s"><h3>⚙️ Settings</h3><p class="muted" style="font-size:13.5px;margin:0">server.properties form + raw mode, MOTD, whitelist — restart dile apply.</p></div>
+    <div class="card hoverable reveal" data-tilt style="transition-delay:.1s"><h3>📁 File Manager</h3><p class="muted" style="font-size:13.5px;margin:0">Explorer + editor (Ctrl+S), upload/download, rename, delete — the whole server folder.</p></div>
+    <div class="card hoverable reveal" data-tilt style="transition-delay:.18s"><h3>⚙️ Settings</h3><p class="muted" style="font-size:13.5px;margin:0">server.properties form + raw mode, MOTD, whitelist — applied on restart.</p></div>
     <div class="card hoverable reveal" data-tilt style="transition-delay:.26s"><h3>💾 Backup + Drive</h3><p class="muted" style="font-size:13.5px;margin:0">Auto zip + Google Drive upload, manual backup, one-click restore, download.</p></div>
-    <div class="card hoverable reveal" data-tilt style="transition-delay:.34s"><h3>☕ Auto Java</h3><p class="muted" style="font-size:13.5px;margin:0">Version onujayi JRE (8/17/21/25) nijei download + verify — kichu install korar dorkar nai.</p></div>
+    <div class="card hoverable reveal" data-tilt style="transition-delay:.34s"><h3>☕ Auto Java</h3><p class="muted" style="font-size:13.5px;margin:0">Downloads + verifies the right JRE (8/17/21/25) per version — nothing to install.</p></div>
     <div class="card hoverable reveal" data-tilt style="transition-delay:.42s"><h3>🔐 Accounts</h3><p class="muted" style="font-size:13.5px;margin:0">Login/signup, admin-user roles, owner-per-server access, requireLogin toggle.</p></div>
   </div>
 </div>
@@ -134,7 +134,7 @@ let lastHtml='';
 async function load(){
   try{
     const r=await fetch('/api/servers');
-    if(r.status===401){$('#slist').innerHTML='<div class="empty">🔒 access korte login koro — <a href="/login">login →</a></div>';$('#liveCount').textContent='login koro';return}
+    if(r.status===401){$('#slist').innerHTML='<div class="empty">🔒 log in to see your servers — <a href="/login">login →</a></div>';$('#liveCount').textContent='login to see';return}
     const s=await r.json();
     const run=s.filter(x=>x.running).length;
     $('#liveCount').innerHTML=`<b>${run}</b> online · ${s.length} servers`;
@@ -156,7 +156,7 @@ async function load(){
         </div>
         <a class="btn ${x.running?'primary':''}" href="${window.__me?'/server/'+x.id:'/login'}">${window.__me?'🖥️ Panel':'🔓 Manage'}</a>
       </div>`).join(''):
-      `<div class="empty">kono server nai — <a href="/user">first server create koro →</a></div>`;
+      `<div class="empty">no servers yet — <a href="/user">create your first server →</a></div>`;
     if(html!==lastHtml){                    // update holei DOM ghotbe — else fade-up abar replay hobe na (glitch fix)
       document.body.classList.add('warm');  // update render e animation off
       $('#slist').innerHTML=html;
@@ -174,7 +174,7 @@ async function heroTerm(){
     if(rr.status===401){
       $('#heroTermId').textContent='mc — locked';
       $('#heroTerm').innerHTML='<div class="tsys" id="heroT"></div><div id="heroLink"></div><span class="cursor"></span>';
-      await typeInto('#heroT','[panel] booting MC-Panel v2.0 … [auth] 🔒 live console dekhte login lagbe',18);
+      await typeInto('#heroT','[panel] booting MC-Panel v2.0 … [auth] 🔒 log in to watch the live console',18);
       if($('#heroLink')&&$('#heroLink').isConnected)$('#heroLink').innerHTML='<a href="/login" style="color:var(--mint2)">/login →</a>';
       return;
     }
@@ -182,15 +182,15 @@ async function heroTerm(){
     if(!s.length){
       $('#heroTermId').textContent='mc — ready';
       $('#heroTerm').innerHTML='<div class="tsys" id="heroT"></div><div id="heroLink"></div><span class="cursor"></span>';
-      await typeInto('#heroT','[panel] booting MC-Panel v2.0 … [scan] 0 server found — bored?',18);
-      if($('#heroLink')&&$('#heroLink').isConnected)$('#heroLink').innerHTML='<a href="/user" style="color:var(--mint2)">/user theke first server create koro →</a>';
+      await typeInto('#heroT','[panel] booting MC-Panel v2.0 … [scan] 0 servers found — bored?',18);
+      if($('#heroLink')&&$('#heroLink').isConnected)$('#heroLink').innerHTML='<a href="/user" style="color:var(--mint2)">create your first server at /user →</a>';
       return;
     }
     const pick=s.find(x=>x.running)||s[0];
     $('#heroTermId').textContent=pick.id+' — live';
     $('#heroFoot').textContent=pick.id+(pick.running?'':' · offline');
     const lr=await fetch(`/api/servers/${pick.id}/logs?tail=8`);
-    if(lr.status===401){$('#heroTerm').innerHTML='<span class="tsys">[panel] 🔒 login koro console dekhte</span><span class="cursor"></span>';return}
+    if(lr.status===401){$('#heroTerm').innerHTML='<span class="tsys">[panel] 🔒 log in to watch the console</span><span class="cursor"></span>';return}
     const l=await lr.json();
     const el=$('#heroTerm');
     el.innerHTML='';

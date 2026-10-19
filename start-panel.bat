@@ -11,5 +11,5 @@ REM ---- Browser e khulo ----
 timeout /t 2 /nobreak >nul
 start http://localhost:3000/
 echo Panel chalu: http://localhost:3000/  +  https://cloud.roun.sryze.cc
-echo Bondho korte: 2 ta "MC Panel" ar "CF Tunnel" window close koro
+echo To stop: close both the "MC Panel" and "CF Tunnel" windows
 pause

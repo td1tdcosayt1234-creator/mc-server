@@ -1,4 +1,4 @@
-<!doctype html><html lang="bn"><head>
+<!doctype html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#04050a">
 <title>Docs — MC Panel</title>
@@ -43,20 +43,20 @@
     <section class="reveal" id="quickstart">
       <div class="sec-index"><b style="color:var(--violet2)">01</b> / Quick start</div>
       <h2>5 minute e <span class="gradtext">chalu.</span></h2>
-      <p>Node.js 18+ lagbe (Node 22 recommended). Ek line ei kaj:</p>
+      <p>Node.js 18+ required (Node 22 recommended). One line does it:</p>
       <div class="code"><button class="copybtn" onclick="cp(this)">copy</button><span class="cmt"># clone + install + chalau</span>
 git clone https://github.com/td1tdcosayt1234-creator/mc-server.git
 cd mc-server
 npm install
 node server.js</div>
-      <p>Ekhon <code>http://localhost:3000</code> — first signup korle oi account <b style="color:var(--violet2)">admin</b>. Create page theke server create koro: name + platform + version + RAM → Create + Download (auto jar)</p>
-      <div class="doc-note"><b>Tip:</b> server folder <code>servers/&lt;id&gt;</code> e thakbe — full file access panel ei. Git nijer folder ignore kore.</div>
+      <p>Now open <code>http://localhost:3000</code> — the first signup becomes <b style="color:var(--violet2)">admin</b>. Create a server from the Create page: name + platform + version + RAM → Create + Download (auto jar)</p>
+      <div class="doc-note"><b>Tip:</b> the server folder lives at <code>servers/&lt;id&gt;</code> — full file access inside the panel. Git ignores the folder.</div>
     </section>
 
     <section class="reveal" id="platforms">
       <div class="sec-index"><b style="color:var(--violet2)">02</b> / Platforms</div>
       <h2>Ei 16 platforms <span class="gradtext">built-in.</span></h2>
-      <p>Shob auto-download official API/maven theke — kono mirror jar na.</p>
+      <p>Everything auto-downloads from the official API/maven — never a mirror jar.</p>
       <div class="code" style="line-height:2.1">
 <b class="k">paper</b> <img class="s lo" src="https://github.com/PaperMC.png?size=24" onerror="this.outerHTML='📄'">  fill.papermc.io v3 · fresh builds <span class="cmt">· perf + plugins</span><br>
 <b class="k">folia</b> <img class="s lo" src="https://github.com/PaperMC.png?size=24" onerror="this.outerHTML='🍃'">  fill.papermc.io v3 <span class="cmt">· region multithreaded (1.20+)</span><br>
@@ -69,48 +69,48 @@ node server.js</div>
 <b class="k">neoforge</b> <img class="s lo" src="https://github.com/neoforged.png?size=24" onerror="this.outerHTML='🔥'">  maven.neoforged.net installer → <span class="s">--installServer</span> → win_args run<br>
 <b class="k">forge</b> <img class="s lo" src="https://github.com/MinecraftForge.png?size=24" onerror="this.outerHTML='⚒️'">  maven.minecraftforge.net installer → <span class="s">--installServer</span> → win_args run <span class="cmt">· MC 1.17+, build auto-latest</span><br>
 <b class="k">leaf</b> <img class="s lo" src="https://github.com/Winds-Studio.png?size=24" onerror="this.outerHTML='🍃'">  github releases (Winds-Studio/Leaf) <span class="cmt">· paper fork + performance opts — paper plugins chole</span><br>
-<b class="k">velocity</b> <img class="s lo" src="https://github.com/VelocityPowered.png?size=24" onerror="this.outerHTML='🪂'">  fill.papermc.io v3 <span class="cmt">· modern proxy — velocity.toml edit korte hobe</span><br>
+<b class="k">velocity</b> <img class="s lo" src="https://github.com/VelocityPowered.png?size=24" onerror="this.outerHTML='🪂'">  fill.papermc.io v3 <span class="cmt">· modern proxy — edit velocity.toml</span><br>
 <b class="k">waterfall</b> <img class="s lo" src="https://github.com/PaperMC.png?size=24" onerror="this.outerHTML='🌊'">  fill.papermc.io v3 <span class="cmt">· bungee fork (EOL, download 200 chole)</span><br>
 <b class="k">bungeecord</b> <img class="s lo" src="https://github.com/SpigotMC.png?size=24" onerror="this.outerHTML='🔗'">  ci.md-5.net Jenkins <span class="cmt">· classic proxy — version 'latest'</span><br>
 <b class="k">mohist</b> <img class="s lo" src="https://github.com/MohistMC.png?size=24" onerror="this.outerHTML='🏮'">  api.mohistmc.com <span class="cmt">· Forge + Bukkit hybrid (mods + plugins dui khan)</span><br>
 <b class="k">arclight</b> <img class="s lo" src="https://github.com/Arclight-Team.png?size=24" onerror="this.outerHTML='💡'">  github releases <span class="cmt">· Forge + Bukkit hybrid (forge variant)</span></div>
-      <div class="doc-note"><b>NeoForge / Forge:</b> create korle panel nijei installer chalai (~1-2 min, libraries namiye), tarpor <code>win_args.txt</code> diye bose. Java mapping auto — 1.21.x → 21.</div>
+      <div class="doc-note"><b>NeoForge / Forge:</b> on create the panel itself runs the installer (~1-2 min, downloads libraries), then boots via <code>win_args.txt</code>. Java mapping auto — 1.21.x → 21.</div>
     </section>
 
     <section class="reveal" id="auth">
       <div class="sec-index"><b style="color:var(--violet2)">03</b> / Login & roles</div>
       <h2>Accounts, <span class="gradtext">roles.</span></h2>
-      <p>Auth ekdom local — db.json e. Password <code>scrypt</code> + random salt hash hoy. Session = 7 din, HttpOnly cookie.</p>
+      <p>Auth is fully local — db.json. Passwords hash with <code>scrypt</code> + random salt. Session = 7 days (remember-me 30), HttpOnly cookie.</p>
       <ul style="color:var(--muted);font-size:14px;line-height:2;padding-left:20px">
         <li><b style="color:var(--text)">First signup = admin</b> (self-host panel er sensible default)</li>
-        <li><b style="color:var(--text)">admin</b> — sob server, user manage, requireLogin toggle</li>
+        <li><b style="color:var(--text)">admin</b> — all servers, user management, requireLogin toggle</li>
         <li><b style="color:var(--text)">user</b> — nijer create kora server only (owner: 403 guard)</li>
-        <li>Admin page theke <b style="color:var(--text)">"Login required" toggle</b> — off korle khola access (giya style)</li>
+        <li>From the Admin page: <b style="color:var(--text)">"Login required" toggle</b> — off means open access (the old style)</li>
       </ul>
     </section>
 
     <section class="reveal" id="java">
       <div class="sec-index"><b style="color:var(--violet2)">04</b> / Auto Java</div>
-      <h2>Java <span class="gradtext">niye tension nai.</span></h2>
-      <p>Version onujayi mapping → panel nijei JRE ensure kore:</p>
+      <h2>Java — <span class="gradtext">zero setup.</span></h2>
+      <p>Per-version mapping → the panel ensures the JRE itself:</p>
       <div class="code"><span class="cmt">// net Java mapping (lib/java.js)</span>
 MC 1.20.5 – 1.21.x → <span class="k">Java 21</span>  <span class="cmt">(Temurin JRE auto-download)</span>
 MC 1.17.0 – 1.20.4 → <span class="k">Java 17</span>
 MC ≤ 1.16.5        → <span class="k">Java 8</span></div>
-      <p>Runtime folder: <code>runtime/java-&lt;major&gt;</code> (gitignored). System java match korle oi ta — no download. Download progress live console e dekhbo.</p>
+      <p>Runtime folder: <code>runtime/java-&lt;major&gt;</code> (gitignored). If system java matches, that one is used — no download. Download progress shows in the live console.</p>
     </section>
 
     <section class="reveal" id="console">
       <div class="sec-index"><b style="color:var(--violet2)">05</b> / Console & files</div>
       <h2>Real terminal, <span class="gradtext">real file manager.</span></h2>
       <p>Console page: SSE line-by-line stream, command input history (↑↓), power buttons (Start/Restart/Stop/Kill), CPU/RAM live bars. Files page: explorer + editor (Ctrl+S save), upload/download, rename/delete, khujar filter. Startup tab → RAM ti Java args; Settings tab → server.properties form + raw mode.</p>
-      <div class="doc-note"><b>Auto-restart:</b> crash korle 5s por nijei bose (port-conflict thakle skip, crash-loop block).</div>
+      <div class="doc-note"><b>Auto-restart:</b> on crash it reboots itself after 5s (skips on port-conflict, blocks crash-loops).</div>
     </section>
 
     <section class="reveal" id="backups">
       <div class="sec-index"><b style="color:var(--violet2)">06</b> / Backups</div>
       <h2>Auto backup + <span class="gradtext">Drive.</span></h2>
-      <p>Prottek <code>BACKUP_MINUTES</code> (default 50) minute por por zip backup: <code>backups/&lt;server&gt;/</code>. Google Drive service account thakle oikhane o jai. Backup tab theke one-click <b style="color:var(--text)">Restore</b> (server stop kore full overwrite) + download.</p>
+      <p>Every <code>BACKUP_MINUTES</code> (default 50) minutes a zip backup is taken: <code>backups/&lt;server&gt;/</code>. With a Google Drive service account it also uploads there. One-click <b style="color:var(--text)">Restore</b> from the Backup tab (stops the server, full overwrite) + download.</p>
     </section>
 
     <section class="reveal" id="config">
@@ -121,8 +121,8 @@ MC ≤ 1.16.5        → <span class="k">Java 8</span></div>
 <span class="k">BACKUPS_DIR</span>=./backups
 <span class="k">BACKUP_MINUTES</span>=50
 <span class="k">FIREBASE_SERVICE_ACCOUNT</span>=./serviceAccount.json <span class="cmt"># khali = local db.json</span>
-<span class="k">DRIVE_FOLDER_ID</span>= <span class="cmt"># khali = local backups</span></div>
-      <p>db.json e users + servers + settings rakha-hoi (local mode). Firebase thakle Firestore — panel apatoto auth local mode e.</p>
+<span class="k">DRIVE_FOLDER_ID</span>= <span class="cmt"># empty = local backups</span></div>
+      <p>db.json stores users + servers + settings (local mode). With Firebase it stores in Firestore — panel auth currently runs in local mode.</p>
     </section>
 
     <section class="reveal" id="api">
@@ -150,8 +150,8 @@ MC ≤ 1.16.5        → <span class="k">Java 8</span></div>
       <h2>Connect <span class="gradtext">paths.</span></h2>
       <ul style="color:var(--muted);font-size:14px;line-height:2;padding-left:20px">
         <li><b style="color:var(--text)">Same PC:</b> <code>localhost:25565</code></li>
-        <li><b style="color:var(--text)">LAN/Tailscale:</b> panel er Network tab e LAN IP + port dekhabe (Tailscale install = CGNAT e o kaj kore)</li>
-        <li><b style="color:var(--text)">Internet:</b> router port-forward (TCP+UDP) ba <b style="color:var(--mint2)">playit.gg tunnel</b> (free, MC friendly) — bandho kore bondhu ke tunnel address dao</li>
+        <li><b style="color:var(--text)">LAN/Tailscale:</b> the panel's Network tab shows LAN IP + port (Tailscale works even behind CGNAT)</li>
+        <li><b style="color:var(--text)">Internet:</b> router port-forward (TCP+UDP) or a <b style="color:var(--mint2)">playit.gg tunnel</b> (free, MC friendly) — set it up and give friends the tunnel address</li>
         <li>Multi-port: duita server duita port (Settings tab e server-port change)</li>
       </ul>
     </section>
@@ -160,11 +160,11 @@ MC ≤ 1.16.5        → <span class="k">Java 8</span></div>
       <div class="sec-index"><b style="color:var(--violet2)">10</b> / Troubleshoot</div>
       <h2>Common issues & <span class="gradtext">fixes.</span></h2>
       <ul style="color:var(--muted);font-size:14px;line-height:2.1;padding-left:20px">
-        <li><b style="color:var(--text)">"port already used"</b> → onno server ba orphan java oi port e; oi server stop koro ba Settings e port change</li>
-        <li><b style="color:var(--text)">Crash-loop guard</b> → auto-restart thamiye dekhabe — console log poro</li>
-        <li><b style="color:var(--text)">EULA</b> → Startup tab e "eula.txt accept" button</li>
-        <li><b style="color:var(--text)">NeoForge installer fail?</b> → network check; abar create korle fresh install</li>
-        <li><b style="color:var(--text)">Restart panel</b> → node mesh niye: Ctrl+C → node server.js (backups + servers folder thik thakbe)</li>
+        <li><b style="color:var(--text)">"port already used"</b> → another server or an orphan java holds the port; stop that server or change the port in Settings</li>
+        <li><b style="color:var(--text)">Crash-loop guard</b> → auto-restart pauses itself — read the console log</li>
+        <li><b style="color:var(--text)">EULA</b> → "eula.txt accept" button in the Startup tab</li>
+        <li><b style="color:var(--text)">NeoForge installer fail?</b> → check the network; create again for a fresh install</li>
+        <li><b style="color:var(--text)">Restart panel</b> → close the node window: Ctrl+C → node server.js (backups + servers folders stay untouched)</li>
       </ul>
     </section>
   </main>

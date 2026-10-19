@@ -1,4 +1,4 @@
-<!doctype html><html lang="bn"><head>
+<!doctype html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#04050a">
 <title>Status — MC Panel</title>
@@ -37,7 +37,7 @@
   <div class="stars" aria-hidden="true"></div>
   <div class="kicker reveal"><span class="pulse-dot"></span>live telemetry · auto-refresh</div>
   <h1 class="reveal" style="transition-delay:.08s">Panel <span class="gradtext">status.</span></h1>
-  <p class="sub reveal" style="max-width:560px;transition-delay:.16s">Real-time java runtime, servers, network — sob path from the running panel API. <span class="muted small" id="lastUpd"></span></p>
+  <p class="sub reveal" style="max-width:560px;transition-delay:.16s">Real-time java runtimes, servers, network — every path comes from the running panel API. <span class="muted small" id="lastUpd"></span></p>
 </div>
 
 <div class="container" style="padding-bottom:70px;position:relative;z-index:2">
@@ -89,7 +89,7 @@ async function info(){
     const rows=[];
     if(j.javaMajor)rows.push({v:'system java',m:j.javaMajor});
     jres.forEach(m=>rows.push({v:'runtime/java-'+m,m}));
-    $('#jres').innerHTML=rows.map(r=>`<span class="chip">☕ Java ${r.m} <span class="muted">· ${esc(r.v)}</span></span>`).join('')||'<span class="chip">kono runtime nai</span>';
+    $('#jres').innerHTML=rows.map(r=>`<span class="chip">☕ Java ${r.m} <span class="muted">· ${esc(r.v)}</span></span>`).join('')||'<span class="chip">no runtime found</span>';
     $('#sysJava').textContent='system: '+esc(j.java||'unknown')+' · platform: '+esc(j.platform||'-');
     const ips=j.ips||[];
     $('#stNet').textContent=ips.length;
@@ -100,7 +100,7 @@ async function servers(){
     const r=await fetch('/api/servers');
     if(r.status===401){
       authed=false;
-      $('#srvWrap').innerHTML='<div class="card reveal rved" style="padding:26px"><div class="rowline"><span style="font-size:22px">🔒</span><div><b>Servers dekhte login lagbe</b><div class="muted small">Admin ba user account diye login korle live list + ports dekhbe</div></div><a class="btn primary" style="margin-left:auto" href="/login">Login →</a></div></div>';
+      $('#srvWrap').innerHTML='<div class="card reveal rved" style="padding:26px"><div class="rowline"><span style="font-size:22px">🔒</span><div><b>Log in to see servers</b><div class="muted small">Log in with an admin or user account to see the live list + ports</div></div><a class="btn primary" style="margin-left:auto" href="/login">Login →</a></div></div>';
       $('#stOnline').textContent='—';$('#stTotal').textContent='—';
       $('#allClear').innerHTML='<span class="dot"></span>login required';
       return;
@@ -109,7 +109,7 @@ async function servers(){
     authed=true;
     const run=s.filter(x=>x.running).length;
     if(window.__uxCount){window.__uxCount($('#stOnline'),run);window.__uxCount($('#stTotal'),s.length);}
-    $('#allClear').innerHTML=run?`<span class="dot" style="background:var(--green)"></span>${run} online`:`<span class="dot" style="background:#f87171"></span>sob offline`;
+    $('#allClear').innerHTML=run?`<span class="dot" style="background:var(--green)"></span>${run} online`:`<span class="dot" style="background:#f87171"></span>all offline`;
     $('#srvWrap').innerHTML=s.length?`<div class="stat-table">${s.map(x=>`
       <div class="stat-row${x.running?' live':''}">
         <div style="display:flex;gap:10px;align-items:center;min-width:0">
@@ -122,7 +122,7 @@ async function servers(){
           ${x.running?`<span class="chip">CPU <b>${x.stats&&x.stats.cpu||0}%</b></span><span class="chip">MEM <b>${x.stats&&x.stats.memMB||0}MB</b></span>`:''}
           <a class="btn ghost sm" href="/server/${x.id}">Panel →</a>
         </div>
-      </div>`).join('')}</div>`:'<div class="card reveal rved" style="padding:26px"><div class="empty">kono server nai — <a href="/user">create koro →</a></div></div>';
+      </div>`).join('')}</div>`:'<div class="card reveal rved" style="padding:26px"><div class="empty">no servers — <a href="/user">create one →</a></div></div>';
   }catch(e){$('#srvWrap').innerHTML='<div class="card" style="padding:26px"><div class="empty">panel offline?</div></div>';$('#allClear').innerHTML='<span class="dot" style="background:#f87171"></span>panel down';}
 }
 info();servers();updTime();

@@ -1,4 +1,4 @@
-<!doctype html><html lang="bn"><head>
+<!doctype html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#04050a">
 <title>Create Server — MC Panel</title>
@@ -69,7 +69,7 @@
       <button class="btn primary shine" onclick="create()">⬇ Create + Download</button>
       <span class="muted small" id="msg"></span>
     </div>
-    <p class="muted small" style="margin:14px 0 0">☕ Java <b style="color:var(--mint2)">FULL AUTO</b> — version onujayi JRE panel nijei niye ase (17 system e ache, 1.21+ er jonno 21 auto-download hoy runtime folder e). Kichu install korar dorkar nei.</p>
+    <p class="muted small" style="margin:14px 0 0">☕ Java <b style="color:var(--mint2)">FULL AUTO</b> — the panel fetches the right JRE for the version automatically (17 on system, 21 for 1.21+ downloads into the runtime folder). Nothing to install.</p>
   </div>
 
   <div style="margin:32px 0 14px"><div class="sec-index"><b style="color:var(--violet2)">—</b> / your servers</div></div>
@@ -87,19 +87,19 @@ const logo=t=>`https://github.com/${LOGO[t]||''}.png?size=48`;
 const avat=t=>LOGO[t]?`<img src="${logo(t)}" alt="${t}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.outerHTML='${ICON[t]||'🎮'}'">`:(ICON[t]||'🎮');
 // platform dropdown — real logo shoho meta (label + desc + group)
 const PLATS=[
-  {t:'paper',g:'Bukkit family',d:'best performance'},
-  {t:'folia',g:'Bukkit family',d:'multithreaded regions'},
-  {t:'purpur',g:'Bukkit family',d:'paper + extras'},
-  {t:'spigot',g:'Bukkit family',d:'classic'},
-  {t:'craftbukkit',g:'Bukkit family',d:'vanilla+bukkit'},
+  {t:'paper',g:'Bukkit family (plugins)',d:'best performance'},
+  {t:'folia',g:'Bukkit family (plugins)',d:'multithreaded regions'},
+  {t:'purpur',g:'Bukkit family (plugins)',d:'paper + extras'},
+  {t:'spigot',g:'Bukkit family (plugins)',d:'classic'},
+  {t:'craftbukkit',g:'Bukkit family (plugins)',d:'vanilla + bukkit'},
+  {t:'leaf',g:'Bukkit family (plugins)',d:'paper fork (performance)'},
   {t:'vanilla',g:'Vanilla / modded',d:'official'},
   {t:'fabric',g:'Vanilla / modded',d:'mods'},
   {t:'quilt',g:'Vanilla / modded',d:'mods'},
   {t:'neoforge',g:'Vanilla / modded',d:'big mods'},
   {t:'forge',g:'Vanilla / modded',d:'classic mods (1.17+)'},
-  {t:'leaf',g:'Vanilla / modded',d:'paper fork (performance)'},
-  {t:'mohist',g:'Vanilla / modded',d:'Forge + Bukkit hybrid'},
-  {t:'arclight',g:'Vanilla / modded',d:'Forge + Bukkit hybrid'},
+  {t:'mohist',g:'Hybrid (mods + plugins)',d:'Forge + Bukkit'},
+  {t:'arclight',g:'Hybrid (mods + plugins)',d:'Forge + Bukkit'},
   {t:'velocity',g:'Proxies',d:'modern proxy'},
   {t:'waterfall',g:'Proxies',d:'bungee fork'},
   {t:'bungeecord',g:'Proxies',d:'classic proxy'}
@@ -133,7 +133,7 @@ buildTypeDd();setType('paper');
 function fillVer(){const arr=V[document.getElementById('type').value]||[];document.getElementById('version').innerHTML=arr.map(x=>`<option>${x}</option>`).join('');}
 async function create(){
   const type=$('#type').value,version=$('#version').value,name=$('#name').value.trim(),ram=+$('#ram').value;
-  if(!name)return alert('name daw');
+  if(!name)return alert('Enter a server name');
   const m=$('#msg');m.style.color='var(--amber)';m.textContent='⬇ downloading '+type+' '+version+'…';
   try{
     const r=await (await fetch('/api/servers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,type,version,ram})})).json();
@@ -144,7 +144,7 @@ async function create(){
 async function list(){
   try{
     const r=await fetch('/api/servers');
-    if(r.status===401){$('#list').innerHTML='<div class="empty">🔒 login kage na kore access nai — <a href="/login">login →</a></div>';return}
+    if(r.status===401){$('#list').innerHTML='<div class="empty">🔒 login required — <a href="/login">login →</a></div>';return}
     const d=await r.json();
     $('#list').innerHTML=d.length?d.map(x=>`
       <div class="card srvrow hoverable">
@@ -156,7 +156,7 @@ async function list(){
           <button class="btn primary sm" onclick="location.href='/server/${x.id}'">🖥️ Panel</button>
           ${x.running?`<button class="btn stop sm" onclick="stop1('${x.id}')">■ Stop</button>`:`<button class="btn start sm" onclick="start1('${x.id}')">▶ Start</button>`}
         </div>
-      </div>`).join(''):'<div class="empty">kono server nai — upor theke create koro</div>';
+      </div>`).join(''):'<div class="empty">no servers yet — create one above</div>';
   }catch(e){$('#list').innerHTML='<div class="empty">load fail</div>'}
 }
 async function start1(id){

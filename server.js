@@ -75,29 +75,29 @@ app.use('/api', async (req, res, next) => {
   // create block hoy (age: auth user "x" er moto id e upload kore folder banat)
   if (p.startsWith('/servers/')) {
     const sid = p.split('/')[2];
-    if (sid && !SID_OK.test(sid)) return res.status(400).json({ error: 'server id vul' });
+    if (sid && !SID_OK.test(sid)) return res.status(400).json({ error: 'invalid server id' });
     if (sid) {
       let rec = null;
       try { rec = (await db.getServers()).find(x => x.id === sid); } catch {}
-      if (!rec) return res.status(404).json({ error: 'server nai: ' + sid });
+      if (!rec) return res.status(404).json({ error: 'server not found: ' + sid });
       // non-admin: owner-only server access (admin sob dekhbe)
       if (req.user && req.user.role !== 'admin' && rec.owner !== req.user.id) {
-        return res.status(403).json({ error: 'ei server tomar na (owner: ' + (rec.owner || 'admin') + ')' });
+        return res.status(403).json({ error: 'this server is not yours (owner: ' + (rec.owner || 'admin') + ')' });
       }
       // guest → shudhu GET public read (logs/stats/console)
       if (!req.user && loginRequired() && !(req.method === 'GET' && PUBLIC_READ(p))) {
-        return res.status(401).json({ error: 'login lagbe — /login' });
+        return res.status(401).json({ error: 'login required — /login' });
       }
       return next();
     }
   }
   if (p.startsWith('/auth/login') || p.startsWith('/auth/signup')) {
     const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket.remoteAddress || 'x';
-    if (authLimited(ip)) return res.status(429).json({ error: 'onek bar try holo — 1 min por abar' });
+    if (authLimited(ip)) return res.status(429).json({ error: 'too many attempts — try again after 1 min' });
   }
   if (OPEN_API.some(x => p === x || p.startsWith(x + '/'))) return next();
   if (req.method === 'GET' && PUBLIC_READ(p)) return next();
-  if (loginRequired() && !req.user) return res.status(401).json({ error: 'login lagbe — /login' });
+  if (loginRequired() && !req.user) return res.status(401).json({ error: 'login required — /login' });
   if (p.startsWith('/users')) {
     if (!req.user || req.user.role !== 'admin') return res.status(403).json({ error: 'admin only' });
     return next();
@@ -157,7 +157,7 @@ app.get('/api/servers', ok(async (req, res) => {
 
 app.get('/api/servers/:id', ok(async (req, res) => {
   const s = (await db.getServers()).find(x => x.id === req.params.id);
-  if (!s) return res.status(404).json({ error: 'server nai' });
+  if (!s) return res.status(404).json({ error: 'server not found' });
   const pub = { ...s, ...mc.serverStatus(s.id), stats: mc.getStats(s.id) };
   delete pub.rconPass; delete pub.rconPort;   // RCON credentials client e jabe na
   res.json(pub);
@@ -165,7 +165,7 @@ app.get('/api/servers/:id', ok(async (req, res) => {
 
 app.post('/api/servers', ok(async (req, res) => {
   const { name, type, version, ram } = req.body;
-  if (!name || !version) return res.status(400).json({ error: 'name + version lagbe' });
+  if (!name || !version) return res.status(400).json({ error: 'name + version required' });
   const base = name.toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 40) || 'srv';
   // ID collision guard: same name hole overwrite na hobe — -2, -3 suffix
   let id = base, n = 2;
@@ -187,11 +187,11 @@ app.post('/api/servers/:id/start', ok(async (req, res) => {
   const s = (await db.getServers()).find(x => x.id === req.params.id);
   if (!fs.existsSync(path.join(SERVERS_DIR, req.params.id, 'server.jar'))) {
     // server.jar nai? (files tab e delete hoye chilo / startup fail) — record er type+version diye abar namiye dei
-    if (!s) return res.status(404).json({ error: 'server nai' });
+    if (!s) return res.status(404).json({ error: 'server not found' });
     try {
       await mc.downloadServerJar(req.params.id, s.type || 'paper', s.version);
     } catch (e) {
-      return res.status(400).json({ error: 'server.jar nai chilo + redownload fail: ' + e.message });
+      return res.status(400).json({ error: 'server.jar was missing + redownload failed: ' + e.message });
     }
   }
   // AUTO JAVA: server version onujayi matching JRE - system e thakle seta, na thakle runtime download
@@ -206,12 +206,12 @@ app.post('/api/servers/:id/start', ok(async (req, res) => {
   const others = (await db.getServers()).filter(x => x.id !== req.params.id && mc.isRunning(x.id));
   for (const o of others) {
     const op = props.getPort(SERVERS_DIR, o.id);
-    if (op === myPort) return res.status(400).json({ error: `port ${myPort} already running server "${o.id}" use korche - oi server stop koro ba Settings tab e server-port change koro` });
+    if (op === myPort) return res.status(400).json({ error: `port ${myPort} is already used by server "${o.id}" - stop that server or change server-port in the Settings tab` });
   }
   // port e jodi onno kono (tracked na) java binds kore thake - age stop korte hobe
   const otherPid = await mc.portOwnerPid(myPort);
   if (otherPid != null && !mc.allKnownPids().includes(otherPid)) {
-    return res.status(400).json({ error: `port ${myPort} already PID ${otherPid} er java holds korche (orphan/conflict). Kill kore abar try koro or port change koro` });
+    return res.status(400).json({ error: `port ${myPort} is held by another java process, PID ${otherPid} (orphan/conflict). Kill it and retry, or change the port` });
   }
   const ram = parseInt(req.body.ram || (s && s.ram) || 4096, 10) || 4096;
   const extra = String((s && s.javaArgs) || req.body.javaArgs || '').trim().split(' ').filter(Boolean);
@@ -257,7 +257,7 @@ app.get('/api/servers/:id/stats', (req, res) => res.json(mc.getStats(req.params.
 app.post('/api/servers/:id/command', (req, res) => res.json(mc.sendCommand(req.params.id, req.body.cmd || '')));
 
 // ---- 🎮 Players (RCON): online list / inventory / location / op-deop-ban-kick-pardon ----
-const badName = res => res.status(400).json({ error: 'player name vul (A-Z a-z 0-9 _, max 16)' });
+const badName = res => res.status(400).json({ error: 'invalid player name (A-Z a-z 0-9 _, max 16)' });
 app.get('/api/servers/:id/players', ok(async (req, res) => { res.json(await players.list(req.params.id)); }));
 app.get('/api/servers/:id/players/banned', ok(async (req, res) => { res.json(await players.bans(req.params.id)); }));
 app.get('/api/servers/:id/players/:name/inv', ok(async (req, res) => {
@@ -325,12 +325,12 @@ app.post('/api/servers/:id/properties', ok((req, res) => {
 // ---- Startup settings (RAM + Java flags) ----
 app.get('/api/servers/:id/startup', ok(async (req, res) => {
   const s = (await db.getServers()).find(x => x.id === req.params.id);
-  if (!s) return res.status(404).json({ error: 'server nai' });
+  if (!s) return res.status(404).json({ error: 'server not found' });
   res.json({ ram: s.ram || 4096, javaArgs: s.javaArgs || '', type: s.type, version: s.version });
 }));
 app.post('/api/servers/:id/startup', ok(async (req, res) => {
   const s = (await db.getServers()).find(x => x.id === req.params.id);
-  if (!s) return res.status(404).json({ error: 'server nai' });
+  if (!s) return res.status(404).json({ error: 'server not found' });
   const ram = Math.max(512, Math.min(16384, parseInt(req.body.ram || s.ram || 4096, 10) || 4096));
   const javaArgs = String(req.body.javaArgs == null ? s.javaArgs || '' : req.body.javaArgs).slice(0, 500);
   await db.saveServer({ ...s, ram, javaArgs });
@@ -348,7 +348,7 @@ app.post('/api/servers/:id/backups/:name/restore', ok(async (req, res) => {
   // grace 25s + force kill er path er time dhore 32s wait
   try { mc.stopServer(req.params.id); } catch {}
   const stopped = await mc.waitStopped(req.params.id, 32000);
-  if (!stopped) return res.status(400).json({ error: 'server stop hoy nai — age Stop/Kill kore abar try koro' });
+  if (!stopped) return res.status(400).json({ error: 'server did not stop — Stop/Kill first and retry' });
   await backup.restoreBackup(req.params.id, req.params.name, SERVERS_DIR);
   res.json({ ok: true });
 }));
@@ -380,7 +380,7 @@ app.get('/api/users', ok(async (req, res) => {
 }));
 app.post('/api/users', ok(async (req, res) => {
   const { email, role, password } = req.body;
-  if (!email) return res.status(400).json({ error: 'email lagbe' });
+  if (!email) return res.status(400).json({ error: 'email required' });
   if (password) return res.json(await auth.adminCreate({ email, role, password }));
   res.json(await db.saveUser({ email, role: role || 'user', createdAt: new Date().toISOString() }));
 }));
@@ -420,7 +420,7 @@ app.get('/api/auth/settings', ok(async (req, res) => {
 app.delete('/api/servers/:id', ok(async (req, res) => {
   const id = req.params.id;
   const s = (await db.getServers()).find(x => x.id === id);
-  if (!s) return res.status(404).json({ error: 'server nai' });
+  if (!s) return res.status(404).json({ error: 'server not found' });
   mc.killServer(id);
   await mc.waitStopped(id, 32000); // pid liveness check — Windows file lock fix + graceful stop window cover
   await db.deleteServer(id);
@@ -456,7 +456,7 @@ app.use('/api', apiErrHandler);
 
 // ---- 404 catch-all (page + api json) — sob route er PORE ----
 app.use((req, res) => {
-  if (req.path.startsWith('/api')) return res.status(404).json({ error: 'api route nai: ' + req.path });
+  if (req.path.startsWith('/api')) return res.status(404).json({ error: 'api route not found: ' + req.path });
   res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
 });
 
