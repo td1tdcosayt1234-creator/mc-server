@@ -67,7 +67,7 @@
 <script>
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const ICON={paper:'📄',purpur:'🟣',vanilla:'🌱',spigot:'⚡',fabric:'🧵',folia:'🍃',quilt:'🪡',neoforge:'🔥',forge:'⚒️',craftbukkit:'🔨'};
+const ICON={paper:'📄',purpur:'🟣',vanilla:'🌱',spigot:'⚡',fabric:'🧵',folia:'🍃',quilt:'🪡',neoforge:'🔥',forge:'⚒️',velocity:'🪂',waterfall:'🌊',bungeecord:'🔗',mohist:'🏮',arclight:'💡',craftbukkit:'🔨'};
 let ME=null;
 function toast(msg,typ='ok'){const t=$('#tip');t.textContent=msg;t.className='toast show '+typ;clearTimeout(t._to);t._to=setTimeout(()=>t.className='toast',2600)}
 // chrome anims → /ux.js

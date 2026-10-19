@@ -26,7 +26,8 @@ file manager, startup/settings edit, backup + restore — sob nijer server hobe 
   Download, delete. Auto backup proti `BACKUP_MINUTES` min por por.
 
 ## Platforms (auto jar download)
-Paper (fill v3 API) • Purpur • Vanilla (Mojang piston-meta) • Spigot (GetBukkit) • Fabric (loader+installer server jar) • Forge (maven installer, 1.17+, build auto-latest)
+Server: Paper (fill v3) • Purpur • Vanilla (Mojang) • Spigot • Fabric • Quilt • Folia • NeoForge • Forge (installer, 1.17+) • CraftBukkit • Mohist (Forge+Bukkit hybrid) • Arclight (Forge+Bukkit hybrid)
+Proxy: Velocity • Waterfall • BungeeCord (stop command auto: end/shutdown, nogui off)
 
 ## Run
 ```
@@ -56,9 +57,9 @@ GET/POST /api/users, DELETE /api/users/:id
 ```
 
 ## Crash protection
-- Server crash korle 5s por auto restart + `[Panel] crash detected` log
-- Panel reboot korle sob server auto start
-- Stop = graceful `stop` command, 8s por force kill (taskkill /T /F)
+- Server crash korle 5s por auto restart + `[Panel] crash detected` log (4 bar crash-loop hole auto-restart OFF)
+- Panel reboot korle sob server auto start (jar missing hole nijei re-download)
+- Stop = graceful `stop` command (proxy: `end`/`shutdown`), 25s grace er por force kill (taskkill /T /F)
 
 ## Firebase (users/servers DB)
 1. console.firebase.google.com → Firestore create
