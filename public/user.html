@@ -61,9 +61,11 @@
         </div></div>
       <div><label class="label">Version</label><select class="input" id="version"></select></div>
     </div>
-    <div class="field" style="max-width:220px">
-      <label class="label">③ RAM (MB)</label>
-      <select class="input" id="ram"><option>1024</option><option selected>2048</option><option>3072</option><option>4096</option><option>6144</option><option>8192</option></select>
+    <div class="grid2c" style="gap:12px">
+      <div><label class="label">③ RAM (MB)</label>
+        <select class="input" id="ram"><option>1024</option><option selected>2048</option><option>3072</option><option>4096</option><option>6144</option><option>8192</option></select></div>
+      <div><label class="label">④ CPU cores</label>
+        <select class="input" id="cpu"><option value="0" selected>Auto (all cores)</option><option value="1">1 core</option><option value="2">2 cores</option><option value="3">3 cores</option><option value="4">4 cores</option><option value="6">6 cores</option><option value="8">8 cores</option></select></div>
     </div>
     <div class="rowline" style="margin-top:8px">
       <button class="btn primary shine" onclick="create()">⬇ Create + Download</button>
@@ -132,11 +134,11 @@ async function versions(){try{V=await (await fetch('/api/versions')).json();}cat
 buildTypeDd();setType('paper');
 function fillVer(){const arr=V[document.getElementById('type').value]||[];document.getElementById('version').innerHTML=arr.map(x=>`<option>${x}</option>`).join('');}
 async function create(){
-  const type=$('#type').value,version=$('#version').value,name=$('#name').value.trim(),ram=+$('#ram').value;
+  const type=$('#type').value,version=$('#version').value,name=$('#name').value.trim(),ram=+$('#ram').value,cpu=+$('#cpu').value;
   if(!name)return alert('Enter a server name');
   const m=$('#msg');m.style.color='var(--amber)';m.textContent='⬇ downloading '+type+' '+version+'…';
   try{
-    const r=await (await fetch('/api/servers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,type,version,ram})})).json();
+    const r=await (await fetch('/api/servers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,type,version,ram,cpu})})).json();
     if(r.error)throw new Error(r.error);
     m.style.color='var(--green)';m.textContent='✅ done ('+r.id+')';list();
   }catch(e){m.style.color='var(--red)';m.textContent='❌ '+e.message;}
@@ -150,7 +152,7 @@ async function list(){
       <div class="card srvrow hoverable">
         <div style="display:flex;gap:12px;align-items:center;min-width:0">
           <div class="avatar" style="width:40px;height:40px;font-size:19px;overflow:hidden">${avat(x.type)}</div>
-          <div><b>${esc(x.name)}</b><br><span class="muted small">${x.type} ${x.version} • ${x.ram||4096}MB</span></div>
+          <div><b>${esc(x.name)}</b><br><span class="muted small">${x.type} ${x.version} • ${x.ram||4096}MB${x.cpu?` • ${x.cpu} cores`:''}</span></div>
         </div>
         <div class="rowbtn">
           <button class="btn primary sm" onclick="location.href='/server/${x.id}'">🖥️ Panel</button>

@@ -178,7 +178,7 @@ app.post('/api/servers', ok(async (req, res) => {
     try { fs.rmSync(path.join(SERVERS_DIR, id), { recursive: true, force: true }); } catch {}
     throw e;
   }
-  const srv = await db.saveServer({ id, name, type: type || 'paper', version, ram: ram || 4096, javaArgs: '', owner: req.user ? req.user.id : 'legacy', createdByName: req.user ? (req.user.name || req.user.email) : 'pre-auth', createdAt: new Date().toISOString() });
+  const srv = await db.saveServer({ id, name, type: type || 'paper', version, ram: ram || 4096, cpu: Math.max(0, Math.min(64, parseInt(req.body.cpu, 10) || 0)), javaArgs: '', owner: req.user ? req.user.id : 'legacy', createdByName: req.user ? (req.user.name || req.user.email) : 'pre-auth', createdAt: new Date().toISOString() });
   res.json({ ...srv, ...mc.serverStatus(id) });
 }));
 
@@ -216,7 +216,7 @@ app.post('/api/servers/:id/start', ok(async (req, res) => {
   const ram = parseInt(req.body.ram || (s && s.ram) || 4096, 10) || 4096;
   const extra = String((s && s.javaArgs) || req.body.javaArgs || '').trim().split(' ').filter(Boolean);
   try { await players.ensureRcon(req.params.id); } catch (e) { mc.pushLog(req.params.id, '[Panel] rcon setup warn: ' + e.message); } // 🎮 Players feature auto-enable
-  res.json(mc.startServer(req.params.id, ram, extra, true, javaBin));
+  res.json(mc.startServer(req.params.id, ram, extra, true, javaBin, (s && s.cpu) || 0, neededJava(s ? s.version : '')));
 }));
 app.post('/api/servers/:id/stop', (req, res) => res.json(mc.stopServer(req.params.id)));
 app.post('/api/servers/:id/restart', ok(async (req, res) => {
@@ -230,7 +230,7 @@ app.post('/api/servers/:id/restart', ok(async (req, res) => {
   const ram = parseInt(req.body.ram || (s && s.ram) || 4096, 10) || 4096;
   const extra = String((s && s.javaArgs) || '').trim().split(' ').filter(Boolean);
   try { await players.ensureRcon(req.params.id); } catch (e) { mc.pushLog(req.params.id, '[Panel] rcon setup warn: ' + e.message); } // 🎮 Players feature auto-enable
-  res.json(mc.restartServer(req.params.id, ram, extra, javaBin));
+  res.json(mc.restartServer(req.params.id, ram, extra, javaBin, (s && s.cpu) || 0, neededJava(s ? s.version : '')));
 }));
 app.post('/api/servers/:id/kill', (req, res) => res.json(mc.killServer(req.params.id)));
 
@@ -326,15 +326,16 @@ app.post('/api/servers/:id/properties', ok((req, res) => {
 app.get('/api/servers/:id/startup', ok(async (req, res) => {
   const s = (await db.getServers()).find(x => x.id === req.params.id);
   if (!s) return res.status(404).json({ error: 'server not found' });
-  res.json({ ram: s.ram || 4096, javaArgs: s.javaArgs || '', type: s.type, version: s.version });
+  res.json({ ram: s.ram || 4096, javaArgs: s.javaArgs || '', cpu: s.cpu || 0, type: s.type, version: s.version });
 }));
 app.post('/api/servers/:id/startup', ok(async (req, res) => {
   const s = (await db.getServers()).find(x => x.id === req.params.id);
   if (!s) return res.status(404).json({ error: 'server not found' });
   const ram = Math.max(512, Math.min(16384, parseInt(req.body.ram || s.ram || 4096, 10) || 4096));
   const javaArgs = String(req.body.javaArgs == null ? s.javaArgs || '' : req.body.javaArgs).slice(0, 500);
-  await db.saveServer({ ...s, ram, javaArgs });
-  res.json({ ok: true, ram, javaArgs });
+  const cpu = Math.max(0, Math.min(64, parseInt(req.body.cpu, 10) || 0));
+  await db.saveServer({ ...s, ram, javaArgs, cpu });
+  res.json({ ok: true, ram, javaArgs, cpu });
 }));
 
 // ---- Backups ----
@@ -481,7 +482,7 @@ const server = app.listen(PORT, async () => {
           continue;
         }
         if (claimed.has(bootPort)) {
-          console.log(`[AutoStart] skip ${s.id}: port ${bootPort} ekta autostart server already claim korche — Settings tab e port change korle cholbe`);
+          console.log(`[AutoStart] skip ${s.id}: port ${bootPort} is already claimed by another autostart server — change the port in Settings to run it`);
           continue;
         }
         claimed.add(bootPort);
@@ -492,7 +493,7 @@ const server = app.listen(PORT, async () => {
           try { await mc.downloadServerJar(s.id, s.type || 'paper', s.version); }
           catch (e) { console.log(`[AutoStart] skip ${s.id}: jar redownload fail — ${e.message}`); continue; }
         }
-        mc.startServer(s.id, s.ram || 4096, String(s.javaArgs || '').trim().split(' ').filter(Boolean), true, jb);
+        mc.startServer(s.id, s.ram || 4096, String(s.javaArgs || '').trim().split(' ').filter(Boolean), true, jb, s.cpu || 0, neededJava(s.version));
         console.log(`[AutoStart] ${s.id}`);
       } catch (e) { console.log(`[AutoStart] fail ${s.id}:`, e.message); }
     }
@@ -502,7 +503,7 @@ const server = app.listen(PORT, async () => {
 // clear message + clean exit (Unhandled EADDRINUSE crash hoitona)
 server.on('error', e => {
   if (e && e.code === 'EADDRINUSE') {
-    console.error(`[Panel] port ${PORT} already use hocche — duita panel ek shathe chale na! Ager ekta panelei cholche (start-panel.bat/npm duibar start?). Ager ta bondho koro othoba onno port (PORT=4000 npm start)`);
+    console.error(`[Panel] port ${PORT} is already in use — two panels don't run side by side! The previous one is still running (double start via start-panel.bat / npm?). Close that one or pick another port (PORT=4000 npm start)`);
     process.exit(1);
   }
   console.error('[Panel] server error:', e && e.message);

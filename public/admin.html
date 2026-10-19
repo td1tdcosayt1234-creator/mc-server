@@ -131,7 +131,7 @@ async function list(){
     const d=await r.json();
     $('#list').innerHTML=d.map(s=>`
       <div class="card srvrow hoverable">
-        <div><b style="font-size:14.5px">${avat(s.type)} ${esc(s.name)}</b> <span class="muted small">${s.type} ${s.version} • ${s.ram||4096}MB</span>
+        <div><b style="font-size:14.5px">${avat(s.type)} ${esc(s.name)}</b> <span class="muted small">${s.type} ${s.version} • ${s.ram||4096}MB${s.cpu?` • ${s.cpu} cores`:''}</span>
           <br><span class="pill ${s.running?'on':''}" style="margin-top:5px"><span class="dot"></span>${s.running?'Online':'Offline'}</span>
           ${s.owner?`<span class="ownerchip" style="margin-left:8px">owner: ${esc(s.createdByName||s.owner.slice(0,8))}</span>`:'<span class="ownerchip" style="margin-left:8px">legacy</span>'}</div>
         <div class="rowbtn">
