@@ -448,7 +448,7 @@ app.use((req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, async () => {
+const server = app.listen(PORT, async () => {
   console.log(`Home: http://localhost:${PORT}/  User: http://localhost:${PORT}/user  Admin: http://localhost:${PORT}/admin`);
   // resource stats sampler (CPU/RAM per running server)
   setInterval(() => { try { mc.sampleStats(); } catch {} }, 2500);
@@ -479,4 +479,14 @@ app.listen(PORT, async () => {
       } catch (e) { console.log(`[AutoStart] fail ${s.id}:`, e.message); }
     }
   } catch (e) { console.log('[AutoStart] err', e.message); }
+});
+// double-start (start-panel.bat er sathe onno window, npm duibar) → port conflict hole
+// clear message + clean exit (Unhandled EADDRINUSE crash hoitona)
+server.on('error', e => {
+  if (e && e.code === 'EADDRINUSE') {
+    console.error(`[Panel] port ${PORT} already use hocche — duita panel ek shathe chale na! Ager ekta panelei cholche (start-panel.bat/npm duibar start?). Ager ta bondho koro othoba onno port (PORT=4000 npm start)`);
+    process.exit(1);
+  }
+  console.error('[Panel] server error:', e && e.message);
+  process.exit(1);
 });
