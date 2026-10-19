@@ -47,6 +47,7 @@
             <option value="fabric">🧵 Fabric — mods</option>
             <option value="quilt">🪡 Quilt — mods</option>
             <option value="neoforge">🔥 NeoForge — big mods</option>
+            <option value="forge">⚒️ Forge — classic mods (1.17+)</option>
           </optgroup>
         </select></div>
       <div><label class="label">Version</label><select class="input" id="version"></select></div>
@@ -70,7 +71,7 @@
 let V={};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const ICON={paper:'📄',purpur:'🟣',vanilla:'🌱',spigot:'⚡',fabric:'🧵',folia:'🍃',quilt:'🪡',neoforge:'🔥',craftbukkit:'🔨'};
+const ICON={paper:'📄',purpur:'🟣',vanilla:'🌱',spigot:'⚡',fabric:'🧵',folia:'🍃',quilt:'🪡',neoforge:'🔥',forge:'⚒️',craftbukkit:'🔨'};
 // chrome anims → /ux.js
 async function versions(){try{V=await (await fetch('/api/versions')).json();fillVer();}catch{}}
 function fillVer(){const arr=V[document.getElementById('type').value]||[];document.getElementById('version').innerHTML=arr.map(x=>`<option>${x}</option>`).join('');}

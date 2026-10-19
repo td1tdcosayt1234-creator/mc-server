@@ -26,7 +26,7 @@ file manager, startup/settings edit, backup + restore — sob nijer server hobe 
   Download, delete. Auto backup proti `BACKUP_MINUTES` min por por.
 
 ## Platforms (auto jar download)
-Paper (fill v3 API) • Purpur • Vanilla (Mojang piston-meta) • Spigot (GetBukkit) • Fabric (loader+installer server jar)
+Paper (fill v3 API) • Purpur • Vanilla (Mojang piston-meta) • Spigot (GetBukkit) • Fabric (loader+installer server jar) • Forge (maven installer, 1.17+, build auto-latest)
 
 ## Run
 ```
