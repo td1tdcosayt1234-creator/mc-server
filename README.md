@@ -22,7 +22,8 @@ file manager, startup/settings edit, backup + restore — for your own servers.
 - **⚙️ Settings** — server.properties form editor (motd, port, max-players, difficulty,
   gamemode, whitelist, view-distance...) + raw file mode. Save → apply on restart.
 - **🌐 Network** — game port, LAN IP, panel URL, join address + port-forward/tunnel note.
-- **💾 Backups** — list (size/date), manual backup, Restore (unzip overwrite, stops server),
+- **💾 Backups** — list (size/date), manual backup, Restore (exact restore: the folder is
+  put back to the backup state, later files are removed — stops the server first),
   Download, delete. Auto backup every `BACKUP_MINUTES` minutes.
 
 ## Platforms (auto jar download)

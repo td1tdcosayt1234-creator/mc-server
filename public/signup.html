@@ -79,7 +79,7 @@ const send = async () => {
 };
 $('#go').onclick = send;
 $('#password').addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
-fetch('/api/auth/me').then(r => r.json()).then(j => { if (j.user) location.href = '/'; });
+fetch('/api/auth/me').then(r => r.json()).then(j => { if (j.user) location.href = '/'; }).catch(() => {});
 </script>
 <script src="/ux.js"></script>
 </body></html>

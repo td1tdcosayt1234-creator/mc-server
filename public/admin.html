@@ -67,6 +67,8 @@
 <script>
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+// onclick="fn('…')" attribute context e single quote escape korte hoy (esc quote na kore)
+const qe=s=>esc(String(s).replace(/[\\'`]/g,'\\$&'));
 const ICON={paper:'📄',purpur:'🟣',vanilla:'🌱',spigot:'⚡',fabric:'🧵',folia:'🍃',quilt:'🪡',neoforge:'🔥',forge:'⚒️',velocity:'🪂',waterfall:'🌊',bungeecord:'🔗',mohist:'🏮',arclight:'💡',leaf:'🍃',craftbukkit:'🔨'};
 // real logos — github org avatar hotlink (onerror → emoji fallback)
 const LOGO={paper:'PaperMC',folia:'PaperMC',waterfall:'PaperMC',purpur:'PurpurMC',vanilla:'Mojang',spigot:'SpigotMC',craftbukkit:'Bukkit',fabric:'FabricMC',quilt:'QuiltMC',neoforge:'neoforged',forge:'MinecraftForge',velocity:'VelocityPowered',mohist:'MohistMC',arclight:'Arclight-Team',leaf:'Winds-Studio'};
@@ -82,13 +84,14 @@ async function me(){
     ME=j.user;
     if(!ME){location.href='/login';return null}
     $('#whoami').textContent=(ME.role==='admin'?'👑 ':'👤 ')+ME.name+' ('+ME.role+')';
-    if(ME.role!=='admin'){$('#list').innerHTML='<div class="empty">🔒 admin only page — your dashboard: <a href="/user">/user</a></div>';users();$('#users').innerHTML='<div class="empty">🔒 admin only</div>';$('#reqLogin').disabled=true;return ME}
+    if(ME.role!=='admin'){$('#list').innerHTML='<div class="empty">🔒 admin only page — your dashboard: <a href="/user">/user</a></div>';$('#users').innerHTML='<div class="empty">🔒 admin only</div>';$('#reqLogin').disabled=true;return ME}
     try{
       const s=await (await fetch('/api/auth/settings')).json();
       $('#reqLogin').checked=!!s.requireLogin;
       $('#reqLogin').disabled=false;
       $('#setStat').textContent=s.requireLogin?'active':'open (off)';
     }catch{}
+    users();   // admin er jonno user list — age ei call chilo na → card "loading…" chilo forever
   }catch(e){}
   return ME;
 }
@@ -109,7 +112,7 @@ async function users(errOnly){
     $('#users').innerHTML=d.length?d.map(u=>`
       <div class="userrow">
         <div style="display:flex;gap:10px;align-items:center"><b style="font-size:14px">${esc(u.name||u.email||u.id)}</b><span class="rolechip ${u.role==='admin'?'admin':''}">${esc(u.role||'user')}</span><span class="muted small">${esc(u.email||'')}</span>${u.hasPassword?'':'<span class="ownerchip">no password</span>'}</div>
-        <button class="btn stop sm" onclick="delUser('${esc(u.id)}')">Delete</button>
+        <button class="btn stop sm" onclick="delUser('${qe(u.id)}')">Delete</button>
       </div>`).join(''):'<div class="empty">no users</div>';
   }catch(e){$('#users').innerHTML='<div class="empty">load fail</div>'}
 }
@@ -118,12 +121,14 @@ async function addUser(){
   if(!email)return alert('Enter an email');
   if(password&&password.length<6)return alert('password min 6');
   const body={email,role}; if(name)body.name=name; if(password)body.password=password;
-  const r=await (await fetch('/api/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
-  $('#email').value='';$('#upw').value='';$('#uname').value='';
-  $('#ustat').textContent=r.error?'❌ '+r.error:'✅ added';
-  users();
+  try{
+    const r=await (await fetch('/api/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
+    $('#email').value='';$('#upw').value='';$('#uname').value='';
+    $('#ustat').textContent=r.error?'❌ '+r.error:'✅ added';
+    users();
+  }catch(e){$('#ustat').textContent='❌ '+(e.message||'request failed')}
 }
-async function delUser(id){if(!confirm('delete user?'))return;await fetch('/api/users/'+id,{method:'DELETE'});users();}
+async function delUser(id){if(!confirm('delete user?'))return;try{await fetch('/api/users/'+id,{method:'DELETE'});}catch(e){toast('❌ '+e.message,'bad');return}users();}
 async function list(){
   try{
     const r=await fetch('/api/servers');
@@ -131,19 +136,19 @@ async function list(){
     const d=await r.json();
     $('#list').innerHTML=d.map(s=>`
       <div class="card srvrow hoverable">
-        <div><b style="font-size:14.5px">${avat(s.type)} ${esc(s.name)}</b> <span class="muted small">${s.type} ${s.version} • ${s.ram||4096}MB${s.cpu?` • ${s.cpu} cores`:''}</span>
+        <div><b style="font-size:14.5px">${avat(s.type)} ${esc(s.name)}</b> <span class="muted small">${esc(s.type)} ${esc(s.version)} • ${s.ram||4096}MB${s.cpu?` • ${s.cpu} cores`:''}</span>
           <br><span class="pill ${s.running?'on':''}" style="margin-top:5px"><span class="dot"></span>${s.running?'Online':'Offline'}</span>
           ${s.owner?`<span class="ownerchip" style="margin-left:8px">owner: ${esc(s.createdByName||s.owner.slice(0,8))}</span>`:'<span class="ownerchip" style="margin-left:8px">legacy</span>'}</div>
         <div class="rowbtn">
-          <button class="btn primary sm" onclick="location.href='/server/${s.id}'">🖥️ Panel</button>
-          <button class="btn ghost sm" onclick="restart('${s.id}')">🔄 Restart</button>
-          <button class="btn stop sm" onclick="del('${s.id}')">Delete</button>
+          <button class="btn primary sm" onclick="location.href='/server/${qe(s.id)}'">🖥️ Panel</button>
+          <button class="btn ghost sm" onclick="restart('${qe(s.id)}')">🔄 Restart</button>
+          <button class="btn stop sm" onclick="del('${qe(s.id)}')">Delete</button>
         </div>
       </div>`).join('');
   }catch(e){$('#list').innerHTML='<div class="empty">load fail</div>'}
 }
-async function restart(id){toast('Restarting…');await fetch(`/api/servers/${id}/restart`,{method:'POST'});setTimeout(list,2500);}
-async function del(id){if(!confirm('DELETE SERVER - the whole folder will be removed! Sure?'))return;const r=await (await fetch('/api/servers/'+id,{method:'DELETE'})).json();toast(r.error?('❌ '+r.error):(r.warning?('⚠ '+r.warning):'Deleted ✅'),r.error?'bad':(r.warning?'bad':'ok'));setTimeout(list,800);}
+async function restart(id){toast('Restarting…');try{await fetch(`/api/servers/${id}/restart`,{method:'POST'});}catch(e){toast('❌ '+e.message,'bad');return}setTimeout(list,2500);}
+async function del(id){if(!confirm('DELETE SERVER - the whole folder will be removed! Sure?'))return;try{const r=await (await fetch('/api/servers/'+id,{method:'DELETE'})).json();toast(r.error?('❌ '+r.error):(r.warning?('⚠ '+r.warning):'Deleted ✅'),r.error?'bad':(r.warning?'bad':'ok'));}catch(e){toast('❌ '+e.message,'bad');return}setTimeout(list,800);}
 me().then(() => { if (ME && ME.role === 'admin') list(); }); // non-admin holei list() chole jeto — adpathi server list overwrite hoto
 setInterval(() => { if (ME && ME.role === 'admin') list(); }, 12000);
 </script>

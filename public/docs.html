@@ -110,7 +110,7 @@ MC ≤ 1.16.5        → <span class="k">Java 8</span></div>
     <section class="reveal" id="backups">
       <div class="sec-index"><b style="color:var(--violet2)">06</b> / Backups</div>
       <h2>Auto backup + <span class="gradtext">Drive.</span></h2>
-      <p>Every <code>BACKUP_MINUTES</code> (default 50) minutes a zip backup is taken: <code>backups/&lt;server&gt;/</code>. With a Google Drive service account it also uploads there. One-click <b style="color:var(--text)">Restore</b> from the Backup tab (stops the server, full overwrite) + download.</p>
+      <p>Every <code>BACKUP_MINUTES</code> (default 50) minutes a zip backup is taken: <code>backups/&lt;server-id&gt;-&lt;timestamp&gt;.zip</code> (last 10 per server kept). With a Google Drive service account it also uploads there. One-click <b style="color:var(--text)">Restore</b> from the Backup tab (stops the server, then the folder is restored <b>exactly</b> to the backup — files added after it are removed).</p>
     </section>
 
     <section class="reveal" id="config">
@@ -178,12 +178,22 @@ MC ≤ 1.16.5        → <span class="k">Java 8</span></div>
 const $ = s => document.querySelector(s);
 // chrome anims → /ux.js
 // copy: clone kore button bad diye text nei (trailing 'copy' strip bug fix)
+// navigator.clipboard non-secure origin (http://192.168.x.x) e undefined → guard lagbe
 function cp(b){
   const clone = b.parentElement.cloneNode(true);
   clone.querySelectorAll('.copybtn').forEach(n => n.remove());
-  navigator.clipboard.writeText(clone.innerText.trim()).then(() => {
+  const text = clone.innerText.trim();
+  if (!navigator.clipboard) {
+    b.textContent = 'copy failed (https needed)';
+    setTimeout(() => b.textContent = 'copy', 1800);
+    return;
+  }
+  navigator.clipboard.writeText(text).then(() => {
     b.textContent = 'copied ✅';
     setTimeout(() => b.textContent = 'copy', 1500);
+  }).catch(() => {
+    b.textContent = 'copy failed';
+    setTimeout(() => b.textContent = 'copy', 1800);
   });
 }
 // TOC scroll-spy — active section highlight

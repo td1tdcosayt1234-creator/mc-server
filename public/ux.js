@@ -157,6 +157,8 @@
 
   // page transitions: internal link click → soft exit → nav
   if (!REDUCED) {
+    // bfcache theke pash fire hole page-exit class stuck thakto → page blank
+    addEventListener('pageshow', () => document.documentElement.classList.remove('page-exit'));
     document.addEventListener('click', e => {
       const a = e.target && e.target.closest ? e.target.closest('a') : null;
       if (!a) return;
@@ -166,6 +168,9 @@
       let u;
       try { u = new URL(a.href, location.href); } catch { return; }
       if (u.origin !== location.origin) return;
+      // download endpoint (Content-Disposition: attachment) e navigation browser cancel kore
+      // dey → page-exit class thke jay (page blank hoye jay) → ei link gulo intercept korchi na
+      if (/\/download(\?|$)/.test(u.pathname + u.search)) return;
       if (u.pathname === location.pathname && u.hash) return;   // tab hash — nav na
       if (u.pathname === location.pathname && u.search === location.search) return;
       e.preventDefault();

@@ -176,7 +176,7 @@ async function load(){
             <span class="pill ${x.running?'on':''}"><span class="dot"></span>${x.running?'Online':'Offline'}</span>
             <b style="margin-left:9px;font-size:15px">${esc(x.name)}</b>
             <div class="mini">
-              <span class="chip">${x.type} ${x.version}</span><span class="chip">${x.ram||4096}MB RAM</span>
+              <span class="chip">${esc(x.type)} ${esc(x.version)}</span><span class="chip">${x.ram||4096}MB RAM</span>
               ${x.running?`<span class="chip sparkchip">${sparkOf(x.id)}CPU <b>${x.stats&&x.stats.cpu||0}%</b></span><span class="chip">MEM <b>${x.stats&&x.stats.memMB||0}MB</b></span>`:''}
             </div>
           </div>
@@ -240,7 +240,9 @@ function colorLine(t){
   if(/joined the game|left the game/i.test(t))return `<span class="tchat">${esc(t)}</span>`;
   return `<span class="tdefault">${esc(t)}</span>`;
 }
-load();heroTerm();setInterval(load,8000);authState();
+// auth state age resolve hoy, tarpor list render — na hole load() ashbe window.__me
+// undefined dhore "🔓 Manage → /login" link dekhay (login kora obosthayo)
+authState().then(()=>{load();heroTerm();setInterval(load,8000);});
 // marquee seamless loop (ekbar i)
 $('#mq').innerHTML=$('#mq').innerHTML+$('#mq').innerHTML;
 

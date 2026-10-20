@@ -57,15 +57,25 @@ const PUBLIC_READ = p =>
 const SID_OK = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/; // server id — path traversal (%2e%2e etc) block
 
 // brute-force guard: login/signup IP-wise (1 min window)
+// FAILED attempt count hoy — age protita attempt (successful login o) count hoto →
+// 15 bar login korle legit user lockout hoy (shared IP/NAT e common)
 const authHits = new Map();
-function authLimited(ip) {
+function clientIp(req) {
+  return req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket.remoteAddress || 'x';
+}
+function authTooMany(ip) {
+  const rec = authHits.get(ip);
+  if (!rec) return false;
+  if (Date.now() - rec.at > 60 * 1000) { authHits.delete(ip); return false; }
+  return rec.n > 15;
+}
+function authFail(ip) {
   const now = Date.now();
   const rec = authHits.get(ip) || { at: now, n: 0 };
   if (now - rec.at > 60 * 1000) { rec.at = now; rec.n = 0; }
   rec.n++;
   authHits.set(ip, rec);
   if (authHits.size > 5000) authHits.clear(); // memory guard
-  return rec.n > 15;
 }
 app.use('/api', async (req, res, next) => {
   req.user = auth.userFromReq(req) || null;
@@ -95,8 +105,7 @@ app.use('/api', async (req, res, next) => {
     }
   }
   if (p.startsWith('/auth/login') || p.startsWith('/auth/signup')) {
-    const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket.remoteAddress || 'x';
-    if (authLimited(ip)) return res.status(429).json({ error: 'too many attempts — try again after 1 min' });
+    if (authTooMany(clientIp(req))) return res.status(429).json({ error: 'too many failed attempts — try again after 1 min' });
   }
   if (OPEN_API.some(x => p === x || p.startsWith(x + '/'))) return next();
   // GET /servers public-read er aghei __ownerOnly set — na dogo list-er owner-filter bypass hoto (pre-existing leak fix)
@@ -184,7 +193,7 @@ app.post('/api/servers', ok(async (req, res) => {
     try { fs.rmSync(path.join(SERVERS_DIR, id), { recursive: true, force: true }); } catch {}
     throw e;
   }
-  const srv = await db.saveServer({ id, name, type: type || 'paper', version, ram: ram || 4096, cpu: Math.max(0, Math.min(64, parseInt(req.body.cpu, 10) || 0)), javaArgs: '', owner: req.user ? req.user.id : 'legacy', createdByName: req.user ? (req.user.name || req.user.email) : 'pre-auth', createdAt: new Date().toISOString() });
+  const srv = await db.saveServer({ id, name, type: type || 'paper', version, ram: Math.max(512, Math.min(16384, parseInt(ram, 10) || 4096)), cpu: Math.max(0, Math.min(64, parseInt(req.body.cpu, 10) || 0)), javaArgs: '', owner: req.user ? req.user.id : 'legacy', createdByName: req.user ? (req.user.name || req.user.email) : 'pre-auth', createdAt: new Date().toISOString() });
   res.json({ ...srv, ...mc.serverStatus(id) });
 }));
 
@@ -224,7 +233,7 @@ app.post('/api/servers/:id/start', ok(async (req, res) => {
   try { await players.ensureRcon(req.params.id); } catch (e) { mc.pushLog(req.params.id, '[Panel] rcon setup warn: ' + e.message); } // 🎮 Players feature auto-enable
   res.json(mc.startServer(req.params.id, ram, extra, true, javaBin, (s && s.cpu) || 0, neededJava(s ? s.version : '')));
 }));
-app.post('/api/servers/:id/stop', (req, res) => res.json(mc.stopServer(req.params.id)));
+app.post('/api/servers/:id/stop', ok((req, res) => res.json(mc.stopServer(req.params.id))));
 app.post('/api/servers/:id/restart', ok(async (req, res) => {
   const s = (await db.getServers()).find(x => x.id === req.params.id);
   let javaBin = null;
@@ -238,7 +247,7 @@ app.post('/api/servers/:id/restart', ok(async (req, res) => {
   try { await players.ensureRcon(req.params.id); } catch (e) { mc.pushLog(req.params.id, '[Panel] rcon setup warn: ' + e.message); } // 🎮 Players feature auto-enable
   res.json(mc.restartServer(req.params.id, ram, extra, javaBin, (s && s.cpu) || 0, neededJava(s ? s.version : '')));
 }));
-app.post('/api/servers/:id/kill', (req, res) => res.json(mc.killServer(req.params.id)));
+app.post('/api/servers/:id/kill', ok((req, res) => res.json(mc.killServer(req.params.id))));
 
 // ---- Real terminal: logs + live SSE + command ----
 app.get('/api/servers/:id/logs', ok(async (req, res) => {
@@ -259,8 +268,8 @@ app.get('/api/servers/:id/console', (req, res) => {
   req.on('close', () => { mc.sseClients.get(id)?.delete(res); });
 });
 
-app.get('/api/servers/:id/stats', (req, res) => res.json(mc.getStats(req.params.id)));
-app.post('/api/servers/:id/command', (req, res) => res.json(mc.sendCommand(req.params.id, req.body.cmd || '')));
+app.get('/api/servers/:id/stats', ok((req, res) => res.json(mc.getStats(req.params.id))));
+app.post('/api/servers/:id/command', ok((req, res) => res.json(mc.sendCommand(req.params.id, (req.body || {}).cmd || ''))));
 
 // ---- 🎮 Players (RCON): online list / inventory / location / op-deop-ban-kick-pardon ----
 const badName = res => res.status(400).json({ error: 'invalid player name (A-Z a-z 0-9 _, max 16)' });
@@ -387,7 +396,7 @@ app.delete('/api/servers/:id/subowners/:uid', ok(async (req, res) => {
 app.get('/api/servers/:id/backups', (req, res) => res.json(backup.listBackups(req.params.id)));
 app.post('/api/servers/:id/backup', ok(async (req, res) => {
   const z = await backup.backupServer(req.params.id, SERVERS_DIR);
-  res.json({ ok: true, file: z });
+  res.json({ ok: true, file: z.file, skipped: z.skipped, drive: z.drive });
 }));
 app.post('/api/servers/:id/backups/:name/restore', ok(async (req, res) => {
   // stop → process exit + port release porjonto wait (Windows e file-lock thakle restore adha-adhura hoto)
@@ -395,8 +404,11 @@ app.post('/api/servers/:id/backups/:name/restore', ok(async (req, res) => {
   try { mc.stopServer(req.params.id); } catch {}
   const stopped = await mc.waitStopped(req.params.id, 32000);
   if (!stopped) return res.status(400).json({ error: 'server did not stop — Stop/Kill first and retry' });
-  await backup.restoreBackup(req.params.id, req.params.name, SERVERS_DIR);
-  res.json({ ok: true });
+  const r = await backup.restoreBackup(req.params.id, req.params.name, SERVERS_DIR);
+  // restore e purano server.properties ese jay → rcon port/password DB er sathe mismatch hoy
+  // (Players tab kaj kore na) — DB er config diye abar likhe dei
+  try { await players.ensureRcon(req.params.id); } catch (e) { mc.pushLog(req.params.id, '[Panel] rcon re-sync warn: ' + e.message); }
+  res.json({ ok: true, removed: r.removed || [] });
 }));
 app.delete('/api/servers/:id/backups/:name', ok((req, res) => { res.json(backup.deleteBackup(req.params.id, req.params.name)); }));
 app.get('/api/servers/:id/backups/:name/download', (req, res) => {
@@ -436,16 +448,29 @@ app.delete('/api/users/:id', ok(async (req, res) => res.json(await db.deleteUser
 app.get('/api/auth/me', (req, res) => {
   res.json({ user: req.user ? { id: req.user.id, name: req.user.name, email: req.user.email, role: req.user.role } : null, requireLogin: loginRequired() });});
 app.post('/api/auth/signup', ok(async (req, res) => {
-  const u = await auth.signup(req.body || {});
-  const { token, ttl } = await auth.login(u.email, (req.body || {}).password, !!(req.body || {}).remember);
-  auth.setUserCookie(res, token, ttl / 1000, req);
-  res.json({ ok: true, user: u });
+  const ip = clientIp(req);
+  let u;
+  try {
+    u = await auth.signup(req.body || {});
+    const { token, ttl } = await auth.login(u.email, (req.body || {}).password, !!(req.body || {}).remember);
+    auth.setUserCookie(res, token, ttl / 1000, req);
+    res.json({ ok: true, user: u });
+  } catch (e) {
+    authFail(ip);   // failed attempt count hoy (brute-force guard)
+    throw e;
+  }
 }));
 app.post('/api/auth/login', ok(async (req, res) => {
   // remember checkbox thakle 30 din session, na hole 7 din
-  const { user, token, ttl } = await auth.login((req.body || {}).email, (req.body || {}).password, !!(req.body || {}).remember);
-  auth.setUserCookie(res, token, ttl / 1000, req);
-  res.json({ ok: true, user });
+  const ip = clientIp(req);
+  try {
+    const { user, token, ttl } = await auth.login((req.body || {}).email, (req.body || {}).password, !!(req.body || {}).remember);
+    auth.setUserCookie(res, token, ttl / 1000, req);
+    res.json({ ok: true, user });
+  } catch (e) {
+    authFail(ip);
+    throw e;
+  }
 }));
 app.post('/api/auth/logout', (req, res) => {
   const m = String(req.headers.cookie || '').match(new RegExp('(?:^|;\\s*)mcpanel_session=([a-f0-9]{64})'));
@@ -470,6 +495,7 @@ app.delete('/api/servers/:id', ok(async (req, res) => {
   mc.killServer(id);
   await mc.waitStopped(id, 32000); // pid liveness check — Windows file lock fix + graceful stop window cover
   await db.deleteServer(id);
+  mc.forgetServer(id);   // log buffer/pid/stats/sse map gulo memory theke free
   // folder purge — Windows e handle release e delay thake, tai retry/backoff (age silent catch e folder pore thakto)
   const dir = path.join(SERVERS_DIR, id);
   let purged = false;

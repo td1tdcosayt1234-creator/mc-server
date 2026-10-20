@@ -129,10 +129,10 @@ function toggleDd(f){const dd=document.getElementById('typeDd');f=arguments.leng
 document.getElementById('typeBtn').addEventListener('click',e=>{e.stopPropagation();toggleDd();});
 document.addEventListener('click',e=>{if(document.getElementById('typeDd').classList.contains('open')&&!e.target.closest('.pdrop'))toggleDd(false);});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')toggleDd(false);});
-async function versions(){try{V=await (await fetch('/api/versions')).json();}catch{}fillVer();}
+async function versions(){try{V=await (await fetch('/api/versions')).json();}catch(e){$('#msg').style.color='var(--red)';$('#msg').textContent='❌ version list load hoy nai — network check koro';}fillVer();}
 // page-load e default platform (paper) dropdown e dekhao
 buildTypeDd();setType('paper');
-function fillVer(){const arr=V[document.getElementById('type').value]||[];document.getElementById('version').innerHTML=arr.map(x=>`<option>${x}</option>`).join('');}
+function fillVer(){const arr=V[document.getElementById('type').value]||[];const sel=document.getElementById('version');sel.innerHTML=arr.length?arr.map(x=>`<option>${esc(x)}</option>`).join(''):'<option value="">— version load hoy nai —</option>';}
 async function create(){
   const type=$('#type').value,version=$('#version').value,name=$('#name').value.trim(),ram=+$('#ram').value,cpu=+$('#cpu').value;
   if(!name)return alert('Enter a server name');
@@ -152,7 +152,7 @@ async function list(){
       <div class="card srvrow hoverable">
         <div style="display:flex;gap:12px;align-items:center;min-width:0">
           <div class="avatar" style="width:40px;height:40px;font-size:19px;overflow:hidden">${avat(x.type)}</div>
-          <div><b>${esc(x.name)}</b><br><span class="muted small">${x.type} ${x.version} • ${x.ram||4096}MB${x.cpu?` • ${x.cpu} cores`:''}</span></div>
+          <div><b>${esc(x.name)}</b><br><span class="muted small">${esc(x.type)} ${esc(x.version)} • ${x.ram||4096}MB${x.cpu?` • ${x.cpu} cores`:''}</span></div>
         </div>
         <div class="rowbtn">
           <button class="btn primary sm" onclick="location.href='/server/${x.id}'">🖥️ Panel</button>
@@ -168,7 +168,7 @@ async function start1(id){
   }catch(e){alert('start fail: '+e.message)}
   setTimeout(list,1500);
 }
-async function stop1(id){await fetch(`/api/servers/${id}/stop`,{method:'POST'});setTimeout(list,1500);}
+async function stop1(id){try{await fetch(`/api/servers/${id}/stop`,{method:'POST'});}catch(e){alert('stop fail: '+e.message)}setTimeout(list,1500);}
 versions();list();setInterval(list,10000);
 </script>
 <script src="/ux.js"></script>

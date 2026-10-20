@@ -423,7 +423,10 @@ async function refreshStats() {
 async function power(a) {
   if (a === 'kill' && !confirm('Force kill does NOT save world data. Kill anyway?')) return;
   try {
-    await api(`/api/servers/${SID}/${a}`, { method: 'POST' });
+    const r = await api(`/api/servers/${SID}/${a}`, { method: 'POST' });
+    // backend 200 e ok:false pathay ("not running" / "already running") — ignore korle UI
+    // bhul dekhay
+    if (r && r.ok === false) { toast(r.msg || (a.toUpperCase() + ' failed'), 'bad'); return; }
     toast(a.toUpperCase() + ' command pathano holo ⚡');
     if (a === 'restart') $('#svStatus').textContent = 'Restarting…';
     if (a === 'stop') $('#svStatus').textContent = 'Stopping…';
@@ -690,7 +693,8 @@ async function loadNetwork() {
     const props = await api(`/api/servers/${SID}/properties`);
     const port = (props.map || {})['server-port'] || '25565';
     $('#nPort').textContent = port;
-    $('#netChip').innerHTML = '<span class="pulse-dot"></span>' + port;  // hardcoded 25565 chilo — real port dekhao
+    // port value ta server.properties theke ashe (user editable) → escape na korle XSS
+    $('#netChip').innerHTML = '<span class="pulse-dot"></span>' + esc(port);  // hardcoded 25565 chilo — real port dekhao
     const i = await api('/api/info');
     $('#nPanel').textContent = location.host;
     $('#nLan').textContent = (i.ips && i.ips[0]) || location.hostname;
@@ -755,7 +759,7 @@ async function installPlugin(slug) {
 async function loadInstalled() {
   try {
     const d = await api(`/api/servers/${SID}/plugins`);
-    $('#pkRows').innerHTML = d.map(x => `<tr><td class="mono" style="font-size:11.5px">${esc(x.file)}</td><td>${fmtSize(x.size)}</td><td class="muted small">${new Date(x.mtime).toLocaleString()}</td><td><div class="rowbtn"><button class="btn sm ghost" onclick="delPlugin('${qe(x.file)}','${x.folder}')">🗑</button></div></td></tr>`).join('');
+    $('#pkRows').innerHTML = d.map(x => `<tr><td class="mono" style="font-size:11.5px">${esc(x.file)}</td><td>${fmtSize(x.size)}</td><td class="muted small">${new Date(x.mtime).toLocaleString()}</td><td><div class="rowbtn"><button class="btn sm ghost" onclick="delPlugin('${qe(x.file)}','${qe(x.folder)}')">🗑</button></div></td></tr>`).join('');
     $('#pkEmpty').style.display = d.length ? 'none' : 'block';
   } catch (e) { $('#pkRows').innerHTML = ''; $('#pkEmpty').style.display = 'block'; }
 }
